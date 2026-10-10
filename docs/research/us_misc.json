@@ -1,0 +1,416 @@
+{
+ "key": "us_misc",
+ "result": {
+  "datasets": [
+   {
+    "key": "us_stocks_screener",
+    "url": "https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=25&offset=0&download=true",
+    "verified": false,
+    "format": "JSON object. With download=true: rows at data.rows (array of objects), column labels at data.headers (object with the same keys); top-level also has message and status {rCode, bCodeMessage, developerMessage}. Without download=true (paged table mode) the shape is DIFFERENT: data.table.rows, data.table.headers, data.totalrecords, data.asof, and rows only carry symbol,name,lastsale,netchange,pctchange,marketCap,url (no volume/sector/industry/country) with abbreviated marketCap like \"5.581T\". Use download=true.",
+    "params": "No API key. Send a browser-like User-Agent (e.g. 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:85.0) Gecko/20100101 Firefox/85.0' is what a working GitHub Actions job uses) plus Accept: application/json; several projects also add Referer: https://www.nasdaq.com/ and Origin: https://www.nasdaq.com. Without browser-like headers api.nasdaq.com is reported to hang until timeout or drop the HTTP/2 stream (INTERNAL_ERROR) rather than return an error. A reported fix for the hang: User-Agent 'Mozilla/5.0' plus Accept-Encoding: identity plus Connection: keep-alive. Optional &exchange=nasdaq|nyse|amex to split by exchange. limit/offset are ignored when download=true (all rows come back in one response).",
+    "dataDate": "No reliable per-row date. download=true is modeled by third-party code as having data.asOf (unverified). Table mode has data.asof like \"Last price as of Feb 23, 2023\". Safer: take the date from the job run time in America/New_York. Run after about 16:30 ET (that is 04:30 or 05:30 Taiwan time the next day). Values reflect the last trade, so on holidays they are the previous session's.",
+    "fields": [
+     {
+      "name": "symbol",
+      "meaning": "ticker. Share classes use a slash, e.g. BRK/B, so normalize to BRK.B for Yahoo or TradingView"
+     },
+     {
+      "name": "name",
+      "meaning": "security name, e.g. 'ATA Creativity Global American Depositary Shares'"
+     },
+     {
+      "name": "lastsale",
+      "meaning": "last price as a string with a $ prefix",
+      "unit": "USD string, e.g. \"$0.8789\""
+     },
+     {
+      "name": "netchange",
+      "meaning": "price change vs previous close",
+      "unit": "USD string without $, e.g. \"-0.0316\""
+     },
+     {
+      "name": "pctchange",
+      "meaning": "percent change",
+      "unit": "string with %, e.g. \"-3.471%\""
+     },
+     {
+      "name": "volume",
+      "meaning": "share volume",
+      "unit": "shares string, no commas in download mode, e.g. \"5869\""
+     },
+     {
+      "name": "marketCap",
+      "meaning": "market cap; \"0.00\" when unknown, e.g. SPACs",
+      "unit": "USD string with 2 decimals, e.g. \"60173027.00\""
+     },
+     {
+      "name": "country",
+      "meaning": "country of company, e.g. \"United States\", \"China\""
+     },
+     {
+      "name": "ipoyear",
+      "meaning": "IPO year string, may be empty"
+     },
+     {
+      "name": "industry",
+      "meaning": "industry, e.g. \"Other Consumer Services\""
+     },
+     {
+      "name": "sector",
+      "meaning": "sector, e.g. \"Finance\", \"Real Estate\", \"Technology\""
+     },
+     {
+      "name": "url",
+      "meaning": "relative nasdaq.com path, e.g. \"/market-activity/stocks/aacg\""
+     }
+    ],
+    "sampleRecord": "{\"symbol\":\"AACG\",\"name\":\"ATA Creativity Global American Depositary Shares\",\"lastsale\":\"$0.8789\",\"netchange\":\"-0.0316\",\"pctchange\":\"-3.471%\",\"volume\":\"5869\",\"marketCap\":\"60173027.00\",\"country\":\"China\",\"ipoyear\":\"2008\",\"industry\":\"Other Consumer Services\",\"sector\":\"Real Estate\",\"url\":\"/market-activity/stocks/aacg\"}",
+    "notes": "NOT fetched directly: WebFetch returned ROBOTS_DISALLOWED for api.nasdaq.com, and shell network use was barred. The field names and sample record come from real API output saved by a GitHub Actions job: rreichel3/US-Stock-Symbols, file nasdaq/nasdaq_full_tickers.json. Its workflow .github/workflows/fetch-stocks.yml runs on ubuntu-latest with cron '0 0 * * *'. It runs curl --user-agent '<Firefox UA>' 'https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=25&offset=0&exchange=nasdaq&download=true' and then jq '.data.rows'. The data contains rows with ipoyear 2026, so the endpoint works from GitHub-hosted runners in 2026 with only a browser UA. The data.rows path for download=true is also confirmed by bwjoke/fomo5000.com (screener?.data?.rows), DiogoCrespi/b3_screener (json?.data?.rows) and yokwe Screener.java (Stock: data{asOf, headers, rows}). Size: about 7,000 rows for all exchanges; the rreichel3 combined ticker list has about 6,400. Rows include warrants, units, preferreds and SPACs, so filter for common stock if needed. All values are strings: strip $ and %, and parseFloat. Empty strings can occur. One third-party document reports roughly 1 request per 0.3 s as safe and 429 at about 10 req/s. Add retries with backoff and a 60 s timeout, because a hang rather than a 4xx is the usual failure mode."
+   },
+   {
+    "key": "us_etf_screener",
+    "url": "https://api.nasdaq.com/api/screener/etf?download=true",
+    "verified": false,
+    "format": "JSON object. With download=true: rows at data.data.rows (one level deeper than stocks), headers at data.data.headers, timestamp at data.dataAsOf (and data.data.asOf per one model). In tableonly=true paged mode (no download) a third-party doc reports rows at data.records.data.rows and total at data.records.totalrecords. Code that copes with both: json?.data?.data?.rows || json?.data?.rows",
+    "params": "Same headers as the stock screener: browser User-Agent, Accept: application/json, optionally Referer https://www.nasdaq.com/. DiogoCrespi/b3_screener uses https://api.nasdaq.com/api/screener/etf?tableonly=true&download=true.",
+    "dataDate": "data.dataAsOf string (exact format unverified). Otherwise use the run date in America/New_York.",
+    "fields": [
+     {
+      "name": "symbol",
+      "meaning": "ETF ticker"
+     },
+     {
+      "name": "companyName",
+      "meaning": "fund name"
+     },
+     {
+      "name": "lastSalePrice",
+      "meaning": "last price with $ prefix",
+      "unit": "USD string, e.g. \"$56.8056\""
+     },
+     {
+      "name": "netChange",
+      "meaning": "price change",
+      "unit": "USD string, e.g. \"-0.3804\""
+     },
+     {
+      "name": "percentageChange",
+      "meaning": "daily percent change",
+      "unit": "string with %, e.g. \"-0.67%\""
+     },
+     {
+      "name": "oneYearPercentage",
+      "meaning": "1-year return",
+      "unit": "string with %, e.g. \"17.83%\". The header key is reportedly 'oneYearPercentagechange' but the row key is 'oneYearPercentage'"
+     },
+     {
+      "name": "deltaIndicator",
+      "meaning": "\"up\" or \"down\""
+     }
+    ],
+    "sampleRecord": "{\"symbol\": \"AIVI\", \"lastSalePrice\": \"$56.8056\", \"netChange\": \"-0.3804\", \"percentageChange\": \"-0.67%\", \"oneYearPercentage\": \"17.83%\", \"deltaIndicator\": \"down\"}  (abbreviated sample from third-party doc gauss314/skills nasdaq-data REFERENCE.md, NOT fetched by me)",
+    "notes": "NOT fetched: ROBOTS_DISALLOWED via WebFetch. The structure is cross-checked in three independent codebases: yokwe Screener.java (ETF: data{data{asOf,headers,rows}, dataAsOf}), serhiy-petryk NasdaqScreenerLoader.cs (data.dataAsOf, data.data.rows) and DiogoCrespi nasdaq.js. Coverage: one doc reports totalrecords 4,551 and another code comment says about 5k ETFs, so this appears to be the full Nasdaq-listed ETF universe across exchanges. Completeness is not verified. ETF rows have NO volume, marketCap, sector or expense ratio. For ETF volume or 52-week data, use Yahoo chart. Some leveraged ETNs and closed-end funds are in the stock screener instead, so look a symbol up in both lists."
+   },
+   {
+    "key": "yahoo_chart_v8",
+    "url": "https://query1.finance.yahoo.com/v8/finance/chart/{SYMBOL}?range=1y&interval=1d  (e.g. AAPL, 2330.TW for TWSE listed, 6488.TWO for TPEx/OTC; fallback host query2.finance.yahoo.com)",
+    "verified": false,
+    "format": "JSON object. Result at chart.result[0], error at chart.error (null on success). Timestamps: chart.result[0].timestamp (unix seconds array). OHLCV: chart.result[0].indicators.quote[0].open/.high/.low/.close/.volume (parallel arrays aligned with timestamp; values can be null on some days). Adjusted close: chart.result[0].indicators.adjclose[0].adjclose (may be absent, e.g. on intraday range=1d&interval=1m requests). Meta: chart.result[0].meta. Optional chart.result[0].events.dividends/splits when &events=div,split.",
+    "params": "No key, no cookie or crumb needed for v8/chart. Send a browser-like User-Agent: working examples use 'Mozilla/5.0' or a full Chrome or Mac UA. The default python-requests or node UA is reported to get blocked. Alternatively use period1/period2 (unix seconds) instead of range. Valid ranges: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max.",
+    "dataDate": "Daily bar timestamp = session open time in UTC. For example, 2330.TW 1783386000 = 2026-07-07 09:00 Asia/Taipei. Convert with meta.gmtoffset (seconds; 28800 for Taiwan) or meta.exchangeTimezoneName to get the trading date. meta.regularMarketTime (unix seconds) = time of the last trade, e.g. 1783920608 = 2026-07-13 13:30:08 Taipei.",
+    "fields": [
+     {
+      "name": "meta.currency",
+      "meaning": "\"TWD\" for .TW, .TWO; \"USD\" for US"
+     },
+     {
+      "name": "meta.symbol",
+      "meaning": "echo of symbol, e.g. \"2330.TW\""
+     },
+     {
+      "name": "meta.exchangeName / meta.fullExchangeName",
+      "meaning": "\"TAI\" / \"Taiwan\" for .TW (value for .TWO not seen)"
+     },
+     {
+      "name": "meta.instrumentType",
+      "meaning": "\"EQUITY\", \"ETF\", ..."
+     },
+     {
+      "name": "meta.regularMarketPrice",
+      "meaning": "latest price",
+      "unit": "currency"
+     },
+     {
+      "name": "meta.fiftyTwoWeekHigh / meta.fiftyTwoWeekLow",
+      "meaning": "52-week high/low (present in meta in 2026 responses)",
+      "unit": "currency"
+     },
+     {
+      "name": "meta.regularMarketDayHigh / meta.regularMarketDayLow / meta.regularMarketVolume",
+      "meaning": "latest session high/low/volume"
+     },
+     {
+      "name": "meta.chartPreviousClose",
+      "meaning": "close before the first bar of the requested range (NOT necessarily yesterday's close)"
+     },
+     {
+      "name": "meta.previousClose",
+      "meaning": "previous session close (seen with range=1d)"
+     },
+     {
+      "name": "meta.longName / meta.shortName",
+      "meaning": "names, e.g. \"Taiwan Semiconductor Manufacturing Company Limited\""
+     },
+     {
+      "name": "meta.regularMarketTime / meta.gmtoffset / meta.timezone / meta.exchangeTimezoneName",
+      "meaning": "last trade unix time; 28800; \"CST\"; \"Asia/Taipei\""
+     },
+     {
+      "name": "meta.firstTradeDate, priceHint, hasPrePostMarketData, currentTradingPeriod{pre,regular,post}, dataGranularity, range, validRanges",
+      "meaning": "misc"
+     },
+     {
+      "name": "timestamp[]",
+      "meaning": "bar times (unix s)"
+     },
+     {
+      "name": "indicators.quote[0].open/high/low/close/volume",
+      "meaning": "OHLCV arrays",
+      "unit": "currency / shares"
+     },
+     {
+      "name": "indicators.adjclose[0].adjclose",
+      "meaning": "split/dividend-adjusted close"
+     }
+    ],
+    "sampleRecord": "meta (2330.TW, range=5d, captured 2026-07-13, condensed): {\"currency\":\"TWD\",\"symbol\":\"2330.TW\",\"exchangeName\":\"TAI\",\"fullExchangeName\":\"Taiwan\",\"instrumentType\":\"EQUITY\",\"firstTradeDate\":946947600,\"regularMarketTime\":1783920608,\"hasPrePostMarketData\":false,\"gmtoffset\":28800,\"timezone\":\"CST\",\"exchangeTimezoneName\":\"Asia/Taipei\",\"regularMarketPrice\":2440.0,\"fiftyTwoWeekHigh\":2535.0,\"fiftyTwoWeekLow\":1085.0,\"regularMarketDayHigh\":2480.0,\"regularMarketDayLow\":2440.0,\"regularMarketVolume\":34539893,\"longName\":\"Taiwan Semiconductor Manufacturing Company Limited\",\"shortName\":\"TAIWAN SEMICONDUCTOR MANUFACTUR\",\"chartPreviousClose\":2440.0,\"priceHint\":2,\"dataGranularity\":\"1d\",\"range\":\"5d\"}; first timestamps [1783386000,1783472400], closes [2440.0,2465.0]",
+    "notes": "NOT fetched directly: query1, query2 and the .TWO URL all returned ROBOTS_DISALLOWED via WebFetch. The structure and the sample meta come from a real raw Yahoo response committed in GitHub repo austinyuch/finance_algorithms (data/vintage/raw/2026-07-13/yahoo_2330.TW.json, a wrapper whose 'raw' field holds the Yahoo JSON string; fetched with headers {User-Agent: 'Mozilla/5.0'}). A second 2026-06-20 probe (SmartyJohnway/tw-market-live-data-intelligence matrix.json) shows HTTP 200 for 2330.TW, 1435.TW, 8069.TWO, 5347.TWO, 0050.TW, 00929.TW, 9105.TW and ^TWII. It used UA 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' and flagged missing_adjclose_array on a 1d/1m request. So .TWO works, but its exact meta.exchangeName was not seen. Several GitHub Actions workflows in 2026 call this endpoint with curl -A 'Mozilla/5.0', e.g. brikersjames/light-ai-tracker price.yml and andybateman/signpost update-spk.yml. Rate limiting: yfinance issue #2297 reports widespread HTTP 429 'Edge: Too Many Requests' from about 2025-02-19, including on cookie/crumb calls. yfinance discussion #2431 (May 2025 to Jan 2026) describes temporary IP-based blocks that lift after hours. TradingAgents issue #437 (2026-03-23) shows YFRateLimitError. I found no report specific to GitHub Actions runner IPs, but they are shared Azure IPs, so expect occasional 429s. A third-party guide says about 2 req/s is safe, 3-5 req/s draws 429s, and more than 10 req/s gets a temporary IP block. Recommendations: about 0.5-1 s between requests, sequential only, exponential backoff on 429 (wait 30-60 s), switch query1 to query2 on failure, and keep the previous day's JSON if a symbol fails. With interval=1d, today's in-progress bar can appear with partial values during market hours. Run the TW job after 14:30 Taipei and the US job after 16:30 ET."
+   },
+   {
+    "key": "bot_fx_rates",
+    "url": "https://rate.bot.com.tw/xrt/flcsv/0/day",
+    "verified": true,
+    "format": "CSV, UTF-8 with BOM (U+FEFF before the header), comma-separated, every line ends with a trailing comma (empty last field). 1 header line + 19 currency rows in this order: USD, HKD, GBP, AUD, CAD, SGD, CHF, JPY, ZAR, SEK, NZD, THB, PHP, IDR, EUR, KRW, VND, MYR, CNY. The header repeats column names, so parse by INDEX, not by name.",
+    "params": "none. A by-date variant also returned data: https://rate.bot.com.tw/xrt/flcsv/0/2026-10-08 (same layout). A TXT variant is at https://rate.bot.com.tw/xrt/fltxt/0/day. The HTML page https://rate.bot.com.tw/xrt?Lang=zh-TW shows '牌價最新掛牌時間' (e.g. 2026/10/10 09:25).",
+    "dataDate": "The CSV has NO date or time column. Use the fetch time, or scrape '牌價最新掛牌時間' from the HTML page. The download filename (Content-Disposition) is believed to carry a timestamp, but this is unverified. Quotes change intraday; the BOT spot rate is not the official close.",
+    "fields": [
+     {
+      "name": "col0 幣別",
+      "meaning": "currency code, e.g. USD"
+     },
+     {
+      "name": "col1 匯率",
+      "meaning": "literal text '本行買入' (bank buys)"
+     },
+     {
+      "name": "col2 現金",
+      "meaning": "cash buying rate 現金買入",
+      "unit": "TWD per 1 unit"
+     },
+     {
+      "name": "col3 即期",
+      "meaning": "SPOT BUYING rate 即期買入",
+      "unit": "TWD per 1 unit"
+     },
+     {
+      "name": "col4-10 遠期10天,遠期30天,遠期60天,遠期90天,遠期120天,遠期150天,遠期180天",
+      "meaning": "forward buying rates"
+     },
+     {
+      "name": "col11 匯率",
+      "meaning": "literal text '本行賣出' (bank sells)"
+     },
+     {
+      "name": "col12 現金",
+      "meaning": "cash selling rate 現金賣出",
+      "unit": "TWD"
+     },
+     {
+      "name": "col13 即期",
+      "meaning": "SPOT SELLING rate 即期賣出",
+      "unit": "TWD"
+     },
+     {
+      "name": "col14-20 遠期10天..遠期180天",
+      "meaning": "forward selling rates"
+     },
+     {
+      "name": "col21",
+      "meaning": "empty (trailing comma)"
+     }
+    ],
+    "sampleRecord": "USD,本行買入,31.48000,31.80500,31.83300,31.77600,31.70200,31.62700,31.54300,31.47700,31.40600,本行賣出,32.15000,31.95500,31.93700,31.88700,31.82000,31.75500,31.68100,31.62300,31.56000,",
+    "notes": "Fetched 2026-10-10 and confirmed against the HTML page: USD cash 31.48 / 32.15, spot 31.805 / 31.955. Header verbatim (BOM stripped): 幣別,匯率,現金,即期,遠期10天,遠期30天,遠期60天,遠期90天,遠期120天,遠期150天,遠期180天,匯率,現金,即期,遠期10天,遠期30天,遠期60天,遠期90天,遠期120天,遠期150天,遠期180天, . For USD, the spot buy is cols[3] and the spot sell is cols[13]. Mid = (cols[3]+cols[13])/2, about 31.88 here. Rows ZAR, SEK, THB, PHP, IDR, KRW, VND and MYR contain 0.00000 for unavailable quotes; treat 0 as missing. The 2026-10-08 by-date fetch returned USD spot 31.85000 / 31.95000. Its forward columns were identical to today's, so treat by-date forward data with caution. Alternatives if BOT blocks GitHub Actions: (1) open.er-api.com, verified, see usd_twd_fallback; (2) Yahoo chart symbol TWD=X (USD/TWD), unverified, same JSON as yahoo_chart_v8; (3) Taiwan central bank open data, data.gov.tw dataset 7232 / cpx.cbc.gov.tw, not fetched (ROBOTS_DISALLOWED)."
+   },
+   {
+    "key": "usd_twd_fallback",
+    "url": "https://open.er-api.com/v6/latest/USD",
+    "verified": true,
+    "format": "JSON object; rate at rates.TWD",
+    "params": "none (free, no key)",
+    "dataDate": "time_last_update_unix / time_last_update_utc (e.g. \"Fri, 09 Oct 2026 00:02:31 +0000\"); updates about once per day; time_next_update_utc gives the next refresh",
+    "fields": [
+     {
+      "name": "result",
+      "meaning": "\"success\" on success"
+     },
+     {
+      "name": "provider",
+      "meaning": "https://www.exchangerate-api.com"
+     },
+     {
+      "name": "documentation",
+      "meaning": "docs URL"
+     },
+     {
+      "name": "terms_of_use",
+      "meaning": "https://www.exchangerate-api.com/terms (attribution likely required; not read)"
+     },
+     {
+      "name": "time_last_update_unix / time_last_update_utc",
+      "meaning": "last update"
+     },
+     {
+      "name": "time_next_update_unix / time_next_update_utc",
+      "meaning": "next update"
+     },
+     {
+      "name": "time_eol_unix",
+      "meaning": "end-of-life marker"
+     },
+     {
+      "name": "base_code",
+      "meaning": "\"USD\""
+     },
+     {
+      "name": "rates.TWD",
+      "meaning": "TWD per 1 USD (mid-market)",
+      "unit": "TWD"
+     }
+    ],
+    "sampleRecord": "{\"result\":\"success\",\"provider\":\"https://www.exchangerate-api.com\",\"time_last_update_utc\":\"Fri, 09 Oct 2026 00:02:31 +0000\",\"time_next_update_utc\":\"Sat, 10 Oct 2026 00:31:41 +0000\",\"base_code\":\"USD\",\"rates\":{\"TWD\":31.962657}}  (condensed; other currencies omitted)",
+    "notes": "Fetched 2026-10-10. A daily mid rate, not a bank buy/sell rate. Fine as a fallback for converting US holdings to TWD. Show attribution per their terms."
+   },
+   {
+    "key": "google_news_rss_tw",
+    "url": "https://news.google.com/rss/search?q=台股&hl=zh-TW&gl=TW&ceid=TW:zh-Hant  (URL-encode q: q=%E5%8F%B0%E8%82%A1; per-stock e.g. q=台積電 OR q=2330; time filter can be added inside q, e.g. '台股 when:1d')",
+    "verified": false,
+    "format": "RSS 2.0 XML: rss > channel > item[]. channel has title (e.g. '\"AI when:1h\" - Google 新聞'), link, language (zh-TW), webMaster (news-webmaster@google.com), copyright, lastBuildDate, description ('Google 新聞').",
+    "params": "none. Send a normal browser User-Agent.",
+    "dataDate": "item pubDate in RFC-822 GMT, e.g. 'Sat, 21 Feb 2026 16:03:42 GMT'",
+    "fields": [
+     {
+      "name": "title",
+      "meaning": "'<headline> - <source name>'. The publisher name is appended after ' - ', so strip it using the <source> text, e.g. '全球AI峰會聯合宣言 籲打造安全可信強健人工智慧 - 芋傳媒 TaroNews'"
+     },
+     {
+      "name": "link",
+      "meaning": "Google redirect URL https://news.google.com/rss/articles/CBMi...?oc=5 (not the publisher URL)"
+     },
+     {
+      "name": "guid",
+      "meaning": "opaque article id, e.g. 'CBMiUEFVX3lxTE1q...', attribute isPermaLink=\"false\""
+     },
+     {
+      "name": "pubDate",
+      "meaning": "publication time (GMT)"
+     },
+     {
+      "name": "description",
+      "meaning": "HTML-escaped snippet: an <a href=\"https://news.google.com/rss/articles/...\"> anchor with the headline plus <font color=\"#6f6f6f\">source</font>; no real summary text"
+     },
+     {
+      "name": "source",
+      "meaning": "publisher name as text, with attribute url = publisher homepage, e.g. <source url=\"https://taronews.tw\">芋傳媒 TaroNews</source>"
+     }
+    ],
+    "sampleRecord": "<item><title>全球AI峰會聯合宣言 籲打造安全可信強健人工智慧 - 芋傳媒 TaroNews</title><link>https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ4?oc=5</link><guid isPermaLink=\"false\">CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pI...</guid><pubDate>Sat, 21 Feb 2026 16:03:42 GMT</pubDate><description>&lt;a href=\"https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTV...</description><source url=\"https://taronews.tw\">芋傳媒 TaroNews</source></item>  (partially reconstructed; guid and description truncated)",
+    "notes": "NOT fetched directly: news.google.com/rss returned ROBOTS_DISALLOWED via WebFetch. The structure comes from a real Google News RSS response (zh-TW, ceid=TW:zh-Hant, lastBuildDate Sat, 21 Feb 2026 16:16:53 GMT) saved in GitHub repo agenvoy/Agenvoy internal/tools/external/searchWeb/googleRSS/response.xml. The channel copyright allows personal, non-commercial use in a feed reader only. On a public site, show headline, source, time and a link only; do not copy content. Item count per query is not verified (commonly about 100 max). Links are Google redirect URLs that open in the browser fine. Resolving them server-side to the publisher URL is not straightforward."
+   },
+   {
+    "key": "google_news_rss_us",
+    "url": "https://news.google.com/rss/search?q=stock+market&hl=en-US&gl=US&ceid=US:en  (also topic feed https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en; per ticker e.g. q=AAPL+stock)",
+    "verified": false,
+    "format": "Same RSS 2.0 structure as google_news_rss_tw (channel > item with title, link, guid isPermaLink=\"false\", pubDate, description, source url=...)",
+    "params": "hl=en-US&gl=US&ceid=US:en",
+    "dataDate": "item pubDate (GMT)",
+    "fields": [
+     {
+      "name": "title",
+      "meaning": "'<headline> - <source>'"
+     },
+     {
+      "name": "link",
+      "meaning": "news.google.com/rss/articles/... redirect"
+     },
+     {
+      "name": "guid",
+      "meaning": "opaque id"
+     },
+     {
+      "name": "pubDate",
+      "meaning": "RFC-822 GMT"
+     },
+     {
+      "name": "description",
+      "meaning": "HTML anchor snippet"
+     },
+     {
+      "name": "source",
+      "meaning": "publisher name; url attribute"
+     }
+    ],
+    "notes": "NOT fetched (ROBOTS_DISALLOWED via WebFetch). The structure is assumed identical to the zh-TW variant; only the locale parameters differ. Verify in the first GitHub Actions run."
+   },
+   {
+    "key": "us_holidays",
+    "url": "https://www.nyse.com/markets/hours-calendars",
+    "verified": true,
+    "format": "HTML table (fetched and read); hard-code into a JSON calendar in the repo",
+    "params": "none",
+    "dataDate": "n/a (static calendar; re-check nyse.com yearly; NYSE can add ad-hoc closures e.g. national days of mourning)",
+    "fields": [
+     {
+      "name": "date",
+      "meaning": "YYYY-MM-DD (America/New_York)"
+     },
+     {
+      "name": "type",
+      "meaning": "closed | early_close (13:00 ET)"
+     },
+     {
+      "name": "name",
+      "meaning": "holiday name"
+     }
+    ],
+    "sampleRecord": "{\"date\":\"2026-11-27\",\"type\":\"early_close\",\"closeET\":\"13:00\",\"name\":\"Day after Thanksgiving\"}",
+    "notes": "Source: nyse.com Holidays & Trading Hours, fetched 2026-10-10. Nasdaq's holiday page agrees for 2026. FULL CLOSURES 2026: 2026-01-01 (Thu) New Year's Day; 2026-01-19 (Mon) Martin Luther King, Jr. Day; 2026-02-16 (Mon) Washington's Birthday; 2026-04-03 (Fri) Good Friday; 2026-05-25 (Mon) Memorial Day; 2026-06-19 (Fri) Juneteenth; 2026-07-03 (Fri) Independence Day observed; 2026-09-07 (Mon) Labor Day; 2026-11-26 (Thu) Thanksgiving; 2026-12-25 (Fri) Christmas. EARLY CLOSE 1:00 p.m. ET in 2026 (1:15 p.m. for eligible options): 2026-11-27 (Fri, day after Thanksgiving) and 2026-12-24 (Thu, Christmas Eve). NYSE lists no early close on 2026-07-02. FULL CLOSURES 2027: 2027-01-01 (Fri) New Year's Day; 2027-01-18 (Mon) MLK Day; 2027-02-15 (Mon) Washington's Birthday; 2027-03-26 (Fri) Good Friday; 2027-05-31 (Mon) Memorial Day; 2027-06-18 (Fri) Juneteenth observed; 2027-07-05 (Mon) Independence Day observed; 2027-09-06 (Mon) Labor Day; 2027-11-25 (Thu) Thanksgiving; 2027-12-24 (Fri) Christmas Day observed. EARLY CLOSE 2027: 2027-11-26 (Fri, day after Thanksgiving) 1:00 p.m. ET. NYSE lists no early close on 2027-12-23 or 2027-07-02. 2028 is not published on the page. Early-close footnote, verbatim: 'Each market will close early at 1:00 p.m. (1:15 p.m. for eligible options) on ... Friday, November 27, 2026, and Friday, November 26, 2027 (the day after Thanksgiving).' and '... on Wednesday, December 24, 2025, and Thursday, December 24, 2026.' On early-close days, 13:00 ET (EST) = 02:00 Taiwan time the next day."
+   },
+   {
+    "key": "us_market_hours",
+    "url": "https://www.nyse.com/markets/hours-calendars",
+    "verified": true,
+    "format": "static constants (hours read from nyse.com; DST dates computed from IANA tzdata America/New_York via zdump in this container)",
+    "params": "none",
+    "dataDate": "n/a",
+    "fields": [
+     {
+      "name": "regular_session",
+      "meaning": "09:30-16:00 America/New_York, Mon-Fri, excluding holidays"
+     },
+     {
+      "name": "early_close",
+      "meaning": "13:00 ET on listed early-close days"
+     },
+     {
+      "name": "tz",
+      "meaning": "America/New_York (use IANA zone in code, not fixed offsets)"
+     }
+    ],
+    "sampleRecord": "{\"open\":\"09:30\",\"close\":\"16:00\",\"tz\":\"America/New_York\"}",
+    "notes": "NYSE core trading session (Tape A, B, C; NYSE American; Arca; Texas; National): 9:30 a.m. to 4:00 p.m. ET. Late trading sessions on Arca, American, National and Texas run 4:00 to 8:00 p.m. ET (5:00 p.m. on early-close days). US DST, from tzdata zdump: 2026 starts Sun 2026-03-08 at 02:00 EST to 03:00 EDT (07:00 UTC) and ends Sun 2026-11-01 at 02:00 EDT to 01:00 EST (06:00 UTC). 2027 starts Sun 2027-03-14 (07:00 UTC) and ends Sun 2027-11-07 (06:00 UTC). Rule: second Sunday of March to first Sunday of November. Taiwan (UTC+8, no DST) equivalents: during EDT (UTC-4) the session is 21:30-04:00 Taiwan time (next day). During EST (UTC-5) it is 22:30-05:00 Taiwan time. A US trading date D closes at 04:00 or 05:00 Taiwan time on D+1. Schedule the GitHub Actions cron for US data at about 21:30 or 22:30 UTC (05:30 or 06:30 Taiwan time). Note that GitHub cron is UTC and can be delayed by 10-60 minutes. An example of a cron that is safe all year: '30 22 * * 1-5' UTC, which is after 16:00 ET in both EDT and EST. Note: timeanddate.com could not be fetched (CLIENT_ERROR), so the DST dates come from local tzdata rather than a web page."
+   }
+  ],
+  "notes": "Summary of verification (2026-10-10). WebFetch returned ROBOTS_DISALLOWED for api.nasdaq.com, query1/query2.finance.yahoo.com, news.google.com, stooq.com and data.gov.tw. Following instructions, no curl or shell web access was used. Directly fetched with real data seen: (a) Bank of Taiwan CSV, (b) open.er-api.com USD rates, (c) nyse.com holidays and hours. For Nasdaq, Yahoo and Google News I instead read real API responses that other projects committed to GitHub in 2026, plus their fetch code. Those entries are marked verified=false, and the evidence is in each entry's notes. Key facts for the build: (1) Nasdaq stocks: use download=true and read data.rows. Paged mode uses data.table.rows, with fewer fields and abbreviated marketCap. ETFs use data.data.rows. All values are strings (\"$123.45\", \"-3.471%\", \"60173027.00\"). A browser User-Agent is effectively required, and a GitHub Actions job (rreichel3/US-Stock-Symbols, ubuntu-latest, curl --user-agent Firefox) gets this data successfully every night in 2026. (2) Yahoo v8 chart: chart.result[0].timestamp, indicators.quote[0].{open,high,low,close,volume}, indicators.adjclose[0].adjclose. meta includes regularMarketPrice, fiftyTwoWeekHigh, fiftyTwoWeekLow, currency (TWD for .TW and .TWO), regularMarketTime, gmtoffset and exchangeTimezoneName. It needs a browser UA, not a cookie or crumb. 429 'Too Many Requests' blocks were widely reported from Feb 2025 into 2026 (yfinance #2297, #2431; TradingAgents #437 in March 2026). Throttle to about 1 req/s with backoff, and fall back from query1 to query2. .TWO symbols such as 8069.TWO and 5347.TWO returned HTTP 200 in a June 2026 probe. (3) BOT CSV: parse by column index; USD spot buy = col 3, spot sell = col 13. The file has a BOM and a trailing comma, no date column, and 0.00000 means not quoted. (4) Google News RSS item: title ('headline - source'), link (news.google.com/rss/articles redirect), guid (isPermaLink=false), pubDate (GMT), description (HTML anchor), source (url attribute). Feed terms say personal non-commercial feed-reader use. (5) NYSE 2026 closures: Jan 1, Jan 19, Feb 16, Apr 3, May 25, Jun 19, Jul 3, Sep 7, Nov 26, Dec 25. Early closes: Nov 27 and Dec 24. 2027 closures: Jan 1, Jan 18, Feb 15, Mar 26, May 31, Jun 18, Jul 5, Sep 6, Nov 25, Dec 24. Early close: Nov 26. (6) Session 09:30-16:00 ET. DST 2026: Mar 8 to Nov 1. DST 2027: Mar 14 to Nov 7. In Taiwan time that is 21:30-04:00 (EDT) or 22:30-05:00 (EST). Sources: https://www.nyse.com/markets/hours-calendars, https://www.nasdaq.com/market-activity/stock-market-holiday-schedule, https://rate.bot.com.tw/xrt/flcsv/0/day, https://rate.bot.com.tw/xrt?Lang=zh-TW, https://open.er-api.com/v6/latest/USD, https://raw.githubusercontent.com/rreichel3/US-Stock-Symbols/main/nasdaq/nasdaq_full_tickers.json, https://raw.githubusercontent.com/austinyuch/finance_algorithms/main/data/vintage/raw/2026-07-13/yahoo_2330.TW.json, https://raw.githubusercontent.com/agenvoy/Agenvoy/09fd5488a58367e2f709b117a56a8410574e5dcb/internal/tools/external/searchWeb/googleRSS/response.xml, https://forum.posit.co/t/httr2-request-fails-ok-in-browser/197965, https://github.com/ranaroussi/yfinance/issues/2297, https://github.com/ranaroussi/yfinance/discussions/2431, https://github.com/TauricResearch/TradingAgents/issues/437, https://skillselion.com/skills/gauss314/skills/yahoo-finance."
+ }
+}

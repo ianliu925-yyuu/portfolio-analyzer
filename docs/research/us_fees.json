@@ -1,0 +1,586 @@
+{
+ "key": "us_fees",
+ "result": {
+  "brokers": [
+   {
+    "broker": "Firstrade",
+    "market": "US",
+    "channel": "direct US broker (online; Traditional Chinese site/support at firstrade.com/content/zh-tw)",
+    "feeRule": "$0 commission for online stocks, ETFs, options and mutual funds ('Online trades are $0 for stocks, ETFs, options and mutual funds.'). Broker-assisted stock/ETF order: $19.95. Pass-through SEC fee on sells (see notes).",
+    "minFeeRoundLot": "0",
+    "minFeeOddLot": "0",
+    "discount": "",
+    "rebateTiming": "n/a",
+    "notes": "Verified 2026-10-10 on the official pricing page: 'As of April 6, 2026, the SEC Fee rate is $0.00002060 or $20.60 per million dollars for eligible sell transactions.' Help article (dated June 30, 2026) says the SEC fee 'Only applies to sell transactions and appears on the trade confirmation as: \"FEES\"'. April 6 matches the SEC charge-date (settlement-date) rule; see the SEC row. Neither the pricing page nor the help article mentions FINRA TAF or a rounding method, so TAF pass-through and rounding are UNVERIFIED for Firstrade. ADR pass-through fees: 'ADR fees normally average from one to five cents per share'. They are deducted from the account for non-dividend ADRs and from dividends for dividend-paying ADRs. Wires: incoming free; outgoing $25, domestic or international. Zh-TW pricing page: '無最低存款要求，無賬戶閒置費'. Clearing firm confirmed in Firstrade's Customer Relationship Summary (March 2024): 'Apex Clearing Corporation is the clearing firm that carries your account.' Popularity with Taiwan investors is general knowledge, not a sourced statistic.",
+    "sources": [
+     "https://www.firstrade.com/content/en-us/pricing",
+     "https://www.firstrade.com/content/zh-tw/pricing",
+     "https://help.firstrade.info/en/articles/9264069-does-firstrade-assess-regulatory-transaction-fees-to-its-customers",
+     "https://help.firstrade.info/en/articles/9264478-what-are-adr-pass-thru-charges",
+     "https://help.firstrade.info/en/articles/9260062-what-are-the-fees-for-wire-transfers",
+     "https://firstrade.com/forms/en-us/customer_relationship_summary.pdf?v=20200917"
+    ],
+    "confidence": "high"
+   },
+   {
+    "broker": "Interactive Brokers - IBKR Pro Fixed",
+    "market": "US",
+    "channel": "direct US broker (online)",
+    "feeRule": "USD 0.005 per share, minimum USD 1.00 per order, maximum 1% of trade value. Regulatory fees are passed through on top: SEC Transaction Fee USD 0.0000206 x value of aggregate sales; FINRA Trading Activity Fee USD 0.00 x quantity sold (fee holiday for trades Oct 1 to Dec 31, 2026, footnote 5); FINRA CAT Fee USD 0.000003 x quantity.",
+    "minFeeRoundLot": "USD 1.00, but if 1% of trade value is lower, the 1% maximum applies (footnote 8: 10 shares of a $0.20 stock is charged $0.02)",
+    "minFeeOddLot": "USD 1.00, same rule; US stocks have no lot distinction",
+    "discount": "",
+    "rebateTiming": "n/a",
+    "notes": "Verified 2026-10-10 on the official IBKR page. The Fixed column's 'Third Party Fees' row says only 'Regulatory Fees'. Exchange, clearing and NYSE/FINRA pass-through fees are listed under Tiered only. Footnote 4, attached to the Fixed maximum-per-order cell, says: 'Plus the applicable exchange, ECN and/or specialist fees based on execution venue.' The CAT fee is applied to quantity (buys and sells), not only to sells. Lite is US-residents-only, so IBKR Pro is the plan for Taiwan residents. FX conversion is a separate charge and was not researched.",
+    "sources": [
+     "https://www.interactivebrokers.com/en/pricing/commissions-stocks.php"
+    ],
+    "confidence": "high"
+   },
+   {
+    "broker": "Interactive Brokers - IBKR Pro Tiered",
+    "market": "US",
+    "channel": "direct US broker (online)",
+    "feeRule": "Per share by monthly volume: <=300,000 shares USD 0.0035; 300,001-3,000,000 USD 0.0020; 3,000,001-20,000,000 USD 0.0015; 20,000,001-100,000,000 USD 0.0010; >100,000,000 USD 0.0005. Minimum USD 0.35 per order, maximum 1% of trade value (US table). Added on top: exchange fees (per venue); clearing (NSCC/DTC) USD 0.00020 per share, max 0.5% of trade value; NYSE Pass-Through Fee = commission x 0.000175; FINRA Pass-Through Fee = commission x 0.000565; plus the SEC fee, FINRA TAF (USD 0 Oct 1 to Dec 31, 2026) and CAT fee as for Fixed.",
+    "minFeeRoundLot": "USD 0.35",
+    "minFeeOddLot": "USD 0.35",
+    "discount": "",
+    "rebateTiming": "n/a",
+    "notes": "Verified 2026-10-10. The NYSE and FINRA pass-through multipliers were missing from the original row and have been added. The original's 'applied marginally' description of the tiers is not stated on the page and is unverified. Conflict on the page: the US Tiered table shows 'Maximum per order: 1% of Trade Value', but a general-notes bullet just after the US/Canada disclosures says 'Tiered commissions will be capped at 0.5% of trade value'. The page does not say which region that bullet covers. Footnote 9 adds an exchange liquidity-removing fee for orders that execute immediately. A simple calculator cannot model Tiered exactly, so prefer Fixed as the preset.",
+    "sources": [
+     "https://www.interactivebrokers.com/en/pricing/commissions-stocks.php"
+    ],
+    "confidence": "medium"
+   },
+   {
+    "broker": "Interactive Brokers - IBKR Lite",
+    "market": "US",
+    "channel": "direct US broker (online)",
+    "feeRule": "Commission-free for US exchange-listed stocks and ETFs, for US residents only. Do not offer it as a Taiwan preset.",
+    "minFeeRoundLot": "",
+    "minFeeOddLot": "",
+    "discount": "",
+    "rebateTiming": "n/a",
+    "notes": "Footnote 2 on the IBKR pages: 'The IBKR Lite pricing plan is available to US residents with the following account types: Individual, Joint, IRA and Trusts...' Neither the why-ibkr-lite page nor the Lite/Pro comparison page names any eligible non-US country; the page meta description mentions 'other eligible countries' without listing any. That Lite is unavailable in Taiwan is therefore an inference from 'US residents', not an explicit Taiwan exclusion. On Lite, if OnClose, OnOpen, outside-regular-hours or sub-$1 orders exceed 10% of monthly volume, those orders are charged 'the lesser of USD 0.005 per share or 1% of trade value'.",
+    "sources": [
+     "https://www.interactivebrokers.com/en/trading/why-ibkr-lite.php",
+     "https://www.interactivebrokers.com/en/pricing/commissions-stocks.php",
+     "https://cdcdyn.interactivebrokers.com/en/general/compare-lite-pro.php"
+    ],
+    "confidence": "medium"
+   },
+   {
+    "broker": "Charles Schwab International (Schwab One International)",
+    "market": "US",
+    "channel": "direct US broker (online)",
+    "feeRule": "US$0 online commission for US-listed stocks and ETFs. Broker-assisted US$25; automated phone US$5. 'Industry fees, ADR fees, and Stock Borrow fees still apply.' OTC equities are excluded from the $0 commission. US$50 per foreign-share trade placed directly on a foreign exchange.",
+    "minFeeRoundLot": "0",
+    "minFeeOddLot": "0",
+    "discount": "",
+    "rebateTiming": "n/a",
+    "notes": "Verified 2026-10-10 on official pages. Account minimum $0: the pricing guide lists the 'Schwab One International® Account' at '$0', and the brokerage-account FAQ says 'There is no minimum deposit required to open an individual or joint account.' The historical US$25,000 minimum is outdated. Taiwan residents are eligible: 'Residents of Taiwan may submit their valid, government issued Taiwan National ID card.' Outgoing wire: $25 per transfer, or $15 if submitted online. FX conversion: 'Up to 300 basis points (3%) of principal.' The international pricing page carries a stale SEC line ('As of 10/31/2024, the Section 31 Fee rate is $27.80 per million'), so use the SEC's own rate. It shows TAF as 'As of 1/12/2026 ... $0.000195 per share ... maximum of $9.79' and does not mention the Oct to Dec 2026 holiday. Schwab sets its 'Industry Fee in its sole and reasonable discretion'; the fee 'may differ from or exceed the actual fees', including because of 'the rounding methodology used', which Schwab does not describe.",
+    "sources": [
+     "https://international.schwab.com/pricing",
+     "https://international.schwab.com/brokerage-account",
+     "https://international.schwab.com/open-account-step-2TAI",
+     "https://www.schwab.com/legal/schwab-pricing-guide-for-individual-investors"
+    ],
+    "confidence": "high"
+   },
+   {
+    "broker": "國泰證券 (Cathay Securities)",
+    "market": "US",
+    "channel": "複委託 online (網路下單)",
+    "feeRule": "個股: 0.08% of trade value, buy and sell, '優惠至2026/12/31'; 網路單免收最低手續費. ETF: 每筆 3 美元, buy and sell ('買賣手續費均一價3美元'). 人工單: 0.08%, '每筆最低 USD 10 元'. 牌告: 'GEN 美股牌告手續費率為1%'.",
+    "minFeeRoundLot": "USD 0 for online stock orders; ETF flat USD 3; manual orders minimum USD 10",
+    "minFeeOddLot": "Same as round lot; US stocks have no lot distinction",
+    "discount": "",
+    "rebateTiming": "即時 (promotional rate charged directly)",
+    "notes": "Verified 2026-10-10 on the official fee page and the istockapp page, corroborated by 經濟日報 (2026-01-06). Fees are in USD ('成交金額 (美金計價)'). 交易徵費 on sells only: '0.00206%(無條件進位至USD 0.01)'. ADR fee: '每一股 USD 0.02 ~ USD 0.05 ADR FEE'. 定期定額 buys: '每筆均一價0.1美元'. 定期定額 sells: ETF USD 3, stocks 0.08%. Buying Italian, Spanish or French ADRs incurs a '0.1%~0.3%' financial transaction tax. CORRECTED transfer fees: 股票匯入 is free via DTC and USD 150 per stock via DRS/DWAC; 股票匯出 USD 100 per stock; 現股送存 USD 200. The original 'stock deposit USD 200' conflated 現股送存 with 匯入. No TAF line is shown. After 2026/12/31 the rate may revert to the contracted or 牌告 rate unless the promotion is extended.",
+    "sources": [
+     "https://www.cathaysec.com.tw/cathaysec/Products/TradeFee/USS.aspx",
+     "https://istockapp.cathaysec.com.tw/Marketing/usstock",
+     "https://money.udn.com/money/story/5607/9248302"
+    ],
+    "confidence": "high"
+   },
+   {
+    "broker": "永豐金證券 (SinoPac Securities)",
+    "market": "US",
+    "channel": "複委託 online (網路下單)",
+    "feeRule": "網路下單 0.08% of trade value, minimum USD 0.01 (offer page: 無最低手續費), while the month's cumulative US trading is under USD 50,000 ('當月累計 < 5 萬美元'), through 2026/12/31 per the OVS page ('2026限時優惠'). Above USD 50,000 the customer's original rate applies. 牌告: '0.08%~1%（最低手續費 USD 0.01~100）'. ETF: reported as the cheaper of 0.08% and USD 3 per trade, by application (news and blog only).",
+    "minFeeRoundLot": "USD 0.01 (OVS: '網路下單：成交金額的0.08%，最低手續費0.01美元')",
+    "minFeeOddLot": "USD 0.01",
+    "discount": "",
+    "rebateTiming": "即時 (assumed; whether the USD 50,000 cap is enforced at order time or by later adjustment is not stated)",
+    "notes": "Verified 2026-10-10. Phone orders: 1%, minimum USD 50-100 (no promotion). 定期定額: buys 0.01 美元 (外幣交割) or NT$1 (台幣交割); sells 0.18%, minimum USD 3. The OVS page lists a TAF line showing USD 0 per share for 2026/10/1-2026/12/31, so SinoPac does pass TAF through and applies the holiday. It labels the SEC levy as 證券交易稅 0.00206% on sells. ETF rule: UDN (2026-01-02) says 'ETF則採取申請制 ... 以千分之0.08與單筆3美元去擇優'; '千分之0.08' is probably a typo for 千分之0.8 (0.08%). 工商時報 (2026-01-19) says stocks or ETFs under USD 50k per month pay 0.08%. Neither official page shows a separate ETF rule. No rounding rule is stated.",
+    "sources": [
+     "https://www.sinotrade.com.tw/OVS/OVS_6_2",
+     "https://www.sinotrade.com.tw/richclub/invest/guide/us-stock-trading",
+     "https://www.sinotrade.com.tw/richclub/invest/offer",
+     "https://money.udn.com/money/story/5607/9241068",
+     "https://www.ctee.com.tw/news/20260119700099-430401",
+     "https://mrjoewang.com/sub-brokerage/"
+    ],
+    "confidence": "medium"
+   },
+   {
+    "broker": "富邦證券 (Fubon Securities)",
+    "market": "US",
+    "channel": "複委託 online (網路下單 / 富邦 AI PRO)",
+    "feeRule": "UNVERIFIED rates, secondary sources only: standard online 0.25% of trade value with no minimum. New 2026 複委託 accounts trading whole US shares via 富邦 AI PRO: 0.06% on monthly cumulative volume up to USD 50,000, 2026/2/1-2026/12/31; the excess is charged at the original rate.",
+    "minFeeRoundLot": "USD 0 for online orders (official: 無手續費低收門檻)",
+    "minFeeOddLot": "USD 0 for online orders",
+    "discount": "",
+    "rebateTiming": "unverified (the official page says the excess is '依客戶之原手續費率計收' but does not say whether the discount is charged directly or rebated)",
+    "notes": "The official page confirms the structure but not the rates: '交易市場手續費依實際成交金額計收，無手續費低收門檻'; '透過富邦AI PRO平台進行美股整股買賣，當月累計成交50,000美元(含)以內，手續費享優惠，超過部分依客戶之原手續費率計收'; period 2026/2/1-2026/12/31 ('美股新戶'). The page prints no US percentage. 0.25% and 0.06% come only from money101 (updated 2026-07-24; '成交金額的0.25%，網路下單免最低手續費', and FAQ '可享0.06%手續費優惠') and mrjoewang (updated 2026-08-23, '0.06%'). money101 also says '人工委託則不適用網路下單免低收規定'. my-finance ('2026-03' label, copyright 2025) claims sell minimums of USD 3-10; it also conflicts with official SinoPac data, so treat it as unreliable. Downgraded to low because no official rate was found.",
+    "sources": [
+     "https://www.fubon.com/securities/open-now/",
+     "https://www.money101.com.tw/blog/證券開戶-富邦證券-股票",
+     "https://mrjoewang.com/sub-brokerage/"
+    ],
+    "confidence": "low"
+   },
+   {
+    "broker": "元大證券 (Yuanta Securities)",
+    "market": "US",
+    "channel": "複委託 online (電子下單)",
+    "feeRule": "Official 費用一覽表: 電子 0.1%~1%, '電子無低消'; 人工 1%, USD 50 minimum. Secondary sources give the effective online rate as 0.1% with no minimum, buy and sell. The official table also lists '系統服務費:USD 3(單筆)' under 其他費用; its scope is unclear.",
+    "minFeeRoundLot": "USD 0 for online orders (official: 電子無低消), but see the USD 3 系統服務費",
+    "minFeeOddLot": "USD 0 for online orders (same caveat)",
+    "discount": "",
+    "rebateTiming": "即時 (assumed)",
+    "notes": "Verified 2026-10-10 in the official '各外國有價證券市場交易時間及相關費用一覽表' (undated) and the 作業手冊 ('編輯日期：2026 年 1 月 7 日'). US 其他費用: '交易稅(賣出): 0.00206%', '系統服務費:USD 3(單筆)', 'ADR保管費:USD 0.02~0.05/股'. Footnote: '「其他費用」為代收轉付並不計入元大證券所收取之手續費用當中'. So the USD 3 is described as a pass-through, not commission, but neither document says whether it applies to buys, sells or both, or to which channels. It may materially raise small-order cost. Secondary sources: uptogo (2026-06-18) says '每筆收取 0.1%（無最低手續費）'; mrjoewang (2026-08-23) '買賣0.1%' with no minimum; cnyes (2025-08-20, older) '手續費只要 0.1%' with '低消僅 1 美元'; my-finance gives a USD 15-20 sell minimum (unreliable). 定期定額 buys: '0.1%計，單筆最高收費 1 美元'. Transfers: 'USD 30/檔(DTC)、USD 16/檔(DRS)'. Bank cross-border remittance USD 15. The manual lists a '庫存保管費為 0.5%' for all markets; basis and period are unclear, so do not model it. Low confidence on effective cost.",
+    "sources": [
+     "https://www.yuanta.com.tw/eyuanta/webfile/resourcesFile/3c103956-6ef4-49e2-b2b6-6ef507420344.pdf",
+     "https://www.yuanta.com.tw/eyuanta/webfile/resourcesFile/b1348f0b-7243-4ae8-9f9d-fd8e87167a0c.pdf",
+     "https://uptogo.com.tw/?p=1801595",
+     "https://mrjoewang.com/sub-brokerage/",
+     "https://hao.cnyes.com/post/188755"
+    ],
+    "confidence": "low"
+   },
+   {
+    "broker": "玉山證券 (E.SUN Securities)",
+    "market": "US",
+    "channel": "複委託 online (電子下單)",
+    "feeRule": "牌告手續費 0.08% for both 人工下單 and 電子下單; 最低手續費 '免低收'.",
+    "minFeeRoundLot": "USD 0 (免低收)",
+    "minFeeOddLot": "USD 0 (免低收)",
+    "discount": "",
+    "rebateTiming": "即時",
+    "notes": "Verified 2026-10-10 on the official page ('複委託交易手續費E.SUN Securities'; header '類型 | 人工下單 | 電子下單'). 0.08% is labelled 牌告, not 優惠, and the table has no effective date or end date. News corroborates that the minimum was removed: 旺得富 (2026-02-09) says '取消美股複委託最低手續費門檻，1元也能參與美股交易', and 工商時報 (2026-04-15) says '取消美股複委託最低手續費門檻'. Neither article states the 0.08% rate. Other items in the official table: 交易徵費 0.00206%; 金融交易稅 '買進法國 ADR 0.3%，最低每筆 0.01 美元' and '買進義大利 ADR 0.1%，最低每筆 0.01 美元'; 'ADR 保管費每股 0.02 美元 - 0.05 美元（依實際費用收取）'. Conflicts: mrjoewang (2026-08-23) shows 1% with a USD 50 minimum; uptogo (2026-06-13) shows 0.4% with a USD 35 minimum, which may be the 定期定額 sell rate (mrjoewang lists 玉山 定期定額 sells at 0.4%, min USD 35). Trust the official page and re-check periodically.",
+    "sources": [
+     "https://www.esunsec.com.tw/campaign/trade-fee-foreign",
+     "https://wantrich.chinatimes.com/news/20260209900396-420501",
+     "https://www.ctee.com.tw/news/20260415700331-439901"
+    ],
+    "confidence": "medium"
+   },
+   {
+    "broker": "凱基證券 (KGI Securities)",
+    "market": "US",
+    "channel": "複委託 online (電子下單)",
+    "feeRule": "Official schedule (charge_20260309.pdf, '2026Mar'): 電子 0.1%-1%, minimum USD 0-39.9; 人工 1%, minimum USD 39.9; rates are per client. Promotion '活動期間享美股電子單手續費驚喜價且無低消' runs 2026/10/01 to 12/31 for '凱基證券之美股客戶(不限新舊戶)'. The promotional rate is NOT published.",
+    "minFeeRoundLot": "USD 0-39.9 depending on contracted rate; no minimum for electronic orders during the 2026/10/01-12/31 promotion",
+    "minFeeOddLot": "Same as round lot",
+    "discount": "",
+    "rebateTiming": "即時 (assumed; not stated)",
+    "notes": "Verified 2026-10-10. 交易徵費 0.00206% '(賣出收取)'; note 1: '美國市場，自交易日2026年4月2日(含)起交易徵費由0%調整為0.00206%'. This is CONSISTENT with the SEC's April 4, 2026 effective date: the SEC fee is keyed to the charge date, which for exchange trades is the settlement date, and DTCC confirms NSCC was closed for settlement on Good Friday, April 3, 2026. A trade on April 2 therefore settled April 6. The original row wrongly called this a conflict. The event page says '詳情請洽營業員、智能客服或官網' and gives no rate; UDN (2026-01-19) also gives no rate. KGI's 財富管理帳戶 (a different account type) charges '美股交易手續費1%，最低美金39.9元'. Secondary sources conflict: mrjoewang (2026-08-23) 0.5-1% with USD 39.9 minimum; my-finance 0.1% with USD 3 sell minimum (unreliable). Defaulting the preset to 0.1% with no minimum is an ASSUMPTION based on the schedule's lower bound plus the no-minimum promotion; label it editable.",
+    "sources": [
+     "https://www.kgi.com.tw/zh-tw/-/media/files/kgis/3_2_2_foreign-stocks/charge_20260309.pdf",
+     "https://www.kgi.com.tw/zh-tw/product-overview/stock-trading/foreign-stock",
+     "https://event.kgi.com.tw/news/event/trade-US-now/index.html",
+     "https://money.udn.com/money/amp/story/5607/9275193",
+     "https://mrjoewang.com/sub-brokerage/"
+    ],
+    "confidence": "low"
+   }
+  ],
+  "regulatoryFees": [
+   {
+    "name": "SEC Section 31 transaction fee (current, FY2026 rate)",
+    "rule": "$20.60 per $1,000,000 of covered sales (0.0000206 x sell value; Taiwan brokers show it as 交易徵費 0.00206%). SELLS only. It is keyed to the SEC 'charge date', which for exchange-traded covered sales is the SETTLEMENT date (17 CFR 240.31(a)(3)(i)). With T+1 and NSCC closed on Good Friday 2026-04-03, the first trade date at the new rate is 2026-04-02 (settled 2026-04-06).",
+    "effectiveFrom": "Charge (settlement) date 2026-04-04, which corresponds to trade date 2026-04-02. FINRA's notice applies it to OTC sales with a trade date of 2026-04-04 or later.",
+    "effectiveUntil": "Per the SEC advisory: 'until 60 calendar days after legislation is enacted' that sets the SEC's fiscal year 2027 appropriation. As of 2026-10-10 the SEC advisories page lists no FY2027 Section 31 advisory (the only FY2027 item is the Aug 21, 2026 Section 6(b) filing-fee advisory), so $20.60 is still current. Re-check sec.gov periodically.",
+    "sources": [
+     "https://www.sec.gov/rules-regulations/fee-rate-advisories/2026-2",
+     "https://www.sec.gov/files/rules/other/2026/34-104909.pdf",
+     "https://www.finra.org/rules-guidance/notices/information-notice-20260317",
+     "https://www.sec.gov/rules-regulations/fee-rate-advisories",
+     "https://www.law.cornell.edu/cfr/text/17/240.31",
+     "https://files.dtcc.com/download/assets/a9732/84f27534957911f1b6bb4ec37e043074"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "SEC Section 31 transaction fee (previous rate, for historical trades)",
+    "rule": "$0.00 per $1,000,000 of covered sales",
+    "effectiveFrom": "Charge date 2025-05-14 (under T+1 this is trade date 2025-05-13; the trade-date mapping is inferred, not stated by the SEC)",
+    "effectiveUntil": "Charge date 2026-04-03 (trade date 2026-04-01)",
+    "sources": [
+     "https://www.sec.gov/rules-regulations/fee-rate-advisories/2025-2",
+     "https://www.sec.gov/rules-regulations/fee-rate-advisories/2026-2"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "SEC Section 31 transaction fee (FY2024 rate, for historical trades) - ADDED",
+    "rule": "$27.80 per $1,000,000 of covered sales",
+    "effectiveFrom": "Charge date 2024-05-22",
+    "effectiveUntil": "Charge date 2025-05-13",
+    "sources": [
+     "https://www.sec.gov/rules-regulations/fee-rate-advisories/2024-2",
+     "https://www.sec.gov/rules-regulations/fee-rate-advisories/2025-2"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "FINRA Trading Activity Fee (TAF), covered equity securities - 2026 rate",
+    "rule": "$0.000195 per share sold, maximum $9.79 per trade. SELLS only. Broker practice varies; Revolut, for example, applies a $0.01 minimum.",
+    "effectiveFrom": "2026-01-01",
+    "effectiveUntil": "2026-09-30 (then the fee holiday below)",
+    "sources": [
+     "https://public-inspection.federalregister.gov/2024-27764.pdf",
+     "https://www.finra.org/sites/default/files/2026-09/SR-FINRA-2026-020-91-FR-60427.pdf",
+     "https://international.schwab.com/pricing",
+     "https://help.revolut.com/en-BG/help/wealth/order-execution-fees-and-limits/trading-regulatory-fees/"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "FINRA TAF covered equity securities - 2024-2025 rate (historical) - ADDED",
+    "rule": "$0.000166 per share sold, maximum $8.30 per trade. SELLS only.",
+    "effectiveFrom": "Before 2024-11-21 (the filing calls it the current 2024 rate; the exact start date was not verified here)",
+    "effectiveUntil": "2025-12-31 (2025 listed as 'no change')",
+    "sources": [
+     "https://public-inspection.federalregister.gov/2024-27764.pdf"
+    ],
+    "confidence": "medium"
+   },
+   {
+    "name": "FINRA TAF fee holiday (temporary pause)",
+    "rule": "TAF not assessed 'for transactions from October 1, 2026 through December 31, 2026'. SR-FINRA-2026-021, Release No. 34-106409, filed 2026-09-15 and effective on filing (Rule 19b-4(f)(2)); notice dated 2026-09-18; file name indicates 91 FR 60435. FINRA: 'FINRA understands that executing firms commonly pass the TAF directly on to their customers' but it 'does not know the full extent of this practice across all members'. IBKR shows 'USD 0.00 x Quantity Sold', and SinoPac's OVS page shows TAF USD 0 for 2026/10/1-2026/12/31.",
+    "effectiveFrom": "2026-10-01",
+    "effectiveUntil": "2026-12-31 (assessment resumes 2027-01-01)",
+    "sources": [
+     "https://www.finra.org/rules-guidance/rule-filings/sr-finra-2026-021",
+     "https://www.finra.org/sites/default/files/2026-09/SR-FINRA-2026-021-91-FR-60435.pdf",
+     "https://www.interactivebrokers.com/en/pricing/commissions-stocks.php",
+     "https://www.sinotrade.com.tw/OVS/OVS_6_2"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "FINRA TAF covered equity securities - 2027 and later schedule",
+    "rule": "$0.000195 per share, maximum $9.79 per trade, unchanged for 2027 and 2028 per SR-FINRA-2026-020 (Release No. 34-106410, dated 2026-09-18). Later schedule in that filing: 2029 $0.000232 (max $11.61); 2030 $0.000240 (max $12.05); 2031 $0.000249 (max $12.50).",
+    "effectiveFrom": "2027-01-01",
+    "effectiveUntil": "2028-12-31 (at this rate)",
+    "sources": [
+     "https://www.finra.org/rules-guidance/rule-filings/sr-finra-2026-020",
+     "https://www.finra.org/sites/default/files/2026-09/SR-FINRA-2026-020-91-FR-60427.pdf"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "FINRA CAT (Consolidated Audit Trail) fee - as passed through by IBKR",
+    "rule": "IBKR: 'FINRA CAT Fee' USD 0.000003 x quantity, on buys and sells. The underlying FINRA filing SR-FINRA-2026-011 sets Historical CAT Assessment 1A at '$0.000002 per executed equivalent share' (one NMS stock share = one executed equivalent share), invoiced to CAT executing brokers from June 2026 for May 2026 activity. IBKR says its figure includes a prospective fee plus a historical assessment, reevaluated twice a year. Firstrade, Schwab and the Taiwan brokers checked do not list it. Usually negligible.",
+    "effectiveFrom": "Not verified (the IBKR figure is current as of 2026-10-10)",
+    "effectiveUntil": "Changes about twice a year",
+    "sources": [
+     "https://www.interactivebrokers.com/en/pricing/commissions-stocks.php",
+     "https://www.finra.org/sites/default/files/2026-09/SR-FINRA-2026-011.pdf"
+    ],
+    "confidence": "medium"
+   }
+  ],
+  "roundingRules": "All US-trade fees are in USD. SEC fee: sell proceeds x 0.0000206 per trade. Only 國泰 states an official rounding rule: '0.00206%(無條件進位至USD 0.01)' (ceiling to the cent). Revolut's page says 'rounded up to the nearest cent' with a '$0.01' minimum, yet its own example ('a $1,000 sell order will have an SEC fee of $0.02') contradicts a strict ceiling, which would give $0.03 since $1,000 x 0.0000206 = $0.0206. Rounding by US brokers is therefore inconsistent or unstated. Firstrade states none; Schwab cites an undisclosed 'rounding methodology'. FINRA TAF: shares sold x 0.000195, capped at $9.79 per trade; Revolut applies a $0.01 minimum. TAF is $0 for trades 2026-10-01 to 2026-12-31. For historical trades, choose the SEC rate by settlement (charge) date, not trade date; the 2026 switch is trade date 2026-04-02 or later. IBKR Fixed: commission = min(max(shares x 0.005, 1.00), 1% x trade value). Taiwan 複委託 percentage commissions: none of the brokers checked publishes a US commission rounding rule. Suggested estimate (an assumption, to be labelled as such): commission rounded half-up to USD 0.01; regulatory fees rounded up (ceiling) to USD 0.01 with a USD 0.01 minimum when non-zero. Currency: Taiwan 複委託 can settle in USD (外幣交割) or TWD (台幣交割, with the bank FX spread); commissions are computed in USD either way. Schwab charges up to 3% for FX conversion. US brokers need USD wires: Firstrade outgoing $25; Schwab $25 ($15 online). 元大 lists a USD 15 cross-border remittance fee (bank).",
+  "notes": "Adversarial re-verification done 2026-10-10 with WebFetch and WebSearch only; no files written. Every broker row and regulatory row was re-checked against the cited official pages.\n\nConfirmed on official sources: Firstrade $0 / $19.95 / SEC fee text; IBKR Fixed and Tiered rates, minimums, maximums, and the SEC, TAF and CAT lines; IBKR Lite US-residents-only; Schwab International $0 commission, $0 minimum, Taiwan ID eligibility, wire and FX fees; 國泰 0.08% with no minimum, ETF USD 3 and SEC ceiling rounding; 永豐金 0.08% under USD 50k per month, min USD 0.01, and TAF USD 0 during the holiday; 玉山 0.08% 牌告 免低收; 凱基 schedule and Oct to Dec promotion terms; 元大 official table; SEC FY2026 order and advisories; FINRA SR-2026-020, SR-2026-021 and SR-2024-019.\n\nNot confirmable on any official page: 富邦's 0.25% and 0.06% rates (downgraded to low); 凱基's promotional rate; the scope of 元大's USD 3 系統服務費; 永豐金's ETF rule; Firstrade's TAF pass-through and rounding; IBKR Tiered marginal tiering.\n\nOther findings: the KGI and Firstrade SEC dates do not conflict with the SEC's April 4 date, because the SEC fee is keyed to the settlement-based charge date. Taiwan brokers mostly list only the SEC levy; only 永豐金 lists TAF. For the GitHub Actions job, watch https://www.sec.gov/rules-regulations/fee-rate-advisories for an FY2027 Section 31 advisory, and FINRA rule filings for TAF changes. No machine-readable API for these fees was found."
+ },
+ "changes": [
+  "IBKR Pro Tiered: added the missing NYSE Pass-Through Fee (commission x 0.000175) and FINRA Pass-Through Fee (commission x 0.000565), listed as Tiered-only on the official page. Flagged a page conflict: the general note says 'Tiered commissions will be capped at 0.5% of trade value' while the US table says 1%. 'Applied marginally' is unverified. Confidence high -> medium.",
+  "IBKR Pro Fixed: noted the CAT fee is applied per quantity (buys and sells), not only sells, and quoted footnote 5 for the TAF holiday. No numeric change.",
+  "IBKR Lite: clarified that Taiwan ineligibility is inferred from 'US residents', not an explicit exclusion. Added the Lite 10% exception rule. Confidence stays medium.",
+  "Schwab International: every figure re-confirmed on official pages, so confidence medium -> high. Added Schwab's TAF wording ('As of 1/12/2026') and that the page omits the Oct to Dec 2026 holiday.",
+  "Firstrade: added the help article (SEC fee on sells, shown as 'FEES') and the Customer Relationship Summary (March 2024) confirming Apex Clearing. Marked TAF pass-through and rounding as unverified. Noted that 'April 6, 2026' matches the settlement-based charge date.",
+  "國泰: corrected transfer fees. The original 'stock deposit USD 200' conflated 現股送存 (USD 200) with 股票匯入 (free via DTC, USD 150 via DRS/DWAC). 股票匯出 USD 100 per stock is confirmed. Commission data is confirmed.",
+  "永豐金: added that the OVS page lists TAF USD 0 for 2026/10/1-12/31, so SinoPac passes TAF through. Added 定期定額 buy fee (USD 0.01 外幣交割 / NT$1 台幣交割) and the 工商時報 2026-01-19 corroboration covering ETFs. Changed rebateTiming to assumed. Confidence stays medium because the ETF rule is not on official pages.",
+  "富邦: confidence medium -> low. The 0.25% and 0.06% rates appear only in secondary sources (money101, mrjoewang); the official page has no US percentage. rebateTiming changed to unverified. Flagged the my-finance source as unreliable.",
+  "元大: added the official footnote that 其他費用, including the USD 3 系統服務費, is '代收轉付' and not part of Yuanta's commission; scope is still unknown. Added cnyes 2025-08-20 (0.1%, USD 1 minimum) as an older conflicting source. Added transfer fees (DTC USD 30, DRS USD 16). Flagged the 0.5% 庫存保管費 as unclear. Confidence stays low.",
+  "玉山: added news corroboration that the minimum fee was removed (旺得富 2026-02-09, 工商時報 2026-04-15). Noted 0.08% is labelled 牌告, not a promotion. Added the uptogo (2026-06-13) 0.4%/USD 35 conflict, likely the 定期定額 sell rate. Confidence stays medium.",
+  "凱基: corrected the claim that KGI's 2026/4/2 trade-date note conflicts with the SEC date. The SEC charge date is the settlement date (17 CFR 240.31), and DTCC confirms NSCC was closed on Good Friday 2026-04-03, so April 2 trades settled April 6. Added that the event page confirms '不限新舊戶' and an unpublished rate. Labelled the 0.1% preset default an assumption. Confidence stays low.",
+  "SEC current-rate row: replaced the vague 'first trading day 2026-04-06' with the charge-date (settlement-date) rule, so the trade-date switch is 2026-04-02. Quoted the SEC's 'until 60 calendar days after legislation is enacted' wording. Added CFR and DTCC sources.",
+  "SEC previous-rate row: added the charge-date versus trade-date mapping (inferred).",
+  "ADDED a SEC FY2024 historical row: $27.80 per million, charge dates 2024-05-22 to 2025-05-13 (SEC advisories 2024-2 and 2025-2).",
+  "ADDED a FINRA TAF 2024-2025 historical row: $0.000166 per share, max $8.30 (SR-FINRA-2024-019). Start date not verified, so medium.",
+  "TAF 2026 row: replaced the unchecked source sec.gov/file/34-101696 with the SR-FINRA-2026-020 PDF, which states the 2026 rate as current. Reworded the '$0.01 minimum, round up' claim as broker-specific (Revolut).",
+  "TAF holiday row: added the exact release number (34-106409), filing date 2026-09-15, notice date 2026-09-18 and effectiveness basis. Replaced the paraphrased FINRA pass-through statement with an exact quote. Added SinoPac as a broker showing the holiday.",
+  "CAT fee row: confidence low -> medium. The IBKR figure is confirmed on its page, and FINRA SR-FINRA-2026-011 confirms Historical CAT Assessment 1A at $0.000002 per executed equivalent share. Noted it applies to buys and sells.",
+  "Rounding rules: flagged that Revolut's 'rounded up' statement contradicts its own $1,000 -> $0.02 example. Only 國泰 has an explicit official ceiling rule. Added that historical SEC fees should be chosen by settlement (charge) date."
+ ],
+ "original": {
+  "brokers": [
+   {
+    "broker": "Firstrade",
+    "market": "US",
+    "channel": "direct US broker (online; Traditional Chinese site/support at firstrade.com/content/zh-tw)",
+    "feeRule": "$0 commission for online US stocks/ETFs (also options, mutual funds). Broker-assisted stock/ETF order: $19.95. No per-order platform fee.",
+    "minFeeRoundLot": "0",
+    "minFeeOddLot": "0",
+    "discount": "",
+    "rebateTiming": "n/a",
+    "notes": "Regulatory fees are passed through on sells. Firstrade pricing page: 'As of April 6, 2026, the SEC Fee rate is $0.00002060 or $20.60 per million dollars for eligible sell transactions.' The pricing page does not mention FINRA TAF, but brokers normally pass it through (TAF is $0 for trades Oct 1 to Dec 31, 2026). ADR pass-through (custody) fees: 'ADR fees normally average from one to five cents per share.' DTC charges are passed through to the client. For non-dividend ADRs they are deducted from the account, and for dividend-paying ADRs from the dividends. Wires: incoming free. Outgoing $25, domestic or international. Zh-TW page: no minimum deposit and no inactivity fee ('無最低存款要求，無賬戶閒置費'). Clearing is Apex Clearing. Popular with Taiwan investors because of its Chinese-language service; that popularity is general market knowledge, not a sourced statistic. Rounding of the SEC fee is not stated on the page.",
+    "sources": [
+     "https://www.firstrade.com/content/en-us/pricing",
+     "https://www.firstrade.com/content/zh-tw/pricing",
+     "https://help.firstrade.info/en/articles/9264478-what-are-adr-pass-thru-charges",
+     "https://help.firstrade.info/en/articles/9260062-what-are-the-fees-for-wire-transfers"
+    ],
+    "confidence": "high"
+   },
+   {
+    "broker": "Interactive Brokers - IBKR Pro Fixed",
+    "market": "US",
+    "channel": "direct US broker (online)",
+    "feeRule": "USD 0.005 per share, minimum USD 1.00 per order, maximum 1% of trade value. Pass-through regulatory fees are added on top: SEC Transaction Fee (USD 0.0000206 x value of aggregate sales), FINRA TAF (shown as USD 0.00 x quantity sold during the Oct 1 to Dec 31, 2026 fee holiday), and FINRA CAT fee (USD 0.000003 x quantity).",
+    "minFeeRoundLot": "USD 1.00 (if 1% of trade value is lower than USD 1.00, the 1% maximum applies; IBKR's example is a 10-share order of a $0.20 stock charged $0.02)",
+    "minFeeOddLot": "USD 1.00, same rule. US stocks have no lot distinction.",
+    "discount": "",
+    "rebateTiming": "n/a",
+    "notes": "The Fixed column lists 'Regulatory Fees' as the third-party fees. Exchange and clearing fees are bundled into Fixed, but footnote 4 says the maximum per order is 'Plus the applicable exchange, ECN and/or specialist fees based on execution venue.' IBKR Pro is the plan available to Taiwan residents. FX conversion is a separate charge (not researched here).",
+    "sources": [
+     "https://www.interactivebrokers.com/en/pricing/commissions-stocks.php"
+    ],
+    "confidence": "high"
+   },
+   {
+    "broker": "Interactive Brokers - IBKR Pro Tiered",
+    "market": "US",
+    "channel": "direct US broker (online)",
+    "feeRule": "Per share, by monthly cumulative volume and applied marginally: up to 300,000 shares USD 0.0035; 300,001 to 3,000,000 USD 0.0020; 3,000,001 to 20,000,000 USD 0.0015; 20,000,001 to 100,000,000 USD 0.0010; over 100,000,000 USD 0.0005. Minimum USD 0.35 per order, maximum 1% of trade value. Added on top: exchange, clearing (USD 0.00020 per share, capped at 0.5% of trade value), regulatory and pass-through fees.",
+    "minFeeRoundLot": "USD 0.35",
+    "minFeeOddLot": "USD 0.35",
+    "discount": "",
+    "rebateTiming": "n/a",
+    "notes": "Exchange fees vary by venue, and some venues pay rebates for adding liquidity. A simple calculator cannot model Tiered exactly, so prefer Fixed as the preset.",
+    "sources": [
+     "https://www.interactivebrokers.com/en/pricing/commissions-stocks.php"
+    ],
+    "confidence": "high"
+   },
+   {
+    "broker": "Interactive Brokers - IBKR Lite",
+    "market": "US",
+    "channel": "direct US broker (online)",
+    "feeRule": "Commission-free US exchange-listed stocks/ETFs. NOT available to Taiwan residents.",
+    "minFeeRoundLot": "",
+    "minFeeOddLot": "",
+    "discount": "",
+    "rebateTiming": "n/a",
+    "notes": "IBKR footnote: 'The IBKR Lite pricing plan is available to US residents with the following account types: Individual, Joint, IRA and Trusts.' No other country is named on the IBKR US pages. A page meta description mentions 'other eligible countries' but lists none. Taiwan residents should be modeled on IBKR Pro (Fixed or Tiered). Recommend not offering Lite as a Taiwan preset.",
+    "sources": [
+     "https://www.interactivebrokers.com/en/trading/why-ibkr-lite.php",
+     "https://www.interactivebrokers.com/en/pricing/commissions-stocks.php",
+     "https://cdcdyn.interactivebrokers.com/en/general/compare-lite-pro.php"
+    ],
+    "confidence": "medium"
+   },
+   {
+    "broker": "Charles Schwab International (Schwab One International)",
+    "market": "US",
+    "channel": "direct US broker (online)",
+    "feeRule": "US$0 commission for online trades of listed US stocks and ETFs. Broker-assisted US$25. Automated phone US$5. 'Industry fees, ADR fees, and Stock Borrow fees still apply.'",
+    "minFeeRoundLot": "0",
+    "minFeeOddLot": "0",
+    "discount": "",
+    "rebateTiming": "n/a",
+    "notes": "Account minimum: the current Schwab pricing guide lists the Schwab One International Account minimum deposit as '$0'. international.schwab.com/brokerage-account says 'There is no minimum deposit required to open an individual or joint account.' Schwab historically required US$25,000 for international accounts; current official pages say $0, so treat the $25,000 as outdated. Taiwan residents can open an account; the opening page says 'Residents of Taiwan may submit their valid, government issued Taiwan National ID card.' Outgoing wire: $25 per transfer, or $15 if submitted online. FX conversion: up to 300 bps (3%) of principal. The international pricing page has stale text ('As of 10/31/2024, the Section 31 Fee rate is $27.80 per million') but lists the 2026 TAF ($0.000195 per share, maximum $9.79). Use the SEC's own rate instead. Schwab does not publish its Industry Fee rounding method. OTC equities are excluded from $0 commission. Foreign-exchange-direct trades cost $50.",
+    "sources": [
+     "https://international.schwab.com/pricing",
+     "https://international.schwab.com/brokerage-account",
+     "https://international.schwab.com/open-account-step-2TAI",
+     "https://www.schwab.com/legal/schwab-pricing-guide-for-individual-investors"
+    ],
+    "confidence": "medium"
+   },
+   {
+    "broker": "國泰證券 (Cathay Securities)",
+    "market": "US",
+    "channel": "複委託 online (網路下單)",
+    "feeRule": "個股/特別股: 0.08% of trade value, buy and sell, no minimum ('免收最低手續費'), promotional rate '優惠至2026/12/31'. ETF: flat USD 3 per trade, buy and sell ('ETF：買賣手續費均一價3美元'). Manual orders: 0.08%, minimum USD 10. Standard (牌告) rate: 1%.",
+    "minFeeRoundLot": "USD 0 for online stock trades. ETFs are a flat USD 3. Manual orders have a USD 10 minimum.",
+    "minFeeOddLot": "Same as round lot; US stocks have no lot distinction.",
+    "discount": "",
+    "rebateTiming": "即時 (charged at the promotional rate; no rebate)",
+    "notes": "Fees are in USD ('美金計價'). Sells carry a 交易徵費 (SEC fee) of 0.00206% of the sale amount, '無條件進位至USD 0.01'. ADR custody fee: USD 0.02–0.05 per share. 定期定額 buys: flat USD 0.1. Buying French, Italian or Spanish ADRs incurs a 0.1–0.3% financial transaction tax. Stock deposit USD 200; withdrawal USD 100 per stock. After 2026/12/31 the rate may revert unless the promotion is extended.",
+    "sources": [
+     "https://www.cathaysec.com.tw/cathaysec/Products/TradeFee/USS.aspx",
+     "https://istockapp.cathaysec.com.tw/Marketing/usstock",
+     "https://money.udn.com/money/story/5607/9248302"
+    ],
+    "confidence": "high"
+   },
+   {
+    "broker": "永豐金證券 (SinoPac Securities)",
+    "market": "US",
+    "channel": "複委託 online (網路下單)",
+    "feeRule": "0.08% of trade value with no minimum, when the month's cumulative US trading is under USD 50,000 ('當月累計 < 5 萬美元'). This is the '2026限時優惠', through 2026/12/31 per the OVS fee page. Above USD 50,000, the original contracted rate applies; 牌告 is 0.08%–1% with a minimum of USD 0.01–100. ETFs (application required): the lower of 0.08% and USD 3 per trade.",
+    "minFeeRoundLot": "USD 0.01 (official OVS page: '網路下單：成交金額的0.08%，最低手續費0.01美元')",
+    "minFeeOddLot": "USD 0.01",
+    "discount": "",
+    "rebateTiming": "即時 (promotional rate charged directly)",
+    "notes": "Phone orders: 1%, minimum USD 50–100. 定期定額 sells: 0.18%, minimum USD 3. The ETF 'cheaper of 0.08% or USD 3' rule comes from news (UDN 2026-01-02) and a blog (mrjoewang, updated 2026-08-23). The official offer page does not show an ETF row, so treat that rule as medium confidence. The UDN text shows the ETF rate as '千分之0.08', which is probably a typo for 千分之0.8. The official page does not state a rounding rule for US fees.",
+    "sources": [
+     "https://www.sinotrade.com.tw/OVS/OVS_6_2",
+     "https://www.sinotrade.com.tw/richclub/invest/guide/us-stock-trading",
+     "https://www.sinotrade.com.tw/richclub/invest/offer",
+     "https://money.udn.com/money/story/5607/9241068",
+     "https://mrjoewang.com/sub-brokerage/"
+    ],
+    "confidence": "medium"
+   },
+   {
+    "broker": "富邦證券 (Fubon Securities)",
+    "market": "US",
+    "channel": "複委託 online (網路下單 / 富邦 AI PRO)",
+    "feeRule": "Standard online (牌告) rate: 0.25% of trade value, no minimum ('網路下單免最低手續費'). New 2026 複委託 accounts trading whole US shares via 富邦 AI PRO: 0.06% on monthly cumulative volume up to USD 50,000, 2026/2/1–2026/12/31. The excess is charged at the original contracted rate.",
+    "minFeeRoundLot": "USD 0 for online orders",
+    "minFeeOddLot": "USD 0 for online orders",
+    "discount": "",
+    "rebateTiming": "即時",
+    "notes": "The official Fubon page confirms there is no minimum ('交易市場手續費依實际成交金額計收，無手續費低收門檻'). It also confirms the new-account offer window ('2026/2/1-2026/12/31', 50,000 USD monthly cap), but it does not print the rate. The 0.25% and 0.06% figures come from secondary sources: money101 (updated 2026-07-24) and mrjoewang (updated 2026-08-23). One secondary source (my-finance, 2026-03) claims sell minimums of USD 3–10 for orders not placed via AI PRO. Not verified on an official page.",
+    "sources": [
+     "https://www.fubon.com/securities/open-now/",
+     "https://www.money101.com.tw/blog/證券開戶-富邦證券-股票",
+     "https://mrjoewang.com/sub-brokerage/"
+    ],
+    "confidence": "medium"
+   },
+   {
+    "broker": "元大證券 (Yuanta Securities)",
+    "market": "US",
+    "channel": "複委託 online (電子下單)",
+    "feeRule": "0.1% of trade value per online order, buy and sell, no minimum. The official fee table shows 電子 0.1%~1% with '電子無低消', and 人工 1% with a USD 50 minimum.",
+    "minFeeRoundLot": "USD 0 for online orders (official: 電子無低消)",
+    "minFeeOddLot": "USD 0 for online orders",
+    "discount": "",
+    "rebateTiming": "即時",
+    "notes": "Yuanta's official 費用一覽表 and its 作業手冊 (edited 2026-01-07) list under US 其他費用: '系統服務費: USD 3 (單筆)', a 0.00206% sell transaction levy, and an ADR custody fee of USD 0.02–0.05 per share. The documents do not say whether the USD 3 applies to buys, sells or both, or only to electronic orders. That fee is unverified and may raise the real cost of small orders. Secondary sources conflict: uptogo (2026-06-18) and mrjoewang (2026-08-23) give 0.1% with no minimum, while my-finance (2026-03) gives a USD 15–20 sell minimum. 定期定額 buys: 0.1%, capped at USD 1. Cross-border remittance: USD 15. Custody fee: 0.5% (general foreign securities). Low confidence on effective cost.",
+    "sources": [
+     "https://www.yuanta.com.tw/eyuanta/webfile/resourcesFile/3c103956-6ef4-49e2-b2b6-6ef507420344.pdf",
+     "https://www.yuanta.com.tw/eyuanta/webfile/resourcesFile/b1348f0b-7243-4ae8-9f9d-fd8e87167a0c.pdf",
+     "https://uptogo.com.tw/?p=1801595",
+     "https://mrjoewang.com/sub-brokerage/"
+    ],
+    "confidence": "low"
+   },
+   {
+    "broker": "玉山證券 (E.SUN Securities)",
+    "market": "US",
+    "channel": "複委託 online (電子下單)",
+    "feeRule": "牌告手續費 0.08%, for both 電子下單 and 人工下單. Minimum fee: '免低收'.",
+    "minFeeRoundLot": "USD 0 (免低收)",
+    "minFeeOddLot": "USD 0 (免低收)",
+    "discount": "",
+    "rebateTiming": "即時",
+    "notes": "From E.SUN's official 美股費用 table: 交易徵費 (SEC Fee) 0.00206%. 金融交易稅: buying French ADRs 0.3% (minimum USD 0.01 per trade); Italian ADRs 0.1% (minimum USD 0.01). 'ADR 保管費每股 0.02 美元 - 0.05 美元（依實際費用收取）'. The table has no effective date or footnote, and it gives no promotion end date. Older third-party articles list 1% with a USD 50 minimum (outdated). One blog (mrjoewang, 2026-08-23) still shows 1% with a USD 50 minimum, which conflicts with the official page. Trust the official page and re-check periodically.",
+    "sources": [
+     "https://www.esunsec.com.tw/campaign/trade-fee-foreign"
+    ],
+    "confidence": "medium"
+   },
+   {
+    "broker": "凱基證券 (KGI Securities)",
+    "market": "US",
+    "channel": "複委託 online (電子下單)",
+    "feeRule": "Official fee schedule (charge_20260309.pdf): electronic 0.1%–1% with a minimum of USD 0–39.9; manual 1% with a minimum of USD 39.9. The actual rate is negotiated per client. Promotion '美股電子單手續費驚喜價且無低消' runs 2026/10/01–2026/12/31 for new and existing clients ('不限新舊戶'); the promotional rate is not published.",
+    "minFeeRoundLot": "USD 0–39.9 depending on contracted rate; no minimum during the promotion",
+    "minFeeOddLot": "Same as round lot",
+    "discount": "",
+    "rebateTiming": "即時 (assumed; not stated)",
+    "notes": "Sells carry a 交易徵費 of 0.00206% ('賣出收取'). Footnote: '自交易日2026年4月2日(含)起交易徵費由0%調整為0.00206%'. That date conflicts with the SEC effective date of April 4, 2026. Secondary sources conflict: my-finance (2026-03) gives 0.1% with a USD 3 sell minimum, while mrjoewang (2026-08-23) gives 0.5–1% with a USD 39.9 minimum. KGI's 財富管理帳戶 (a different account type) charges 1% with a USD 39.9 minimum. The preset should default to 0.1%, no minimum (promotion) and let the user edit. Low confidence.",
+    "sources": [
+     "https://www.kgi.com.tw/zh-tw/-/media/files/kgis/3_2_2_foreign-stocks/charge_20260309.pdf",
+     "https://www.kgi.com.tw/zh-tw/product-overview/stock-trading/foreign-stock",
+     "https://event.kgi.com.tw/news/event/trade-US-now/index.html",
+     "https://my-finance.com.tw/tw/News_detail/2200/(2026-03-最新更新)本文已收錄元大、國泰、永豐金等全台十大券商最新複委託活動，教你如何避開賣出低消陷阱！"
+    ],
+    "confidence": "low"
+   }
+  ],
+  "regulatoryFees": [
+   {
+    "name": "SEC Section 31 transaction fee (current, FY2026 rate)",
+    "rule": "$20.60 per $1,000,000 of covered sale proceeds (0.0000206 x sell value; Taiwan brokers show it as 交易徵費 0.00206%). Charged on SELLS only.",
+    "effectiveFrom": "2026-04-04 (a Saturday, so the first trading day is 2026-04-06; Firstrade says 'As of April 6, 2026')",
+    "effectiveUntil": "Until the FY2027 annual adjustment takes effect. As of 2026-10-10 the SEC has published no FY2027 Section 31 advisory; the Aug 21, 2026 advisory covers Section 6(b) filing fees only. By statute the annual rate takes effect on the later of Oct 1 or 60 days after the fiscal-year appropriation is enacted, so $20.60 remains in force for now. Re-check sec.gov periodically.",
+    "sources": [
+     "https://www.sec.gov/rules-regulations/fee-rate-advisories/2026-2",
+     "https://www.sec.gov/files/rules/other/2026/34-104909.pdf",
+     "https://www.finra.org/rules-guidance/notices/information-notice-20260317",
+     "https://www.sec.gov/rules-regulations/fee-rate-advisories"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "SEC Section 31 transaction fee (previous rate, for historical trades)",
+    "rule": "$0.00 per $1,000,000 of covered sales",
+    "effectiveFrom": "2025-05-14",
+    "effectiveUntil": "2026-04-03",
+    "sources": [
+     "https://www.sec.gov/rules-regulations/fee-rate-advisories/2025-2",
+     "https://www.sec.gov/rules-regulations/fee-rate-advisories/2026-2"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "FINRA Trading Activity Fee (TAF), covered equity securities - 2026 rate",
+    "rule": "$0.000195 per share sold, maximum $9.79 per trade. SELLS only. Brokers typically apply a $0.01 minimum and round up to the cent.",
+    "effectiveFrom": "2026-01-01",
+    "effectiveUntil": "2026-09-30 (then the fee holiday below)",
+    "sources": [
+     "https://public-inspection.federalregister.gov/2024-27764.pdf",
+     "https://www.sec.gov/file/34-101696",
+     "https://international.schwab.com/pricing",
+     "https://help.revolut.com/en-BG/help/wealth/order-execution-fees-and-limits/trading-regulatory-fees/"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "FINRA TAF fee holiday (temporary pause)",
+    "rule": "TAF rates set to $0.00 for transactions from Oct 1, 2026 through Dec 31, 2026 (SR-FINRA-2026-021, Release 34-106409, filed and immediately effective Sept 15, 2026; 91 FR 60435). FINRA notes that whether customers benefit depends on each firm's pass-through practice. IBKR shows 'FINRA Trading Activity Fee: USD 0.00 * Quantity Sold'.",
+    "effectiveFrom": "2026-10-01",
+    "effectiveUntil": "2026-12-31",
+    "sources": [
+     "https://www.finra.org/rules-guidance/rule-filings/sr-finra-2026-021",
+     "https://www.finra.org/sites/default/files/2026-09/SR-FINRA-2026-021-91-FR-60435.pdf",
+     "https://www.interactivebrokers.com/en/pricing/commissions-stocks.php"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "FINRA TAF covered equity securities - 2027 and later schedule",
+    "rule": "Returns to $0.000195 per share, maximum $9.79 per trade, on Jan 1, 2027. Unchanged for 2027 and 2028 per SR-FINRA-2026-020 (Release 34-106410). Previously scheduled increases are deferred: 2029 $0.000232 (max $11.61); 2030 $0.000240 (max $12.05); 2031 $0.000249 (max $12.50).",
+    "effectiveFrom": "2027-01-01",
+    "effectiveUntil": "2028-12-31 (at this rate)",
+    "sources": [
+     "https://www.finra.org/rules-guidance/rule-filings/sr-finra-2026-020",
+     "https://www.finra.org/sites/default/files/2026-09/SR-FINRA-2026-020-91-FR-60427.pdf"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "FINRA CAT (Consolidated Audit Trail) fee - as passed through by IBKR",
+    "rule": "USD 0.000003 x quantity per IBKR's US third-party fee list. Includes prospective CAT fees plus a 'Historical CAT Assessment Fee that will expire once the historical cost is collected'; reevaluated twice a year. Not shown by Firstrade, Schwab or the Taiwan brokers. Usually negligible.",
+    "effectiveFrom": "",
+    "effectiveUntil": "",
+    "sources": [
+     "https://www.interactivebrokers.com/en/pricing/commissions-stocks.php"
+    ],
+    "confidence": "low"
+   }
+  ],
+  "roundingRules": "All US-trade fees are in USD. SEC fee: sell proceeds x 0.0000206, rounded UP to the next cent per trade. 國泰 states '無條件進位至USD 0.01', and Revolut says 'rounded up to the nearest cent'; Schwab mentions a 'rounding methodology' without describing it. FINRA TAF: shares sold x 0.000195, capped at $9.79 per trade, with a $0.01 minimum when it is non-zero (per Revolut). Common practice is to round up to the cent; TAF is $0 for trades Oct 1 to Dec 31, 2026. IBKR Fixed: shares x 0.005, then max(that, 1.00) capped at 1% of trade value (the 1% cap wins if lower than $1). Taiwan 複委託 percentage commissions: none of the brokers checked publishes a US commission rounding rule; the only explicit rounding rule found is for the SEC levy (國泰). Suggested implementation, which is an assumption to be labelled as an estimate: round commission half-up to USD 0.01, and ceil regulatory fees to USD 0.01. Currency notes: Taiwan 複委託 can settle in USD (外幣交割) or TWD (台幣交割, with the bank's FX spread); commissions are computed in USD either way. Schwab International charges up to 3% for FX conversion. US brokers need USD wires: Firstrade outgoing $25; Schwab $25 ($15 online). 元大 lists a USD 15 cross-border remittance fee.",
+  "notes": "Research done 2026-10-10 with WebFetch/WebSearch only; no files written.\n\nKey points for the preset table:\n1. US direct brokers: Firstrade and Schwab International charge $0 online commission. IBKR Pro Fixed charges $0.005 per share, $1 minimum, 1% maximum. IBKR Lite is for US residents only, so it is not a Taiwan preset.\n2. Taiwan 複委託 prices in 2026 are promotion-driven and mostly expire 2026/12/31:\n   - 國泰: 0.08%, no minimum; ETFs flat USD 3. Official, high confidence.\n   - 永豐金: 0.08%, no minimum, under USD 50k per month. Official.\n   - 玉山: 0.08%, 免低收. Official page.\n   - 富邦: 0.25% online, no minimum; new-account 0.06% via AI PRO. Medium confidence.\n   - 元大: 0.1%, no minimum, but official docs also list a 'USD 3 系統服務費 (單筆)' of unclear scope. Low confidence.\n   - 凱基: official 0.1%–1%, minimum USD 0–39.9; promotion rate unpublished. Low confidence.\n   The site should treat these as editable defaults with an 'as of' date and an expiry flag.\n3. Regulatory fees on sells: the SEC fee is $20.60 per million from 2026-04-04 and is still current; no FY2027 Section 31 order has been issued yet. The FINRA TAF 2026 rate is $0.000195 per share, max $9.79, BUT it is paused ($0) for trades 2026-10-01 to 2026-12-31. It resumes at the same rate in 2027–2028; increases are deferred to 2029+.\n4. Sources disagree on the SEC effective date: SEC says April 4, 2026 (Saturday), Firstrade 'as of April 6, 2026', and KGI's fee PDF says from trade date 2026/4/2.\n5. The Schwab International pricing page still carries a stale 'As of 10/31/2024 ... $27.80 per million' SEC line. Do not use it.\n6. ADR custody/pass-through fees are typically USD 0.01–0.05 per share per year at every broker; they are charged by the depositary, not per trade.\n7. For the daily GitHub Actions job, consider re-checking https://www.sec.gov/rules-regulations/fee-rate-advisories and FINRA rule filings for rate changes. No machine-readable API for these fees was found.\n\nUnverified or unconfirmed items:\n- Firstrade's FINRA TAF handling (not on its pricing page).\n- Scope of 元大's USD 3 system fee.\n- KGI's and 富邦's promotional rates on an official page.\n- Whether Taiwan brokers stop charging TAF during the holiday."
+ }
+}

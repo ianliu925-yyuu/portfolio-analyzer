@@ -1,0 +1,707 @@
+{
+ "key": "twse",
+ "result": {
+  "datasets": [
+   {
+    "key": "tw_daily_quotes",
+    "url": "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
+    "verified": true,
+    "format": "JSON array of flat objects at the root. Every value is a JSON string. Key order: Date, Code, Name, TradeVolume, TradeValue, OpeningPrice, HighestPrice, LowestPrice, ClosingPrice, Change, Transaction",
+    "params": "none (GET, no query params)",
+    "dataDate": "Each record has a Date field in ROC YYYMMDD format, e.g. \"1151008\" = 2026-10-08 (115+1911). Fetched on Sat 2026-10-10, the data was for 2026-10-08, because 2026-10-09 was the 國慶日 make-up holiday.",
+    "fields": [
+     {
+      "name": "Date",
+      "meaning": "trading date, ROC YYYMMDD",
+      "unit": "ROC date string"
+     },
+     {
+      "name": "Code",
+      "meaning": "security code (stocks, ETFs like 0050/00878/006208/00400A, ETNs, etc.)"
+     },
+     {
+      "name": "Name",
+      "meaning": "short name (Chinese)"
+     },
+     {
+      "name": "TradeVolume",
+      "meaning": "traded volume",
+      "unit": "shares (0050: TradeValue/TradeVolume ≈ 115.2 = price, so it is not lots)"
+     },
+     {
+      "name": "TradeValue",
+      "meaning": "traded value",
+      "unit": "NTD"
+     },
+     {
+      "name": "OpeningPrice",
+      "meaning": "open",
+      "unit": "NTD"
+     },
+     {
+      "name": "HighestPrice",
+      "meaning": "high",
+      "unit": "NTD"
+     },
+     {
+      "name": "LowestPrice",
+      "meaning": "low",
+      "unit": "NTD"
+     },
+     {
+      "name": "ClosingPrice",
+      "meaning": "close",
+      "unit": "NTD"
+     },
+     {
+      "name": "Change",
+      "meaning": "signed price change vs previous close, e.g. \"-1.1000\" or \"0.1000\" (no + sign)",
+      "unit": "NTD"
+     },
+     {
+      "name": "Transaction",
+      "meaning": "number of trades",
+      "unit": "count"
+     }
+    ],
+    "sampleRecord": "{\"Date\":\"1151008\",\"Code\":\"0050\",\"Name\":\"元大台灣50\",\"TradeVolume\":\"99877876\",\"TradeValue\":\"11509275054\",\"OpeningPrice\":\"115.35\",\"HighestPrice\":\"115.55\",\"LowestPrice\":\"114.90\",\"ClosingPrice\":\"114.95\",\"Change\":\"-1.1000\",\"Transaction\":\"191636\"}",
+    "notes": "ETFs ARE included and appear first in the array: the first records were 00400A 主動國泰動能高息 and 00401A, and 0050, 0056, 00878 and 006208 were all present. Records with no trades have empty strings: e.g. 00625K has TradeVolume \"\", OpeningPrice \"\", ClosingPrice \"\" and Change \"0.0000\". 00682U had TradeVolume \"81\" but empty prices, so parse defensively. The sample record was rebuilt from the field values WebFetch reported (WebFetch would not quote whole records). Key order and string typing were confirmed. The WebFetch view was cut off at about 80K chars (around code 1468), so I could not see the 2330 row here, but 2330 does appear in BWIBBU_ALL with the same Date."
+   },
+   {
+    "key": "tw_valuation",
+    "url": "https://openapi.twse.com.tw/v1/exchangeReport/BWIBBU_ALL",
+    "verified": true,
+    "format": "JSON array at the root; all values are strings. Key order: Date, Code, Name, PEratio, DividendYield, PBratio",
+    "params": "none",
+    "dataDate": "Date field, ROC YYYMMDD (\"1151008\")",
+    "fields": [
+     {
+      "name": "Date",
+      "meaning": "data date, ROC YYYMMDD"
+     },
+     {
+      "name": "Code",
+      "meaning": "stock code"
+     },
+     {
+      "name": "Name",
+      "meaning": "short name"
+     },
+     {
+      "name": "PEratio",
+      "meaning": "本益比 P/E; empty string \"\" when not available (e.g. losses)",
+      "unit": "x"
+     },
+     {
+      "name": "DividendYield",
+      "meaning": "殖利率; \"\" when not available",
+      "unit": "%"
+     },
+     {
+      "name": "PBratio",
+      "meaning": "股價淨值比 P/B",
+      "unit": "x"
+     }
+    ],
+    "sampleRecord": "{\"Date\":\"1151008\",\"Code\":\"2330\",\"Name\":\"台積電\",\"PEratio\":\"29.56\",\"DividendYield\":\"0.86\",\"PBratio\":\"10.28\"}",
+    "notes": "The first record is 1101 台泥 with PEratio \"\", DividendYield \"3.11\" and PBratio \"0.83\". Missing values are \"\" (no \"-\" placeholders were seen). No ETF codes appeared in the visible part, which starts at 1101. It looks like a stocks-only dataset, but the view was truncated, so I could not confirm this for the full array."
+   },
+   {
+    "key": "tw_monthly_revenue",
+    "url": "https://openapi.twse.com.tw/v1/opendata/t187ap05_L",
+    "verified": true,
+    "format": "JSON array at the root; all values are strings. Keys are Chinese and use ASCII hyphens and (%)",
+    "params": "none",
+    "dataDate": "資料年月 = ROC YYYMM (\"11508\" = 2026-08). 出表日期 = ROC YYYMMDD (\"1150917\").",
+    "fields": [
+     {
+      "name": "出表日期",
+      "meaning": "publish date, ROC YYYMMDD"
+     },
+     {
+      "name": "資料年月",
+      "meaning": "revenue year-month, ROC YYYMM"
+     },
+     {
+      "name": "公司代號",
+      "meaning": "stock code"
+     },
+     {
+      "name": "公司名稱",
+      "meaning": "short name (e.g. 台泥)"
+     },
+     {
+      "name": "產業別",
+      "meaning": "industry as a CHINESE NAME (e.g. \"水泥工業\")"
+     },
+     {
+      "name": "營業收入-當月營收",
+      "meaning": "current month revenue",
+      "unit": "thousand NTD (inferred: 1101 = 13515534, i.e. about NT$13.5bn per month; the unit is not stated in the payload)"
+     },
+     {
+      "name": "營業收入-上月營收",
+      "meaning": "previous month revenue",
+      "unit": "thousand NTD (inferred)"
+     },
+     {
+      "name": "營業收入-去年當月營收",
+      "meaning": "same month last year",
+      "unit": "thousand NTD (inferred)"
+     },
+     {
+      "name": "營業收入-上月比較增減(%)",
+      "meaning": "MoM %",
+      "unit": "% (long float string, e.g. \"-1.6630332295967223\")"
+     },
+     {
+      "name": "營業收入-去年同月增減(%)",
+      "meaning": "YoY %",
+      "unit": "%"
+     },
+     {
+      "name": "累計營業收入-當月累計營收",
+      "meaning": "YTD cumulative revenue",
+      "unit": "thousand NTD (inferred)"
+     },
+     {
+      "name": "累計營業收入-去年累計營收",
+      "meaning": "last year YTD cumulative revenue",
+      "unit": "thousand NTD (inferred)"
+     },
+     {
+      "name": "累計營業收入-前期比較增減(%)",
+      "meaning": "cumulative YoY %",
+      "unit": "%"
+     },
+     {
+      "name": "備註",
+      "meaning": "remarks, \"-\" if none"
+     }
+    ],
+    "sampleRecord": "{\"出表日期\":\"1150917\",\"資料年月\":\"11508\",\"公司代號\":\"1101\",\"公司名稱\":\"台泥\",\"產業別\":\"水泥工業\",\"營業收入-當月營收\":\"13515534\",\"營業收入-上月營收\":\"13744103\",\"營業收入-去年當月營收\":\"12214776\",\"營業收入-上月比較增減(%)\":\"-1.6630332295967223\",\"營業收入-去年同月增減(%)\":\"10.649053245020621\",\"累計營業收入-當月累計營收\":\"98726969\",\"累計營業收入-去年累計營收\":\"96131621\",\"累計營業收入-前期比較增減(%)\":\"2.699785952844798\",\"備註\":\"-\"}",
+    "notes": "This dataset lags. On 2026-10-10 it still showed 資料年月 11508 (August), published 1150917, so September revenue (filing deadline Oct 10) was not in it yet. It seems to refresh about once a month, around mid-month. The view was truncated at about 1611, so I could not see the 2330 row. This dataset also gives the easiest Chinese industry name per company. A sibling dataset, /v1/opendata/t187ap05_P, covers public (公開發行) companies and has the same keys (seen in the swagger)."
+   },
+   {
+    "key": "tw_company_info",
+    "url": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L",
+    "verified": true,
+    "format": "JSON array at the root; all values are strings; 33 keys",
+    "params": "none",
+    "dataDate": "出表日期 ROC YYYMMDD (\"1151009\")",
+    "fields": [
+     {
+      "name": "出表日期",
+      "meaning": "publish date ROC"
+     },
+     {
+      "name": "公司代號",
+      "meaning": "stock code"
+     },
+     {
+      "name": "公司名稱",
+      "meaning": "full legal name (臺灣水泥股份有限公司)"
+     },
+     {
+      "name": "公司簡稱",
+      "meaning": "short name (台泥)"
+     },
+     {
+      "name": "外國企業註冊地國",
+      "meaning": "foreign registration country (\"－ \" if none)"
+     },
+     {
+      "name": "產業別",
+      "meaning": "industry CODE as a 2-digit string (\"01\"), NOT a name"
+     },
+     {
+      "name": "成立日期",
+      "meaning": "founding date, Gregorian YYYYMMDD (\"19501229\")"
+     },
+     {
+      "name": "上市日期",
+      "meaning": "listing date, Gregorian YYYYMMDD (\"19620209\")"
+     },
+     {
+      "name": "普通股每股面額",
+      "meaning": "par value text, e.g. \"新台幣 10.0000元\" with padded spaces"
+     },
+     {
+      "name": "實收資本額",
+      "meaning": "paid-in capital",
+      "unit": "NTD"
+     },
+     {
+      "name": "已發行普通股數或TDR原股發行股數",
+      "meaning": "shares outstanding",
+      "unit": "shares"
+     },
+     {
+      "name": "英文簡稱",
+      "meaning": "English short name (TCC)"
+     },
+     {
+      "name": "網址",
+      "meaning": "website"
+     }
+    ],
+    "sampleRecord": "(partial, key subset) {\"出表日期\":\"1151009\",\"公司代號\":\"1101\",\"公司名稱\":\"臺灣水泥股份有限公司\",\"公司簡稱\":\"台泥\",\"產業別\":\"01\",\"成立日期\":\"19501229\",\"上市日期\":\"19620209\",\"實收資本額\":\"77231817420\",\"英文簡稱\":\"TCC\",\"已發行普通股數或TDR原股發行股數\":\"7523181742\"}",
+    "notes": "Full key order: 出表日期, 公司代號, 公司名稱, 公司簡稱, 外國企業註冊地國, 產業別, 住址, 營利事業統一編號, 董事長, 總經理, 發言人, 發言人職稱, 代理發言人, 總機電話, 成立日期, 上市日期, 普通股每股面額, 實收資本額, 私募股數, 特別股, 編制財務報表類型, 股票過戶機構, 過戶電話, 過戶地址, 簽證會計師事務所, 簽證會計師1, 簽證會計師2, 英文簡稱, 英文通訊地址, 傳真機號碼, 電子郵件信箱, 網址, 已發行普通股數或TDR原股發行股數. Codes seen in the data: 01 (1101 台泥, 1102 亞泥), 02 (1201 味全), 03 (1301 台塑), 04 (1402 遠東新), 12 (1319 東陽), 14 (1316 上曜), 20 (1342 八貫), 37 (1432 大魯閣). This dataset has no code-to-name table. See tw_industry_code_map."
+   },
+   {
+    "key": "tw_industry_code_map",
+    "url": "https://openapi.twse.com.tw/v1/opendata/t187ap05_L",
+    "verified": false,
+    "format": "No official code-to-name endpoint was found. Option A (recommended): take the Chinese 產業別 from t187ap05_L (monthly revenue) or t187ap14_L (EPS), which already give names, joined on 公司代號. Option B: a static mapping table.",
+    "params": "none",
+    "dataDate": "n/a",
+    "fields": [
+     {
+      "name": "產業別",
+      "meaning": "In t187ap05_L and t187ap14_L it is a Chinese name (e.g. 水泥工業); in t187ap03_L it is a 2-digit code"
+     }
+    ],
+    "sampleRecord": "t187ap03_L 1101 產業別=\"01\" <-> t187ap05_L 1101 產業別=\"水泥工業\"",
+    "notes": "I could not find an official TWSE document or endpoint mapping the codes. The TWSE MI_INDEX page lists industry labels (水泥工業 … 居家生活, 其他, 存託憑證) but its option values were not visible. Several independent GitHub projects agree on this mapping (community source, not official): 01 水泥工業, 02 食品工業, 03 塑膠工業, 04 紡織纖維, 05 電機機械, 06 電器電纜, 08 玻璃陶瓷, 09 造紙工業, 10 鋼鐵工業, 11 橡膠工業, 12 汽車工業, 14 建材營造業, 15 航運業, 16 觀光餐旅, 17 金融保險業, 18 貿易百貨業, 19 綜合, 20 其他業, 21 化學工業, 22 生技醫療業, 23 油電燃氣業, 24 半導體業, 25 電腦及週邊設備業, 26 光電業, 27 通信網路業, 28 電子零組件業, 29 電子通路業, 30 資訊服務業, 31 其他電子業, 32 文化創意業, 33 農業科技業, 34 電子商務, 35 綠能環保, 36 數位雲端, 37 運動休閒, 38 居家生活, 80 管理股票, 91 存託憑證. Only 01 = 水泥工業 was cross-checked against live data (1101). One repo notes 2330=24 and 2884=17. Exact name spelling varies between repos (e.g. 建材營造 vs 建材營造業), so prefer the names returned by the API (Option A)."
+   },
+   {
+    "key": "tw_eps_quarterly",
+    "url": "https://openapi.twse.com.tw/v1/opendata/t187ap14_L",
+    "verified": true,
+    "format": "JSON array at the root; all values are strings; one row per company",
+    "params": "none",
+    "dataDate": "年度 (ROC year, \"115\") + 季別 (quarter, \"2\"); 出表日期 ROC YYYMMDD (\"1151009\")",
+    "fields": [
+     {
+      "name": "出表日期",
+      "meaning": "publish date ROC"
+     },
+     {
+      "name": "年度",
+      "meaning": "fiscal year ROC (115 = 2026)"
+     },
+     {
+      "name": "季別",
+      "meaning": "quarter 1-4"
+     },
+     {
+      "name": "公司代號",
+      "meaning": "stock code"
+     },
+     {
+      "name": "公司名稱",
+      "meaning": "full company name (臺灣水泥股份有限公司)"
+     },
+     {
+      "name": "產業別",
+      "meaning": "Chinese industry name (水泥工業)"
+     },
+     {
+      "name": "基本每股盈餘(元)",
+      "meaning": "basic EPS. NOTE: ASCII half-width parentheses in this dataset",
+      "unit": "NTD"
+     },
+     {
+      "name": "普通股每股面額",
+      "meaning": "par value text"
+     },
+     {
+      "name": "營業收入",
+      "meaning": "revenue",
+      "unit": "thousand NTD (inferred)"
+     },
+     {
+      "name": "營業利益",
+      "meaning": "operating income",
+      "unit": "thousand NTD (inferred)"
+     },
+     {
+      "name": "營業外收入及支出",
+      "meaning": "non-operating income/expense",
+      "unit": "thousand NTD (inferred)"
+     },
+     {
+      "name": "稅後淨利",
+      "meaning": "net income after tax",
+      "unit": "thousand NTD (inferred)"
+     }
+    ],
+    "sampleRecord": "{\"出表日期\":\"1151009\",\"年度\":\"115\",\"季別\":\"2\",\"公司代號\":\"1101\",\"公司名稱\":\"臺灣水泥股份有限公司\",\"產業別\":\"水泥工業\",\"基本每股盈餘(元)\":\"0.38\",\"普通股每股面額\":\"新台幣          10.0000元\",\"營業收入\":\"71289957.00\",\"營業利益\":\"5170177.00\",\"營業外收入及支出\":\"1464159.00\",\"稅後淨利\":\"4569799.00\"}",
+    "notes": "The figures are YEAR-TO-DATE CUMULATIVE, not single-quarter (my inference). For 1101, Q2 營業收入 is 71.29bn, which matches Jan–Jun cumulative monthly revenue (98.73bn YTD Aug − Aug 13.52bn − Jul about 13.74bn ≈ 71.5bn). So the EPS of 0.38 is H1 2026 EPS. To get a single-quarter EPS, store each quarter and subtract the previous one. Other samples: 2002 中鋼 -0.03, 2006 東和鋼鐵 4.07. The number of spaces in the 普通股每股面額 sample is approximate. I could not confirm whether financial companies (28xx) are included, because the view was truncated at about 2015. The alternative, the t187ap06_L_* family, splits companies by type (see tw_income_statement)."
+   },
+   {
+    "key": "tw_income_statement",
+    "url": "https://openapi.twse.com.tw/v1/opendata/t187ap06_L_ci",
+    "verified": true,
+    "format": "JSON array at the root; all values are strings. Keys use FULL-WIDTH parentheses （）",
+    "params": "none",
+    "dataDate": "年度 + 季別, plus 出表日期 (\"1151010\")",
+    "fields": [
+     {
+      "name": "年度",
+      "meaning": "ROC year"
+     },
+     {
+      "name": "季別",
+      "meaning": "quarter"
+     },
+     {
+      "name": "公司代號",
+      "meaning": "code"
+     },
+     {
+      "name": "公司名稱",
+      "meaning": "short name (台泥)"
+     },
+     {
+      "name": "營業收入",
+      "meaning": "revenue",
+      "unit": "thousand NTD (inferred)"
+     },
+     {
+      "name": "營業利益（損失）",
+      "meaning": "operating income"
+     },
+     {
+      "name": "本期淨利（淨損）",
+      "meaning": "net income"
+     },
+     {
+      "name": "淨利（淨損）歸屬於母公司業主",
+      "meaning": "net income attributable to parent"
+     },
+     {
+      "name": "基本每股盈餘（元）",
+      "meaning": "basic EPS (full-width parentheses)",
+      "unit": "NTD"
+     }
+    ],
+    "sampleRecord": "(partial) {\"出表日期\":\"1151010\",\"年度\":\"115\",\"季別\":\"2\",\"公司代號\":\"1101\",\"公司名稱\":\"台泥\",\"營業收入\":\"71289957.00\",\"本期淨利（淨損）\":\"4569799.00\",\"淨利（淨損）歸屬於母公司業主\":\"3279780.00\",\"基本每股盈餘（元）\":\"0.38\"}",
+    "notes": "_ci covers general industry only (33 keys). Financial companies are split into sibling endpoints, each verified with EPS key 基本每股盈餘（元） and 年度 115 / 季別 2: t187ap06_L_fh (金控, 13 rows: 2880-2892, 5880; 2880 華南金 EPS 1.24), t187ap06_L_basi (banks, 10 rows; 2801 彰銀 0.94), t187ap06_L_bd (securities, 3 rows; 2855 統一證 6.96), t187ap06_L_ins (insurance, 5 rows; 2816 旺旺保 7.84), t187ap06_L_mim (異業, 4 rows; 1409 新纖 1.18). The _fh keys include 本期稅後淨利（淨損） instead of 本期淨利（淨損）. To cover every company: union _ci, _fh, _basi, _bd, _ins and _mim, or use t187ap14_L (watch the different parenthesis styles). Values are YTD cumulative (same as t187ap14_L)."
+   },
+   {
+    "key": "tw_margin",
+    "url": "https://openapi.twse.com.tw/v1/exchangeReport/MI_MARGN",
+    "verified": true,
+    "format": "JSON array at the root; all values are strings with no thousands separators; empty = \"\"",
+    "params": "none",
+    "dataDate": "NO date field in the openapi records. The values match the dated endpoint for 20261008 (00400A 融資前日餘額 12434 → 融資今日餘額 12383 in both), so use STOCK_DAY_ALL's Date or the dated endpoint (tw_margin_dated) to stamp it.",
+    "fields": [
+     {
+      "name": "股票代號",
+      "meaning": "code"
+     },
+     {
+      "name": "股票名稱",
+      "meaning": "name"
+     },
+     {
+      "name": "融資買進",
+      "meaning": "margin buy",
+      "unit": "交易單位 (=張 / lots of 1,000 shares for ordinary stocks)"
+     },
+     {
+      "name": "融資賣出",
+      "meaning": "margin sell",
+      "unit": "交易單位"
+     },
+     {
+      "name": "融資現金償還",
+      "meaning": "cash repayment",
+      "unit": "交易單位"
+     },
+     {
+      "name": "融資前日餘額",
+      "meaning": "margin balance previous day",
+      "unit": "交易單位"
+     },
+     {
+      "name": "融資今日餘額",
+      "meaning": "margin balance today (change = 今日 − 前日)",
+      "unit": "交易單位"
+     },
+     {
+      "name": "融資限額",
+      "meaning": "margin limit",
+      "unit": "交易單位"
+     },
+     {
+      "name": "融券買進",
+      "meaning": "short cover buy",
+      "unit": "交易單位"
+     },
+     {
+      "name": "融券賣出",
+      "meaning": "short sell",
+      "unit": "交易單位"
+     },
+     {
+      "name": "融券現券償還",
+      "meaning": "stock repayment",
+      "unit": "交易單位"
+     },
+     {
+      "name": "融券前日餘額",
+      "meaning": "short balance previous day",
+      "unit": "交易單位"
+     },
+     {
+      "name": "融券今日餘額",
+      "meaning": "short balance today",
+      "unit": "交易單位"
+     },
+     {
+      "name": "融券限額",
+      "meaning": "short limit",
+      "unit": "交易單位"
+     },
+     {
+      "name": "資券互抵",
+      "meaning": "offset",
+      "unit": "交易單位"
+     },
+     {
+      "name": "註記",
+      "meaning": "note flags (\" \" when none)"
+     }
+    ],
+    "sampleRecord": "{\"股票代號\":\"00400A\",\"股票名稱\":\"主動國泰動能高息\",\"融資買進\":\"512\",\"融資賣出\":\"563\",\"融資現金償還\":\"\",\"融資前日餘額\":\"12434\",\"融資今日餘額\":\"12383\",\"融資限額\":\"474285\",\"融券買進\":\"\",\"融券賣出\":\"2\",\"融券現券償還\":\"\",\"融券前日餘額\":\"\",\"融券今日餘額\":\"2\",\"融券限額\":\"474285\",\"資券互抵\":\"12\",\"註記\":\" \"}",
+    "notes": "Units are not stated in the openapi payload. The dated TWSE endpoint labels the summary row \"融資(交易單位)\", i.e. trading units = 張 for normal stocks, and has a separate \"融資金額(仟元)\" row. Empty strings mean 0. ETFs are included."
+   },
+   {
+    "key": "tw_margin_dated",
+    "url": "https://www.twse.com.tw/exchangeReport/MI_MARGN?response=json&date=20261008&selectType=ALL",
+    "verified": true,
+    "format": "JSON object: {stat, date, tables:[...]}. tables[0] = summary (信用交易統計), tables[1] = per-stock (融資融券彙總 (全部)). Rows are arrays of strings WITH thousands commas.",
+    "params": "response=json, date=YYYYMMDD (Gregorian), selectType=ALL",
+    "dataDate": "top-level \"date\":\"20261008\"; title \"115年10月08日 融資融券彙總 (全部)\"",
+    "fields": [
+     {
+      "name": "tables[1].fields",
+      "meaning": "[\"代號\",\"名稱\",\"買進\",\"賣出\",\"現金償還\",\"前日餘額\",\"今日餘額\",\"次一營業日限額\",\"買進\",\"賣出\",\"現券償還\",\"前日餘額\",\"今日餘額\",\"次一營業日限額\",\"資券互抵\",\"註記\"]. Indexes 2-7 are 融資, 8-13 are 融券 (duplicate names, so use the index).",
+      "unit": "交易單位 (張)"
+     },
+     {
+      "name": "tables[0].fields",
+      "meaning": "[\"項目\",\"買進\",\"賣出\",\"現金(券)償還\",\"前日餘額\",\"今日餘額\"]; rows include 融資(交易單位) and 融資金額(仟元)"
+     }
+    ],
+    "sampleRecord": "[\"00400A\",\"主動國泰動能高息\",\"512\",\"563\",\"0\",\"12,434\",\"12,383\",\"474,285\",\"0\",\"2\",\"0\",\"0\",\"2\",\"474,285\",\"12\",\" \"]",
+    "notes": "The /rwd/zh/marginTrading/MI_MARGN?date=20261008&selectType=ALL&response=json path returned a '網站維護中' maintenance HTML page when fetched on Sat 2026-10-10. The legacy path above worked. Empty values here are \"0\", unlike openapi's \"\". Summary row: [\"融資(交易單位)\",\"385,423\",\"305,441\",\"31,506\",\"9,358,244\",\"9,406,720\"]."
+   },
+   {
+    "key": "tw_institutional_t86",
+    "url": "https://www.twse.com.tw/fund/T86?response=json&date=20261008&selectType=ALLBUT0999",
+    "verified": true,
+    "format": "JSON object {stat, date, title, hints, fields, data}; data = array of string arrays with thousands commas; names padded with trailing spaces",
+    "params": "response=json, date=YYYYMMDD (Gregorian), selectType=ALLBUT0999 (all except warrants etc.)",
+    "dataDate": "top-level \"date\":\"20261008\"; title \"115年10月08日 三大法人買賣超日報\"; stat \"OK\"",
+    "fields": [
+     {
+      "name": "0 證券代號",
+      "meaning": "code"
+     },
+     {
+      "name": "1 證券名稱",
+      "meaning": "name (trim trailing spaces)"
+     },
+     {
+      "name": "2 外陸資買進股數(不含外資自營商)",
+      "meaning": "foreign buy",
+      "unit": "shares"
+     },
+     {
+      "name": "3 外陸資賣出股數(不含外資自營商)",
+      "meaning": "foreign sell",
+      "unit": "shares"
+     },
+     {
+      "name": "4 外陸資買賣超股數(不含外資自營商)",
+      "meaning": "FOREIGN NET (外陸資買賣超股數)",
+      "unit": "shares"
+     },
+     {
+      "name": "5 外資自營商買進股數",
+      "meaning": "foreign dealer buy",
+      "unit": "shares"
+     },
+     {
+      "name": "6 外資自營商賣出股數",
+      "meaning": "foreign dealer sell",
+      "unit": "shares"
+     },
+     {
+      "name": "7 外資自營商買賣超股數",
+      "meaning": "foreign dealer net",
+      "unit": "shares"
+     },
+     {
+      "name": "8 投信買進股數",
+      "meaning": "investment trust buy",
+      "unit": "shares"
+     },
+     {
+      "name": "9 投信賣出股數",
+      "meaning": "investment trust sell",
+      "unit": "shares"
+     },
+     {
+      "name": "10 投信買賣超股數",
+      "meaning": "INVESTMENT TRUST NET (投信買賣超股數)",
+      "unit": "shares"
+     },
+     {
+      "name": "11 自營商買賣超股數",
+      "meaning": "DEALER NET total (= idx14 + idx17)",
+      "unit": "shares"
+     },
+     {
+      "name": "12 自營商買進股數(自行買賣)",
+      "meaning": "dealer proprietary buy",
+      "unit": "shares"
+     },
+     {
+      "name": "13 自營商賣出股數(自行買賣)",
+      "meaning": "dealer proprietary sell",
+      "unit": "shares"
+     },
+     {
+      "name": "14 自營商買賣超股數(自行買賣)",
+      "meaning": "dealer proprietary net",
+      "unit": "shares"
+     },
+     {
+      "name": "15 自營商買進股數(避險)",
+      "meaning": "dealer hedge buy",
+      "unit": "shares"
+     },
+     {
+      "name": "16 自營商賣出股數(避險)",
+      "meaning": "dealer hedge sell",
+      "unit": "shares"
+     },
+     {
+      "name": "17 自營商買賣超股數(避險)",
+      "meaning": "dealer hedge net",
+      "unit": "shares"
+     },
+     {
+      "name": "18 三大法人買賣超股數",
+      "meaning": "total net = idx4 + idx7 + idx10 + idx11",
+      "unit": "shares"
+     }
+    ],
+    "sampleRecord": "[\"00403A\",\"主動統一升級50  \",\"53,408,427\",\"23,319,510\",\"30,088,917\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"9,081,338\",\"279,000\",\"0\",\"279,000\",\"24,484,583\",\"15,682,245\",\"8,802,338\",\"39,170,255\"]",
+    "notes": "hints = \"單位：股\" (shares; divide by 1000 for 張). There is no openapi equivalent: https://openapi.twse.com.tw/v1/fund/T86 returns a 404 page. The /rwd/zh/fund/T86?date=20261008&selectType=ALLBUT0999&response=json URL from the task returned a '網站維護中' maintenance HTML page when fetched on Sat 2026-10-10. The legacy /fund/T86?response=json... path worked and is shown here. Use one as a fallback for the other and check stat == \"OK\". Rows look sorted by idx18 descending (first row 00632R). Arithmetic checks on 00403A: 30,088,917 + 0 + 0 + 9,081,338 = 39,170,255 and 279,000 + 8,802,338 = 9,081,338. The 2330 row was not visible (truncated), but ETFs are included. For a commonly quoted 外資 net, use idx4 + idx7, or idx4 alone (excludes foreign dealers)."
+   },
+   {
+    "key": "tw_holidays",
+    "url": "https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule",
+    "verified": true,
+    "format": "JSON array at the root; keys Name, Date, Weekday, Description",
+    "params": "none",
+    "dataDate": "Date in ROC YYYYMMDD-style 7 digits (\"1150101\" = 2026-01-01). It covers the current year only: 27 rows, 1150101 to 1151225.",
+    "fields": [
+     {
+      "name": "Name",
+      "meaning": "holiday/event name"
+     },
+     {
+      "name": "Date",
+      "meaning": "ROC YYYMMDD"
+     },
+     {
+      "name": "Weekday",
+      "meaning": "Chinese weekday char (一..日)"
+     },
+     {
+      "name": "Description",
+      "meaning": "description text, may contain <br>"
+     }
+    ],
+    "sampleRecord": "{\"Name\":\"國慶日\",\"Date\":\"1151009\",\"Weekday\":\"五\",\"Description\":\"國慶日為10月10日適逢星期六，於10月9日（星期五）補假。\"}",
+    "notes": "2026 is listed. The list is NOT purely closed days: it also contains TRADING-day markers, which must be filtered out. Examples: \"國曆新年開始交易日\" 1150102, \"農曆春節前最後交易日\" 1150211, \"農曆春節後開始交易日\" 1150223. It also contains \"市場無交易，僅辦理結算交割作業\" (no trading) on 1150212-1150213, and weekend dates. Closed weekdays include 1150101, 1150212-13, 1150216-20, 1150227, 1150403, 1150406, 1150501, 1150619, 1150925, 1150928, 1151009, 1151026 and 1151225. Recommended rule: a weekday is a non-trading day if its Date is in the list AND the Name does not contain \"交易日\"."
+   },
+   {
+    "key": "tw_index_close",
+    "url": "https://openapi.twse.com.tw/v1/exchangeReport/MI_INDEX",
+    "verified": true,
+    "format": "JSON array at the root (265 rows, one per index); all values are strings; Chinese keys",
+    "params": "none",
+    "dataDate": "日期 ROC YYYMMDD (\"1151008\")",
+    "fields": [
+     {
+      "name": "日期",
+      "meaning": "date ROC"
+     },
+     {
+      "name": "指數",
+      "meaning": "index name; TAIEX = \"發行量加權股價指數\""
+     },
+     {
+      "name": "收盤指數",
+      "meaning": "close"
+     },
+     {
+      "name": "漲跌",
+      "meaning": "direction sign \"-\" (presumably \"+\" when up; not observed)"
+     },
+     {
+      "name": "漲跌點數",
+      "meaning": "absolute point change (unsigned; combine with 漲跌)"
+     },
+     {
+      "name": "漲跌百分比",
+      "meaning": "signed % change",
+      "unit": "%"
+     },
+     {
+      "name": "特殊處理註記",
+      "meaning": "special note"
+     }
+    ],
+    "sampleRecord": "{\"日期\":\"1151008\",\"指數\":\"發行量加權股價指數\",\"收盤指數\":\"49313.44\",\"漲跌\":\"-\",\"漲跌點數\":\"492.93\",\"漲跌百分比\":\"-0.99\",\"特殊處理註記\":\"\"}",
+    "notes": "The first row is 寶島股價指數. A simpler option for the market overview is FMTQIK (tw_market_summary), which gives a signed TAIEX change plus market turnover."
+   },
+   {
+    "key": "tw_market_summary",
+    "url": "https://openapi.twse.com.tw/v1/exchangeReport/FMTQIK",
+    "verified": true,
+    "format": "JSON array at the root, one row per trading day of the current month (6 rows on 2026-10-10)",
+    "params": "none",
+    "dataDate": "Date ROC YYYMMDD; the last row is the latest day",
+    "fields": [
+     {
+      "name": "Date",
+      "meaning": "ROC date"
+     },
+     {
+      "name": "TradeVolume",
+      "meaning": "market volume",
+      "unit": "shares"
+     },
+     {
+      "name": "TradeValue",
+      "meaning": "market turnover",
+      "unit": "NTD"
+     },
+     {
+      "name": "Transaction",
+      "meaning": "trades count"
+     },
+     {
+      "name": "TAIEX",
+      "meaning": "TAIEX close"
+     },
+     {
+      "name": "Change",
+      "meaning": "signed TAIEX point change"
+     }
+    ],
+    "sampleRecord": "{\"Date\":\"1151008\",\"TradeVolume\":\"10437288727\",\"TradeValue\":\"924509097873\",\"Transaction\":\"5075757\",\"TAIEX\":\"49313.44\",\"Change\":\"-492.93\"}",
+    "notes": "Its TAIEX matches MI_INDEX (49313.44, -492.93). It is month-to-date only, so the Action must keep its own history for longer charts."
+   }
+  ],
+  "notes": "All data was fetched on 2026-10-10 (Saturday) with WebFetch. The latest trading day was 2026-10-08, because 10-09 was the 國慶日 make-up holiday.\n\nKey findings:\n(1) All openapi.twse.com.tw datasets return a JSON array at the root with every value as a string. Dates are in ROC format: YYYMMDD (e.g. \"1151008\") or YYYMM (\"11508\"). Convert with year + 1911. Exceptions: t187ap03_L 成立日期/上市日期 are Gregorian YYYYMMDD, and the www.twse.com.tw legacy endpoints take and return Gregorian \"date\":\"20261008\".\n(2) ETFs (00xx, 00xxxA, 006208 etc.) ARE in STOCK_DAY_ALL, appear first, and some have empty-string prices or volume when there are no trades.\n(3) Data date: use STOCK_DAY_ALL / BWIBBU_ALL \"Date\" or MI_INDEX \"日期\". openapi MI_MARGN has no date field. Its values matched the dated legacy endpoint for 20261008.\n(4) The three institutional investors data (T86) is not on openapi (/v1/fund/T86 returns 404). The /rwd/zh/... URLs for T86 and MI_MARGN returned a '網站維護中' maintenance page at fetch time (weekend). The legacy URLs worked: https://www.twse.com.tw/fund/T86?response=json&date=YYYYMMDD&selectType=ALLBUT0999 and https://www.twse.com.tw/exchangeReport/MI_MARGN?response=json&date=YYYYMMDD&selectType=ALL. Implement rwd plus a legacy fallback, and check stat==\"OK\".\n(5) The EPS datasets (t187ap14_L, t187ap06_L_*) are year-to-date cumulative (inferred from 1101 revenue vs monthly revenue). The latest available is 年度 115 季別 2. The EPS key spelling differs: t187ap14_L uses 基本每股盈餘(元) with ASCII parentheses, while t187ap06_L_* uses 基本每股盈餘（元） with full-width parentheses.\n(6) Monthly revenue t187ap05_L lags: it still showed 11508 on 10-10.\n(7) Industry codes in t187ap03_L are 2-digit codes with no official mapping found. Use the Chinese 產業別 from t187ap05_L or t187ap14_L, or the community mapping given in tw_industry_code_map (verified=false).\n\nLimits: WebFetch shows only about the first 80K chars of each response (and about 51K of swagger.json), so I could not enumerate the full swagger endpoint list. Rows beyond the cutoff (e.g. 2330 in STOCK_DAY_ALL, MI_MARGN and T86) were not visible. Sample records were rebuilt from field values the fetch tool reported (it refuses long verbatim quotes), except the MI_INDEX and holiday records, which it quoted directly. Revenue/income units of thousand NTD are inferred, not stated. MI_MARGN units are 交易單位 (=張 for ordinary stocks) per the legacy endpoint's row label. T86 unit is shares per hints \"單位：股\". Update times of each openapi dataset during the day were not verified. Run the Action in the evening Taiwan time and check that the date fields equal the expected trading day before overwriting JSON."
+ }
+}

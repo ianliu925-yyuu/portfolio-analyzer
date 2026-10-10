@@ -1,0 +1,743 @@
+{
+ "key": "tw_fees",
+ "result": {
+  "brokers": [
+   {
+    "broker": "元大證券",
+    "market": "TW",
+    "channel": "電子下單 (投資先生 App / Web / AP)",
+    "feeRule": "成交金額 × 0.1425% × 0.6；整股每筆最低 NT$20，盤中零股每筆最低 NT$1（官方）",
+    "discount": "0.6",
+    "rebateTiming": "官方未載。二手資料不一致：money101（2026-09-08 更新）、uptogo（2026-06-13、2026-07-02）寫日退；grenade（2026-10-05 更新）寫「依分公司約定」；gugu（2023-09-20）寫月退。",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "盤中零股 1（官方）；盤後零股官方未載（uptogo 2026-06、2026-07 寫零股最低 1 元，但沒有分盤中和盤後）",
+    "notes": "重新查證官方 PDF（數位金融部 2024/11/29）原文：「手續費：以每筆成交金額之千分之1.425計算(電子交易手續費6折，為千分之0.855)，每筆最低為新台幣1元，外幣交易每筆最低人民幣4元、美元1元」，這段是盤中零股的說明。官方注意事項第18點原文：「台股手續費用，台幣交易每筆最低新台幤20元、外幣交易每筆最低人民幣4元、美元1元、「盤中零股」每筆最低新台幣1元」，沒有提到盤後零股。官方文件都沒有退費或折讓時點。實際折數依分公司或個人議定。",
+    "sources": [
+     "https://www.yuanta.com.tw/eyuanta/webfile/resourcesFile/c032d406-9b57-439a-ad0f-a5e86b4dd012.pdf",
+     "https://www.yuanta.com.tw/file-repository/content/d9ad191c-1eaa-4b51-b59b-c652997d6d24/note.html",
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://uptogo.com.tw/?p=1757178",
+     "https://uptogo.com.tw/?p=1910575",
+     "https://grenade.tw/blog/taiwan-stock-broker-comparison/",
+     "https://school.gugu.fund/blog/gugu_knowledge/7348994481"
+    ],
+    "confidence": "medium（折數與最低費用：high；退費時點：low）"
+   },
+   {
+    "broker": "富邦證券",
+    "market": "TW",
+    "channel": "電子下單（一般舊戶）；新戶方案（富邦 AI PRO / 新開戶）",
+    "feeRule": "一般舊戶：0.1425% × 0.6（二手資料）。新戶：2026/1/1–2026/12/31 每月台股（不含興櫃）電子成交 100 萬元（含）以內享優惠，官方沒寫折數，2026 年二手資料寫 1.8 折；超過 100 萬元的部分「依約定手續費計算」（官方），roo.cash 寫 6 折。整股每筆最低 20 元（二手資料），零股每筆最低 1 元（官方）",
+    "discount": "0.6（一般，二手資料）；新戶 0.18（每月 ≤100 萬，2026/1/1–2026/12/31，折數來自二手資料）",
+    "rebateTiming": "新戶方案是月退（官方）：交割日先按千分之1.425 逐筆收全額，次月 5 日把折讓總額退回原交割帳戶。一般舊戶的退費時點官方未載（二手資料寫月退）。",
+    "minFeeRoundLot": "20（二手資料：roo.cash 2026-07-13 更新、grenade 2026-10；官方新戶頁沒寫台股最低手續費）",
+    "minFeeOddLot": "1（官方盤中零股頁）",
+    "notes": "官方新戶頁原文：「台股(不含興櫃)電子下單每月成交金額100萬元（含）以下手續費享優惠」「優惠期間:2026/1/1~2026/12/31」「於次月 5 日再行退回逐筆計算後之折讓金額總和於客戶原交割帳戶」「超過優惠交易限額100萬以上則依約定手續費計算」，另寫退款差額「小數點後採無條件捨去」。頁面沒有折數。更正：roo.cash 的 1.8 折是「2025 年新戶優惠」（2025/12/31 截止），不是 2026 年的出處。2026 年的 1.8 折出自 money101（2026-09）、uptogo（2026-06、2026-07）、grenade（2026-10）、winvest（2026-10-07）。官方零股頁原文：「單筆手續費未滿新台幣1元者，按1元計收」。77,972 元等於 20 ÷ (0.001425 × 0.18)，所以整股 20 元低消是在折讓後才套用。grenade 2026-10 也舉例：「買 1 萬元整股時，富邦 1.8 折算出來只有 2 元，但整股低消 20 元，實付還是 20 元」。",
+    "sources": [
+     "https://www.fubon.com/securities/open-now/index.html",
+     "https://www.fubon.com/securities/LT-home/index.html",
+     "https://roo.cash/blog/fubon-account-article",
+     "https://www.money101.com.tw/blog/%e7%86%b1%e9%96%80%e5%88%b8%e5%95%86%e6%af%94%e4%b8%80%e6%af%94",
+     "https://uptogo.com.tw/?p=1910575",
+     "https://grenade.tw/blog/taiwan-stock-broker-comparison/",
+     "https://winvest.tw/Knowledge/Article/213"
+    ],
+    "confidence": "medium（新戶退費時點與零股低消：high；折數與整股低消：medium）"
+   },
+   {
+    "broker": "凱基證券",
+    "market": "TW",
+    "channel": "電子下單",
+    "feeRule": "成交金額 × 0.1425% × 0.6（標準電子折數，二手資料）；整股每筆最低 NT$20，零股每筆最低 NT$1（官方）",
+    "discount": "0.6",
+    "rebateTiming": "月退（二手資料：uptogo 2026-06、2026-07、roo.cash；uptogo 2026-04 寫「日扣、月退」，月底或次月初退回）。money101 2026-09 寫「活動回饋」。官方沒寫日期。",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "1",
+    "notes": "官方交易規範頁原文：整股「依成交金額千分之一點四二五計收，依上述費率計算手續費未滿新台幣二十元者，按二十元計收」；零股「零股單筆手續費未滿新台幣1元者，按1元計收」，沒有分盤中和盤後。uptogo 2026-04、2026-06、2026-07 都寫凱基零股最低 20 元，跟官方不符，以官方為準。官方 small-invest 活動頁寫「成交金額 X 0.1425% X 優惠費率，每筆不足1元時仍以1元計收」，這是小額投資產品頁，不能直接推到一般整股。活動折數（2.5 折至 2026/03/31；roo.cash 和 winvest 寫 1.1 折）有附帶條件，不能當成標準折數。",
+    "sources": [
+     "https://www.kgi.com.tw/zh-tw/support-index/trading-regulations",
+     "https://event.kgi.com.tw/news/event/small-invest/index.html",
+     "https://uptogo.com.tw/%e8%b2%a1%e7%b6%93/%e8%ad%89%e5%88%b8%e5%95%86/%e5%87%b1%e5%9f%ba%e6%89%8b%e7%ba%8c%e8%b2%bb%e5%b9%be%e6%8a%98%ef%bc%9f/",
+     "https://uptogo.com.tw/?p=1757178",
+     "https://uptogo.com.tw/?p=1910575",
+     "https://roo.cash/securities/account-recommendation"
+    ],
+    "confidence": "medium（最低費用：high；折數：medium；退費時點：low-medium）"
+   },
+   {
+    "broker": "國泰證券",
+    "market": "TW",
+    "channel": "網路下單 / 樹精靈 App",
+    "feeRule": "成交金額 × 0.1425% × 0.28（= 0.399‰，官方「網路下單優惠2.8折（0.399‰）」）；人工下單用牌告 1.425‰；每筆最低 1 元（二手資料，官方未載）",
+    "discount": "0.28",
+    "rebateTiming": "日退（二手資料一致：money101 2026-09、uptogo 2026-06 與 2026-07、grenade 2026-10、gugu 2023、kikinote 2021；官方未載）",
+    "minFeeRoundLot": "1（低信心。2026 年二手資料一致：uptogo 2026-06「國泰證券的一般電子交易與零股交易，手續費最低只收 1 元」、moneymate 2026-08「低收 1 元」、grenade 2026-10 以 1 萬元整股舉例「國泰 2.8 折低消 1 元，實付約 3 元」；kikinote 2021 也寫最低 1 元。官方費率頁沒有最低手續費，未經官方確認）",
+    "minFeeOddLot": "1",
+    "notes": "官方台股收費頁原文：「網路下單優惠2.8折（0.399‰）」、「人工下單無優惠折扣，手續費同牌告費率。」、註1「成交價金＝成交股數 × 成交單價，計算結果以整元為準，元以下無條件捨去。」。官方頁沒有最低手續費和退費時點。原表把整股低消寫成 20 元（「標準牌告」），但這不是國泰專屬的資料，而且所有找得到的國泰專屬資料都寫 1 元，所以改為 1 元並標低信心。零股 1 元的出處是 2020-10-27 TechNews 轉載中央社：「元大、國泰等券商，將盤中零股交易最低手續費降為 1 元」。",
+    "sources": [
+     "https://www.cathaysec.com.tw/cathaysec/Products/TradeFee/TWS.aspx",
+     "https://technews.tw/?p=662051",
+     "https://uptogo.com.tw/財經/國泰手續費多少？/",
+     "https://moneymate.space/cathaysec-app/",
+     "https://grenade.tw/blog/taiwan-stock-broker-comparison/",
+     "https://uptogo.com.tw/?p=1757178",
+     "https://kikinote.net/160178"
+    ],
+    "confidence": "medium（折數：high；最低費用與退費時點：low-medium）"
+   },
+   {
+    "broker": "永豐金證券",
+    "market": "TW",
+    "channel": "線上新開戶（大戶投 / 豐存股等）電子下單",
+    "feeRule": "線上新開戶：每月電子成交 100 萬元內 0.1425% × 0.2（0.285‰），優惠低收 1 元；超過 100 萬或不適用方案：依約定或牌告 1.425‰，牌告低收 20 元",
+    "discount": "0.2（線上新戶，每月成交 ≤100 萬）",
+    "rebateTiming": "月退（官方）：當月先收全額，次月 15 日退回交割帳戶，遇假日提早",
+    "minFeeRoundLot": "優惠 1（官方「1 元上市櫃、興櫃 (外幣ETF除外)」，沒有分整股和零股）；牌告 20",
+    "minFeeOddLot": "1",
+    "notes": "官方費率頁表頭是「交易項目」「2026 限時優惠 (點擊查看)」「牌告費率 (標準)」。原文：「2 折 (0.285‰)線上新開戶(電子月交易100萬內) (當月先收取全額手續費，於次月 15 日退回至客戶交割帳戶)」；低收列：「1 元上市櫃、興櫃 (外幣ETF除外)」；牌告：「上市(櫃)股票 20 元/興櫃 50 元每筆不足 20 元以 20 元計」。官方收費標準 PDF（2024/11/28）原文：「證券手續費折讓：當月先收取全額手續費，於次月 15 日退回至客戶交割帳戶，遇假日則提早。」注意：這兩項優惠都放在「2026 限時優惠」欄，官方頁沒寫結束日，也沒寫 1 元低收是否限新戶，可能在 2026-12-31 後失效（推論）。舊戶的標準折數沒有公告（kikinote 2021 寫 6.5 折）。",
+    "sources": [
+     "https://www.sinotrade.com.tw/newweb/Fee_Rate/?market=S",
+     "https://www.sinotrade.com.tw/ec/upload/Service-charge.pdf",
+     "https://www.sinotrade.com.tw/richclub/dawhotou/campaign/offer",
+     "https://www.cardu.com.tw/card/stock_assign.php"
+    ],
+    "confidence": "high（新戶 2 折與次月 15 日退：high；1 元低收的適用對象與期限：medium；舊戶標準折數：low）"
+   },
+   {
+    "broker": "群益金鼎證券",
+    "market": "TW",
+    "channel": "電子下單",
+    "feeRule": "成交金額 × 0.1425% × 0.6（二手資料寫 6 至 6.5 折）；整股每筆最低 NT$20（二手資料）；零股電子交易每筆最低 NT$1（官方）",
+    "discount": "0.6（範圍 0.6–0.65）",
+    "rebateTiming": "說法不一，官方未載：money101 2026-09、uptogo 2026-06 寫日退；grenade 2026-10 寫「依分公司約定」；uptogo 2026-06-23 的群益專文說月退最常見（次月約 10 至 15 號），日退要向營業員申請。",
+    "minFeeRoundLot": "20（二手資料：uptogo 2026-06-23 群益專文、grenade 2026-10；官方零股頁沒寫整股）",
+    "minFeeOddLot": "1（電子交易，官方）",
+    "notes": "官方零股頁原文：表格列「交易稅千分之3 手續費千分之1.425(電子交易最低1元)」；Q&A「盤中零股交易手續費收取千分之1.425，另有千分之3的交易稅，電子交易手續費單筆最低為1元。」官方頁沒寫電子折數和退費時點。折數來源：money101 和 uptogo 寫 6 折，grenade 和 uptogo 群益專文寫 6 至 6.5 折，winvest 2026-10-07 和 kikinote 2021 寫 6.5 折。2020 年中央社報導，群益當時盤中零股仍維持最低 20 元，現在官方已改為 1 元。",
+    "sources": [
+     "https://www.capital.com.tw/event/stock/oddLot/default.asp",
+     "https://uptogo.com.tw/uncategorized/群益-手續費幾折？/",
+     "https://grenade.tw/blog/taiwan-stock-broker-comparison/",
+     "https://uptogo.com.tw/?p=1757178",
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://winvest.tw/Knowledge/Article/213"
+    ],
+    "confidence": "low-medium（零股低消：high；折數與退費時點：low）"
+   },
+   {
+    "broker": "元富證券（2026-04-06 已併入台新證券；含富果 Fugle 帳戶）",
+    "market": "TW",
+    "channel": "電子下單（原元富帳戶、富果 Fugle 帳戶，現由台新證券承接）",
+    "feeRule": "原元富及富果帳戶常見：0.1425% × 0.65（二手資料）；整股與盤後定價每筆最低 20 元，零股每筆最低 1 元（富果說明頁）",
+    "discount": "0.65",
+    "rebateTiming": "月退：交易後下個月 15 號退回，遇週末或國定假日提前一個營業日（富果說明頁；grenade 2026-10 寫 Fugle「月退（次月 15 日）」）",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "1",
+    "notes": "合併已確認：優分析轉載鉅亨（2026-04-07）原文：「台新證券及元富證券、台新期貨及元富期貨昨 (6) 日正式合併」「台新證券、台新期貨為存續公司」；ETtoday 標題「金管會核准台新新光金旗下證券、期貨子公司合併 基準日4/6」。富果說明頁（2026-08-28 修改）原文：「盤中整股交易」與「盤後定價交易」每筆最低應收手續費為 20 元，「零股交易」每筆最低應收手續費為 1 元，手續費計算「小數點以下無條件去除」。但該頁 meta 寫元富，內文寫台新，兩處不一致。6.5 折出自 money101 2026-09（元富 6.5 折、月退）、grenade 2026-10（Fugle 約 6.5 折）、winvest 2026-10（元富 6.5 折）、kikinote 2021。合併後原元富客戶的折數是否沿用，官方沒寫。試算器不宜再把元富當成獨立券商預設，建議顯示為「原元富（現台新）」。",
+    "sources": [
+     "https://uanalyze.com.tw/articles/6381050170",
+     "https://finance.ettoday.net/news/3100427",
+     "https://support.fugle.tw/?p=169",
+     "https://grenade.tw/blog/taiwan-stock-broker-comparison/",
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://winvest.tw/Knowledge/Article/213"
+    ],
+    "confidence": "low（合併事實：high；最低費用與次月 15 日退：medium；折數：low）"
+   },
+   {
+    "broker": "統一證券",
+    "market": "TW",
+    "channel": "e起發 App / UMONEY 數位帳戶 / 一般電子下單",
+    "feeRule": "e起發：2.5 折至 1.68 折，依資產變動（二手資料）；一般電子 6 折（kikinote 2021 舊資料）；零股 0.1425% × 折數，最低 1 元（官方）；UMONEY 數位帳戶現股最低 1 元（官方 FAQ）",
+    "discount": "0.6（一般，低信心）；e起發 0.25–0.168（二手資料）",
+    "rebateTiming": "月退（二手資料：money101 2026-09、uptogo 2026-06/07、kikinote 2021；官方沒寫日期）",
+    "minFeeRoundLot": "一般帳戶 20（二手資料，官方未載）；UMONEY 數位帳戶 1（官方 FAQ：「現股買進及賣出成交時，實際手續費以手續費率(0.1425%)計算，最低1元」）",
+    "minFeeOddLot": "1（官方）",
+    "notes": "官方盤中零股頁 Q8 原文：「與盤後零股手續費相同為0.1425%，最低收取1元。」範例：「例1：10000×0.1425%=14.3，因此手續費收14元。」「例2：500×0.1425%=0.7，因此手續費收1元」。範例顯示元以下捨去，再套用 1 元低消（原表引用的「手續費為14.3元，收14元」不是原文，已更正）。UMONEY FAQ 另寫「購買力計算現股買進手續費時，以手續費率(0.1425%)計算，最低20元」，這只用於圈存購買力，不是實收金額。e起發級距沒有官方原文：uptogo 2026-06 寫「2.5 折 ~ 1.68 折」，uptogo 2026-07 寫「依資產變動」，money101 2026-09 寫「最低 1.68 折起」。money101 的 e起發 專文（2026-09-08）沒有任何折數或級距。",
+    "sources": [
+     "https://eservices.pscnet.com.tw/dm/ODD/index.html",
+     "https://digital.pscnet.com.tw/FAQ.html",
+     "https://www.money101.com.tw/blog/%e7%86%b1%e9%96%80%e5%88%b8%e5%95%86%e6%af%94%e4%b8%80%e6%af%94",
+     "https://uptogo.com.tw/?p=1757178",
+     "https://uptogo.com.tw/?p=1910575",
+     "https://kikinote.net/160178"
+    ],
+    "confidence": "low-medium（零股低消與 UMONEY 低消：high；折數：low）"
+   },
+   {
+    "broker": "兆豐證券",
+    "market": "TW",
+    "channel": "電子下單",
+    "feeRule": "成交金額 × 0.1425% × 0.5（二手資料寫 5 至 6 折）",
+    "discount": "0.5（二手資料範圍 0.5–0.6）",
+    "rebateTiming": "月退（二手資料：money101 2026-09、uptogo 2026-06/07、gugu 2023；官方未載）",
+    "minFeeRoundLot": "20（低信心；uptogo 2026-07 寫兆豐「過去」整股最低 20 元，現行值未查到）",
+    "minFeeOddLot": "1（二手資料：uptogo 2026-06、2026-07）",
+    "notes": "官方首頁（emega.com.tw）沒有費率內容。工商時報和經濟日報 2026-04-01 報導，兆豐數位中心客戶在 2026/4/1–2026/12/31 期間享「台股電子交易前200萬元成交量『夢幻優惠價』」，符合條件的新開戶另有 3,600 元手續費折抵金，兩篇都沒寫折數和最低費用。折數來源不一致：money101 2026-09 和 uptogo 2026-06 寫 5 折，uptogo 2026-07 寫 5 至 6 折，winvest 2026-10-07 寫 6 折。",
+    "sources": [
+     "https://uptogo.com.tw/?p=1910575",
+     "https://uptogo.com.tw/?p=1757178",
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://www.ctee.com.tw/news/20260401701033-430201",
+     "https://money.udn.com/money/story/5607/9417102",
+     "https://winvest.tw/Knowledge/Article/213"
+    ],
+    "confidence": "low"
+   },
+   {
+    "broker": "華南永昌證券",
+    "market": "TW",
+    "channel": "電子下單（華南e指發）",
+    "feeRule": "成交金額 × 0.1425% × 0.65（二手資料）",
+    "discount": "0.65",
+    "rebateTiming": "月退（二手資料：money101 2026-09、kikinote 2021）",
+    "minFeeRoundLot": "20（二手資料，kikinote 2021）",
+    "minFeeOddLot": "1（kikinote 2021；2026 年資料沒有找到）",
+    "notes": "官方首頁（entrust.com.tw）沒有費率內容，也沒有收費標準連結。6.5 折出自 money101 2026-09、winvest 2026-10-07、kikinote 2021。官網 2026-09-07 公告標題「12/7起盤中零股新制上路與整股同步開盤」，經濟日報 2026-07-09 報導證交所計畫把盤中零股開盤提前到 9 時，暫訂 12 月 7 日上路。這項變動跟費用無關。",
+    "sources": [
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://winvest.tw/Knowledge/Article/213",
+     "https://kikinote.net/160178",
+     "https://www.entrust.com.tw/",
+     "https://udn.com/news/story/7251/9616251"
+    ],
+    "confidence": "low"
+   },
+   {
+    "broker": "玉山證券",
+    "market": "TW",
+    "channel": "電子平台下單",
+    "feeRule": "依當月成交金額累進計算：0–100萬 6折、100–300萬 5折、300萬以上 3.8折；Unicard 專案（2026/7/1–2027/3/31，首次開立玉山證券帳戶並完成活動登錄）2.8折。整股最低 20 元，零股最低 1 元。",
+    "discount": "0.6（第一級距，小額投資人實際適用）；0.5；0.38；Unicard 0.28",
+    "rebateTiming": "月退（官方）：「折讓金額以隔月退」，次月 13 號退回證券交割帳戶，遇週末或國定假日提前",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "1",
+    "notes": "官方原文：「手續費率採取累進式(級距式)計算，概念類似所得稅累進稅率，每個級距適用不同折扣，而非整筆成交金額均適用同一折扣」；範例「當月成交金額為1,000萬元時：前100萬元按6折計算，超過100萬元至300萬元的200萬元按5折計算，超過300萬元的700萬元按 3.8折計算」；「※折讓金額以隔月退：玉山證券會在您交易後的次月 13 號（遇週末、國定假日則提前），將折扣的金額退回至證券交割帳戶。」；「零股交易每筆最低1元 整股最低20元」；牌告「上市 (櫃) 股票20元；興櫃50元」；「人工下單無優惠折扣，手續費同牌告費率。」Unicard 資格更正：官方原文是「首次開立玉山證券帳戶，並完成活動登錄」，沒有寫要用專屬連結。PDF 另列「台股e指存 每筆1元」（委託金額 2 萬元以下），這是定期投資產品。",
+    "sources": [
+     "https://www.esunsec.com.tw/campaign/trade-fee",
+     "https://www.esunsec.com.tw/-/media/EsunSec/Files/trade-fee/11509.pdf"
+    ],
+    "confidence": "high"
+   },
+   {
+    "broker": "第一金證券",
+    "market": "TW",
+    "channel": "電子下單",
+    "feeRule": "成交金額 × 0.1425% × 0.6（二手資料）",
+    "discount": "0.6",
+    "rebateTiming": "月退（二手資料：money101 2026-09、uptogo 2026-07、gugu 2023）",
+    "minFeeRoundLot": "20（二手資料，kikinote 2021）",
+    "minFeeOddLot": "1（uptogo 2026-07；kikinote 2021 寫 2 元）",
+    "notes": "官方網站 firstsec.com.tw 這次重抓仍失敗（CLIENT_ERROR）。6 折出自 money101 2026-09、uptogo 2026-07、winvest 2026-10-07、gugu 2023，各來源一致，但都不是官方資料。中時旺得富 2026-01-06：線上開戶活動「加碼送800元台股手續費抵用金」，這是固定金額，不是折數。",
+    "sources": [
+     "https://uptogo.com.tw/?p=1910575",
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://winvest.tw/Knowledge/Article/213",
+     "https://wantrich.chinatimes.com/news/20260106900640-420501",
+     "https://kikinote.net/160178"
+    ],
+    "confidence": "low"
+   },
+   {
+    "broker": "台新證券",
+    "market": "TW",
+    "channel": "電子下單（以台新銀行 / Richart 交割）",
+    "feeRule": "成交金額 × 0.1425% × 0.3（二手資料）；整股每筆最低 20 元；零股最低費用說法衝突（1 元或 20 元）",
+    "discount": "0.3",
+    "rebateTiming": "月退（uptogo 2026-06-22）；富果說明頁以台新證券為例，寫下個月 15 號退，遇假日提前一個營業日",
+    "minFeeRoundLot": "20（官方試算器、uptogo 2026-06-22）",
+    "minFeeOddLot": "1（低信心：uptogo 2026-06-22「零股交易的最低手續費限制僅收 1元」、uptogo 2026-07、富果說明頁）；但官方試算器對零股也套用「未滿20元以20元計」",
+    "notes": "官方試算器原文：整股和零股都是「股票價格 x 交易數量 x 0.1425% x 手續費折扣，未滿20元以20元計」；FAQ 原文：「若單筆委託單，不同成交價，手續費分別計算收取。」試算器沒寫捨入規則，也沒有預設折數。uptogo 2026-06-22 原文：「台新證券的電子下單基本牌價折扣為 3折」「整股與一般交易的低消為 20 元」「零股交易的最低手續費限制僅收 1元」「手續費折讓採取月退制」。money101 和 winvest 也寫 3 折，gugu 2023 寫 2.8 折。2020 年中央社報導，3 折是用台新銀行帳號扣款客戶的優惠。官方 dualopen 頁的 2026 活動是 3,888 元或 888 元電子手續費抵用金，不是折數。2026-04-06 起已合併元富證券。零股低消有衝突，請小心處理。",
+    "sources": [
+     "https://www.tssco.com.tw/FeeCalculator/",
+     "https://support.fugle.tw/?p=169",
+     "https://uptogo.com.tw/財經/台新股票手續費試算？/",
+     "https://uptogo.com.tw/?p=1910575",
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://www.tssco.com.tw/zip/dualopen/",
+     "https://technews.tw/?p=662051"
+    ],
+    "confidence": "low"
+   },
+   {
+    "broker": "中國信託證券",
+    "market": "TW",
+    "channel": "電子下單",
+    "feeRule": "成交金額 × 0.1425% × 0.6（二手資料，另有 3.8 折的說法）；每筆最低 20 元（二手資料）",
+    "discount": "0.6（有衝突：winvest 2026-10-07 和 gugu 2023 寫 3.8 折）",
+    "rebateTiming": "月退（grenade 2026-10 寫次月 10 日；uptogo 2026-07、money101 2026-09、gugu 2023 寫月退；官方未載）",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "20（低信心：uptogo 2026-07 零股欄寫「最低 20 元」；grenade 2026-10 和 roo.cash 2026-08 只寫每筆 20 元，沒分整股和零股；未經官方確認）",
+    "notes": "官方首頁 ctbcsec.com 這次可以抓到，但沒有台股費率內容。roo.cash（2026-08-11 修改）原文：「中國信託證券提供電子交易手續費6折優惠，最低為每筆20元。」uptogo 2026-07、money101 2026-09、grenade 2026-10 也寫 6 折，但 winvest 2026-10-07 寫 3.8 折、gugu 2023 也寫 3.8 折，彼此衝突。經濟日報 2026-04-07：完成台股交易可享「手續費折抵金400元」，排除「盤中／後零股及申購交易」。工商時報 2026-03-02：活動至 2026-06-30，指定網頁開戶「享有台股電子交易手續費優惠」，沒寫折數。",
+    "sources": [
+     "https://roo.cash/blog/?p=81671",
+     "https://grenade.tw/blog/taiwan-stock-broker-comparison/",
+     "https://uptogo.com.tw/?p=1910575",
+     "https://winvest.tw/Knowledge/Article/213",
+     "https://school.gugu.fund/blog/gugu_knowledge/7348994481",
+     "https://money.udn.com/money/amp/story/5607/9425058",
+     "https://www.ctee.com.tw/news/20260302701422-430201"
+    ],
+    "confidence": "low"
+   },
+   {
+    "broker": "新光證券",
+    "market": "TW",
+    "channel": "富貴角多元下單（線上新開戶）",
+    "feeRule": "非方案標準：成交金額 × 0.1425% × 0.28（二手資料一致，官方未寫折數）。新戶：開戶後連續 12 個月，每月電子下單 100 萬元內「手續費震撼價」（官方用語），二手資料寫 0 元（先收 2.8 折，次月全額退回）或 1 折，說法不一；超過 100 萬的部分為 2.8 折",
+    "discount": "0.28（標準，二手資料）；新戶方案 0（全額退回）或 0.1，說法不一",
+    "rebateTiming": "說法不一：grenade 比較表 2026-10 寫日退，uptogo 2025-12 寫「當日折讓 或 隔日退款」；但 grenade 新光專文（2026-10-05 修改）寫「每日交易先以 2.8 折收取，月底結算後，100 萬元以內的部分於次月全額退回」。比較可能的情況是：2.8 折在交易當下或隔日生效，新戶方案的部分月退（推論）。",
+    "minFeeRoundLot": "20（grenade 2026-10「20 元（零股 1 元）」、uptogo 2025-12；roo.cash 寫單筆最低 1 元，沒分整股和零股）",
+    "minFeeOddLot": "1",
+    "notes": "官方開戶頁原文：「限時優惠：電子下單每月100萬元手續費震撼價(連續享有12個月)。」另一頁寫「100萬元手續費驚喜價」。兩頁都沒寫折數、最低費用或退費時點。原表寫「非方案折數未公告」，已更正：2025–2026 年二手資料一致寫 2.8 折（grenade 2026-10、uptogo 2025-12、moneymate 2023），但仍不是官方資料。新戶方案的說法：money101 2026-09 寫「0元」，uptogo 2026-06 寫「1 折」，uptogo 2026-07 寫「1 折 / 指定額度內 0 元」，roo.cash 寫「手續費回饋100%」，grenade 寫 12 個月免費、每月最多退 399 元（= 100 萬 × 0.399‰）。新光證券不屬於台新新光金控（原新光金的證券子公司是元富），這點這次沒有另外查證。",
+    "sources": [
+     "https://www.skis.com.tw/n/onlineopen/open.html",
+     "https://www.skis.com.tw/n/onlineopen/sk.html",
+     "https://grenade.tw/blog/skis-tutorial/",
+     "https://grenade.tw/blog/taiwan-stock-broker-comparison/",
+     "https://uptogo.com.tw/財經/證券商/新光證券幾折/",
+     "https://uptogo.com.tw/?p=1910575",
+     "https://roo.cash/securities/account-recommendation"
+    ],
+    "confidence": "low"
+   },
+   {
+    "broker": "口袋證券",
+    "market": "TW",
+    "channel": "口袋證券 App 電子下單",
+    "feeRule": "成交金額 × 0.1425% × 0.28（二手資料）；每筆最低 1 元（官方首頁試算說明）；新戶 2026/7/1–12/31 為 2.2 折（二手資料）",
+    "discount": "0.28（常態，二手資料）；新戶 0.22（2026/7/1–2026/12/31，二手資料）",
+    "rebateTiming": "即時折讓（低信心）：grenade 2026-10「口袋則是直接以折扣後金額收取，不走退佣」；uptogo 2026-06 寫「日折 / 日退」；官方未載",
+    "minFeeRoundLot": "1（官方首頁：「試算依台股現股電子下單手續費（牌告0.1425%）估算，口袋優惠折扣、一般券商6折，最低手續費分別為 NT$1 與 NT$20」）",
+    "minFeeOddLot": "1",
+    "notes": "新增的列。這是本次唯一有「直接折收」（即時折讓）說法的券商，但沒有官方確認。官方首頁沒寫折數；2.8 折出自卡優 2025-09-15、moneymate 2026-05-18（「台股交易手續費常態 2.8 折、低收 1 元」）、uptogo 2026-06、grenade 2026-10、winvest 2026-10-07。官方 FAQ 頁抓取失敗（CLIENT_ERROR）。口袋證券 2024-03-29 的官方公告也是零股交割價金新規的出處（見 roundingRules）。",
+    "sources": [
+     "https://www.pocket.tw/",
+     "https://grenade.tw/blog/taiwan-stock-broker-comparison/",
+     "https://uptogo.com.tw/?p=1757178",
+     "https://moneymate.space/pocket-stock/",
+     "https://www.cardu.com.tw/epoint/detail.php?39947=1",
+     "https://winvest.tw/Knowledge/Article/213"
+    ],
+    "confidence": "low-medium（最低 1 元：high；折數：medium；即時折讓：low）"
+   }
+  ],
+  "regulatoryFees": [
+   {
+    "name": "證券交易稅 — 股票（一般）",
+    "rule": "由賣方負擔，成交金額 × 0.3%（千分之3），買進不課稅。第2條原文：「公司發行之股票及表明股票權利之證書或憑證徵千分之三。」",
+    "effectiveFrom": "長期（證券交易稅條例第2條）",
+    "effectiveUntil": "無期限",
+    "sources": [
+     "https://6laws.net/6law/laws/證券交易稅條例.html",
+     "https://www.esunsec.com.tw/campaign/trade-fee",
+     "https://www.tssco.com.tw/FeeCalculator/"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "證券交易稅 — ETF / 受益憑證 / ETN / 權證",
+    "rule": "由賣方負擔，成交金額 × 0.1%。第2條原文：「公司債及其他經政府核准之有價證券徵千分之一。」玉山官方頁：「ETF、ETN、權證的交易稅是千分之1」。當沖減半（第2條之2）只適用於上市或上櫃股票，所以 ETF 當沖仍為 0.1%。",
+    "effectiveFrom": "長期",
+    "effectiveUntil": "無期限",
+    "sources": [
+     "https://6laws.net/6law/laws/證券交易稅條例.html",
+     "https://www.esunsec.com.tw/campaign/trade-fee"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "證券交易稅 — 現股當沖（股票）減半",
+    "rule": "同一帳戶同一營業日現款買進、現券賣出同種類同數量的上市或上櫃股票，賣出時按 0.15%（千分之1.5）課徵，不適用 0.3%（第2條之2）。2024-12-31 立法院三讀，延長到 2027-12-31，2025-01-02 公布。截至 2026-03 的報導，2027 年以後是否延長仍未決定，沒有永久化。",
+    "effectiveFrom": "2017-04-28（證券商自行買賣 2018-04-28）",
+    "effectiveUntil": "2027-12-31",
+    "sources": [
+     "https://6laws.net/6law/laws/證券交易稅條例.html",
+     "https://www.ctee.com.tw/news/20250101700052-430104",
+     "https://udn.com/news/story/7239/9388560"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "證券交易稅 — 債券ETF 停徵",
+    "rule": "現行第2條之1第2項：投信發行、以債券為主要投資標的之上市及上櫃指數股票型基金受益憑證（被動式債券 ETF）停徵，即 0%。槓桿型和反向型債券 ETF 不適用，按 0.1% 課徵；第3項另限制投資標的。行政院 2026-10-01 通過第2條之1修正草案：公司債、金融債券和被動式債券 ETF 停徵延長 10 年到 125年12月31日（2036-12-31）；主動式債券 ETF 納入停徵，期間 116年1月1日至125年12月31日；並刪除被動式債券 ETF 投資標的限制。草案已送立法院審議，財政部列為本會期優先法案，目標年底前完成。截至 2026-10-10 還沒有三讀。",
+    "effectiveFrom": "2017-01-01",
+    "effectiveUntil": "2026-12-31（現行法）；草案延長到 2036-12-31，尚待立法院通過",
+    "sources": [
+     "https://6laws.net/6law/laws/證券交易稅條例.html",
+     "https://www.ey.gov.tw/Page/9277F759E41CCD91/4d7b8a90-f834-4035-ab54-7728b91f243b",
+     "https://money.udn.com/money/story/5607/9787916",
+     "https://uanalyze.com.tw/articles/8742056296"
+    ],
+    "confidence": "high（現行法）；延長案：pending"
+   },
+   {
+    "name": "證券交易稅 — 公司債及金融債券 停徵",
+    "rule": "第2條之1第1項原文：「自中華民國九十九年一月一日起至一百十五年十二月三十一日止暫停徵公司債及金融債券之證券交易稅。」即 0%。延長到 2036-12-31 的草案同樣待立法院審議。",
+    "effectiveFrom": "2010-01-01",
+    "effectiveUntil": "2026-12-31（現行法）；草案延長到 2036-12-31",
+    "sources": [
+     "https://6laws.net/6law/laws/證券交易稅條例.html",
+     "https://www.ey.gov.tw/Page/9277F759E41CCD91/4d7b8a90-f834-4035-ab54-7728b91f243b"
+    ],
+    "confidence": "high"
+   }
+  ],
+  "roundingRules": "手續費：多數券商把元以下無條件捨去，例如 floor(成交金額 × 0.1425% × 折數)，再和最低手續費取較大者。證據：統一證券官方 Q8 原文「例1：10000×0.1425%=14.3，因此手續費收14元。」「例2：500×0.1425%=0.7，因此手續費收1元」；富果說明頁寫「小數點以下無條件去除」；國泰官方註1寫成交價金「計算結果以整元為準，元以下無條件捨去」；roo.cash（2025-10-15 更新）寫「不論是手續費還是證交稅，最後得出的金額有小數的話皆採「無條件捨去」」；富邦官方新戶頁寫退款差額「小數點後採無條件捨去」。整股低消多為 20 元，零股多為 1 元。最低手續費的計算單位沒有統一的官方規則：台新官方 FAQ 寫「若單筆委託單，不同成交價，手續費分別計算收取」，也就是同一委託的不同成交價可能各自計費、各自套用低消。零股交割價金：口袋證券官方公告（2024-03-29）寫，自 2024-04-01 起改為「同一委託書相同成交價格合併」計算，「元以下無條件捨去」；但公告沒提手續費是否也這樣合併。月退或日退的券商，交割時先按 1.425‰ 全額收取，之後退回折讓差額（富邦、永豐、玉山官方都這樣寫）；淨手續費通常近似 max(低消, floor(成交金額 × 0.1425% × 折數))，但各家計算方式不同（推論，未逐家確認）。證交稅：成交金額 × 稅率，只在賣出時課，二手資料普遍寫元以下無條件捨去，但沒有找到新台幣證交稅捨入的官方條文。財政部 etax 問答（雙幣 ETF）只寫外幣稅額換算成新台幣時「計算至元，元以下四捨五入」。建議試算器預設 floor，並註明可能有 ±1 元差異。",
+  "notes": "1. 沒有標準的單一折數：電子折數依客戶、分公司、開戶管道和活動而不同。表中的 discount 是公告標準值或常見值，試算器應讓使用者自行輸入折數，預設值只作參考。\n2. 這次重新讀到官方原文的券商：玉山（費率頁與 PDF：累進級距、次月 13 日退、整股 20 / 零股 1）、國泰（2.8 折、捨去規則）、永豐金（2 折、次月 15 日退、低收 1 元）、富邦（次月 5 日退、零股 1 元、100 萬上限、2026 期間）、凱基（整股 20、零股 1）、元大（6 折、整股 20、盤中零股 1）、群益（零股電子 1 元）、統一（零股 1 元、UMONEY 現股 1 元）、台新（試算器公式與 FAQ）、口袋（低收 1 元）、新光（「震撼價」措辭）。其餘數值主要來自 2026 年比較文章（money101 2026-09、uptogo 2026-06 和 2026-07、grenade 2026-10、winvest 2026-10-07），文章之間有衝突，已在各家 notes 標明。\n3. 官方網站狀況：firstsec.com.tw 和 pocket.tw/faq 抓取失敗（CLIENT_ERROR）；ctbcsec.com、entrust.com.tw、emega.com.tw 首頁抓得到，但沒有費率內容。法條用 6laws.net 的條文，該站自註以官方公布為準，最新修正日期 113-12-31（114-01-02 公布）。\n4. 結構變動：元富證券已於 2026-04-06 併入台新證券，台新證券存續（優分析轉載鉅亨、ETtoday 的金管會核准報導）。\n5. 即時折讓：只有口袋證券有「直接以折扣後金額收取，不走退佣」的說法（grenade 2026-10；uptogo 2026-06 寫「日折 / 日退」），新光有「當日折讓 或 隔日退款」的說法（uptogo 2025-12），兩者都未經官方確認。官方確認的月退：富邦新戶次月 5 日、永豐金次月 15 日、玉山次月 13 日（後兩家遇假日提前）。二手資料的退費時點：台新次月 15 日（富果頁）、中信次月 10 日（grenade）；日退：國泰（各來源一致）、元大和群益（來源有衝突）。\n6. 證交稅時點：第3條原文「證券交易稅由代徵人於每次買賣交割之當日，按規定稅率代徵」；工商時報 2025-01-01 引述財政部，計稅時點是「交割日」而非「交易日」。因此如果延長案沒有通過，2026 年最後幾個交易日賣出的債券 ETF，交割日落在 2027 年，可能適用 0.1%（推論，未經官方確認）。\n7. 證交所計畫：盤中零股開盤提前到 9 時，暫訂 2026-12-07 上路（經濟日報 2026-07-09，華南永昌 2026-09-07 公告標題也一致）；撮合間隔 5 秒縮短到 1 秒、千金股改為一元一跳，預計 2027 年 7 月。都跟費用無關。\n8. 原表群益列有重複的 \" confidence\" 鍵（前面多一個空白），已移除。\n9. 這次沒有查美股 / 複委託費率。"
+ },
+ "changes": [
+  "國泰證券 minFeeRoundLot 從 20 改為 1，並標低信心：原本的 20 只是通用「標準牌告」假設；所有國泰專屬資料都寫 1 元，包括 uptogo 2026-06（「一般電子交易與零股交易，手續費最低只收 1 元」）、moneymate 2026-08（「低收 1 元」）、grenade 2026-10（1 萬元整股舉例實付約 3 元）和 kikinote 2021。官方費率頁沒寫最低手續費，所以仍標未經官方確認。",
+  "國泰 rebateTiming：補上更多一致的二手來源（gugu 2023、kikinote 2021），仍註明官方未載。",
+  "富邦證券：更正 1.8 折的出處。roo.cash 的 1.8 折是「2025 年新戶優惠」（2025/12/31 截止），2026 年的 1.8 折改引 money101 2026-09、uptogo 2026-06/07、grenade 2026-10、winvest 2026-10。整股 20 元低消降為二手資料（官方新戶頁沒寫）。補上官方原文：「超過優惠交易限額100萬以上則依約定手續費計算」、退款差額「小數點後採無條件捨去」。",
+  "新光證券：原表說非方案折數「未公告」，更正為 2.8 折（grenade 2026-10、uptogo 2025-12、moneymate 2023 一致，但非官方）。新戶方案改寫為 0 元（全額退回）或 1 折，說法不一。rebateTiming 原本只寫日退，現在標為有衝突：grenade 新光專文寫 100 萬內次月退回，即月退。discount 從 0.1 改為「0.28 標準；新戶 0 或 0.1」。",
+  "中國信託證券：discount 0.6 加註衝突（winvest 2026-10-07 和 gugu 2023 寫 3.8 折）。修正 minFeeOddLot 說明：只有 uptogo 2026-07 明確把 20 元寫在零股欄，grenade 和 roo.cash 都沒分整股和零股。補上工商時報 2026-03-02 活動資料。官方首頁可以抓到，但沒有費率內容，不是原表說的 CLIENT_ERROR。",
+  "群益金鼎證券：移除重複的 \" confidence\" 鍵。rebateTiming 改為有衝突：uptogo 2026-06-23 群益專文說月退最常見、日退要申請。整股 20 元補上出處。新增 winvest 和 uptogo 群益專文為來源。",
+  "元富證券列：保留但改名為「元富證券（2026-04-06 已併入台新證券；含富果 Fugle 帳戶）」。補上 ETtoday 報導（金管會核准，基準日 4/6）和 grenade 2026-10 的 Fugle 約 6.5 折、次月 15 日月退。註明富果頁 meta（元富）和內文（台新）不一致。",
+  "統一證券：更正官方範例引文，原文是「例1：10000×0.1425%=14.3，因此手續費收14元。」「例2：500×0.1425%=0.7，因此手續費收1元」。註明 money101 的 e起發 專文沒有任何折數或級距；e起發「依資產」級距只有 uptogo 2026-07 一個來源。",
+  "玉山證券：Unicard 資格從「需專屬連結開戶並登錄」更正為官方原文「首次開立玉山證券帳戶，並完成活動登錄」。累進級距和次月 13 日退已逐字確認，維持 high。",
+  "永豐金證券：補註兩項優惠都放在官方「2026 限時優惠」欄，官方頁沒寫結束日，也沒寫 1 元低收的適用對象；1 元低收的確定度降為 medium。",
+  "凱基證券：退費時點降為 low-medium，因為 money101 2026-09 寫「活動回饋」，與其他來源不一致。補上官方 small-invest 頁「每筆不足1元時仍以1元計收」，並註明只適用該產品。註明 uptogo 2026-04/06/07 的零股 20 元與官方不符。",
+  "兆豐證券：discount 標為範圍 0.5–0.6（winvest 2026-10 寫 6 折）。整股 20 元降為低信心，因為 uptogo 只寫「過去」是 20 元。補上經濟日報 2026-04-01 為「夢幻優惠價」的第二來源，以及 3,600 元折抵金。",
+  "華南永昌證券：補上 winvest 2026-10 的 6.5 折。用經濟日報 2026-07-09 確認「12/7 盤中零股新制」（開盤提前到 9 時，跟費用無關）。",
+  "第一金證券：補上 winvest 2026-10 和 gugu 2023（6 折、月退）。firstsec.com.tw 重抓仍失敗。",
+  "台新證券：補上 uptogo 2026-06-22 的原文（3 折、整股 20、零股 1、月退），以及 2020 年中央社「台新銀行扣款客戶 3 折」的背景；保留零股低消與官方試算器的衝突。",
+  "新增口袋證券列：官方首頁確認每筆最低 1 元；2.8 折（新戶 2026/7/1–12/31 為 2.2 折）出自多個二手資料；「直接折收」（即時折讓）只有二手說法。這是表中唯一可能的即時折讓券商。",
+  "notes 第 5 點：原本說查到的券商都沒有「即時折讓」，更正為口袋（直接折收）和新光（當日折讓或隔日退）有即時折讓的二手說法，都未經官方確認。",
+  "regulatoryFees 現股當沖：補上經濟日報 2026-03-18 的現況，2027 年以後是否延長未決定，沒有永久化。",
+  "regulatoryFees 債券 ETF：補上優分析 2026-10-01 為第二來源，確認仍是行政院草案、尚未三讀；補上草案會刪除投資標的限制。現行法條措辭改為「以債券為主要投資標的之上市及上櫃指數股票型基金受益憑證」。",
+  "roundingRules：補上口袋證券 2024-03-29 官方公告為零股交割價金規則的出處（「同一委託書相同成交價格合併」、「元以下無條件捨去」），並註明公告沒提手續費是否也合併。補上富邦官方的退款差額捨去規則。etax 的「元以下四捨五入」已確認，但只適用雙幣 ETF 的外幣換算。",
+  "元大證券：rebateTiming 的來源補上日期（money101 2026-09-08、uptogo 2026-06-13 和 2026-07-02、grenade 2026-10-05、gugu 2023-09-20），並確認官方文件都沒有退費時點。"
+ ],
+ "original": {
+  "brokers": [
+   {
+    "broker": "元大證券",
+    "market": "TW",
+    "channel": "電子下單 (投資先生 App / Web / AP)",
+    "feeRule": "成交金額 × 0.1425% × 0.6；整股每筆最低 NT$20，盤中零股每筆最低 NT$1",
+    "discount": "0.6",
+    "rebateTiming": "未在官方頁面找到。2026 年二手資料寫日退（money101 2026-09、uptogo 2026-06），grenade 2026-10 寫「依分公司約定」，gugu 2023 寫月退。",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "盤中零股 1（官方）；官方頁面沒有寫盤後零股最低費用",
+    "notes": "6折出自元大官方 PDF（數位金融部 2024/11/29）：「盤中零股手續費以每筆成交金額之千分之1.425計算(電子交易手續費6折，為千分之0.855)，每筆最低為新台幣1元」。官方注意事項第18點：「台幣交易每筆最低新台幤20元…「盤中零股」每筆最低新台幣1元」，沒有提到盤後零股。實際折數依分公司或個人議定，6折是常見公告值。退費時點未經官方確認。",
+    "sources": [
+     "https://www.yuanta.com.tw/eyuanta/webfile/resourcesFile/c032d406-9b57-439a-ad0f-a5e86b4dd012.pdf",
+     "https://www.yuanta.com.tw/file-repository/content/d9ad191c-1eaa-4b51-b59b-c652997d6d24/note.html",
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://uptogo.com.tw/?p=1757178",
+     "https://grenade.tw/blog/taiwan-stock-broker-comparison/"
+    ],
+    "confidence": "medium（折數與最低費用：high；退費時點：low）"
+   },
+   {
+    "broker": "富邦證券",
+    "market": "TW",
+    "channel": "電子下單（一般舊戶）；新戶方案（富邦 AI PRO / 新開戶）",
+    "feeRule": "一般：0.1425% × 0.6。新戶：每月電子成交 100 萬元（含）以內享優惠（二手資料寫 1.8 折），超過部分依約定手續費（6折）",
+    "discount": "0.6（一般）；新戶 0.18（≤100萬/月，2026/1/1–2026/12/31）",
+    "rebateTiming": "月退：先按千分之1.425全額收取，次月 5 日退回折讓金額（官方新戶頁）",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "1（官方盤中零股頁）",
+    "notes": "官方新戶頁原文：「台股(不含興櫃)電子下單每月成交金額100萬元（含）以下手續費享優惠」「於次月 5 日再行退回逐筆計算後之折讓金額總和於客戶原交割帳戶」，但頁面沒寫折數，1.8 折來自 money101 與 roo.cash。舊戶 6 折出自 roo.cash（2026-07 更新）。官方零股頁：「單筆手續費未滿新台幣1元者，按1元計收」。roo.cash 提到成交約 77,972 元以上才不受 20 元低消影響，意思是整股折讓後仍保留 20 元低消（推論）。",
+    "sources": [
+     "https://www.fubon.com/securities/open-now/index.html",
+     "https://www.fubon.com/securities/LT-home/index.html",
+     "https://roo.cash/blog/fubon-account-article",
+     "https://www.money101.com.tw/blog/%e7%86%b1%e9%96%80%e5%88%b8%e5%95%86%e6%af%94%e4%b8%80%e6%af%94"
+    ],
+    "confidence": "medium（退費時點與零股低消：high；折數：medium）"
+   },
+   {
+    "broker": "凱基證券",
+    "market": "TW",
+    "channel": "電子下單",
+    "feeRule": "成交金額 × 0.1425% × 0.6（標準電子折數，二手資料）；整股每筆最低 NT$20，零股每筆最低 NT$1（官方）",
+    "discount": "0.6",
+    "rebateTiming": "月退（二手資料：當日全額收取，月底或次月初退回，官方沒寫確切日期）",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "1",
+    "notes": "官方交易規範頁原文：整股「未滿新台幣二十元者，按二十元計收」，零股「未滿新台幣一元者，按一元計收」，沒有分盤中和盤後。uptogo 2026-04 稱零股非活動期間多維持 20 元，與官方不符，以官方為準。活動折數（2.5 折、1.1 折）有附帶條件，不能當成標準折數。",
+    "sources": [
+     "https://www.kgi.com.tw/zh-tw/support-index/trading-regulations",
+     "https://event.kgi.com.tw/news/event/small-invest/index.html",
+     "https://uptogo.com.tw/%e8%b2%a1%e7%b6%93/%e8%ad%89%e5%88%b8%e5%95%86/%e5%87%b1%e5%9f%ba%e6%89%8b%e7%ba%8c%e8%b2%bb%e5%b9%be%e6%8a%98%ef%bc%9f/",
+     "https://uptogo.com.tw/?p=1757178"
+    ],
+    "confidence": "medium（最低費用：high；折數與退費：medium）"
+   },
+   {
+    "broker": "國泰證券",
+    "market": "TW",
+    "channel": "網路下單 / 樹精靈 App",
+    "feeRule": "成交金額 × 0.1425% × 0.28（= 0.399‰，官方「網路下單優惠2.8折（0.399‰）」）",
+    "discount": "0.28",
+    "rebateTiming": "日退（二手資料：money101 2026、uptogo 2026、grenade 2026，官方沒寫）",
+    "minFeeRoundLot": "20（標準牌告；grenade 2026 和 kikinote 2021 稱網路戶整股低消 1 元，未經官方確認）",
+    "minFeeOddLot": "1",
+    "notes": "官方台股收費頁：「網路下單優惠2.8折（0.399‰）」「人工下單無優惠折扣，手續費同牌告費率」，註1「成交價金＝成交股數 × 成交單價，計算結果以整元為準，元以下無條件捨去」。官方頁沒有寫最低手續費和退費時點。零股 1 元出自 2020 年中央社 / TechNews（國泰將盤中零股最低手續費降為 1 元），2026 年二手資料也一致。",
+    "sources": [
+     "https://www.cathaysec.com.tw/cathaysec/Products/TradeFee/TWS.aspx",
+     "https://technews.tw/?p=662051",
+     "https://grenade.tw/blog/taiwan-stock-broker-comparison/",
+     "https://uptogo.com.tw/?p=1757178"
+    ],
+    "confidence": "medium（折數：high；退費與最低費用：medium）"
+   },
+   {
+    "broker": "永豐金證券",
+    "market": "TW",
+    "channel": "線上新開戶（大戶投 / 豐存股等）電子下單",
+    "feeRule": "線上新開戶：電子月成交 100 萬元內 0.1425% × 0.2（0.285‰），優惠低收 1 元；超過或非方案：依約定 / 牌告 1.425‰，低收 20 元",
+    "discount": "0.2（線上新戶，月成交 ≤100萬）",
+    "rebateTiming": "月退：當月先收全額，次月 15 日退回交割帳戶，遇假日提早（官方）",
+    "minFeeRoundLot": "優惠方案 1（官方「低收 1 元上市櫃、興櫃 (外幣ETF除外)」，沒有分整股和零股）；牌告 20",
+    "minFeeOddLot": "1",
+    "notes": "官方費率查詢頁：「2 折 (0.285‰)線上新開戶(電子月交易100萬內)」。官方收費標準 PDF（2024/11/28）：「上市（櫃）股票 千分之 1.425（低收 20 元）」「當月先收取全額手續費，於次月 15 日退回至客戶交割帳戶，遇假日則提早」。舊戶標準折數沒有公告（2021 年舊資料寫 6.5 折）。",
+    "sources": [
+     "https://www.sinotrade.com.tw/newweb/Fee_Rate/?market=S",
+     "https://www.sinotrade.com.tw/ec/upload/Service-charge.pdf",
+     "https://www.sinotrade.com.tw/richclub/dawhotou/campaign/offer"
+    ],
+    "confidence": "high（新戶方案）；舊戶標準折數：low"
+   },
+   {
+    "broker": "群益金鼎證券",
+    "market": "TW",
+    "channel": "電子下單",
+    "feeRule": "成交金額 × 0.1425% × 0.6（二手資料寫 6 至 6.5 折）；零股電子交易每筆最低 NT$1（官方）",
+    "discount": "0.6（範圍 0.6–0.65）",
+    "rebateTiming": "日退（money101 2026、uptogo 2026；grenade 2026 寫「依分公司約定」，官方沒寫）",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "1（電子；官方表格列在盤後欄，Q&A 寫盤中零股「電子交易手續費單筆最低為1元」）",
+    "notes": "官方零股頁：「盤中零股交易手續費收取千分之1.425」「電子交易手續費單筆最低為1元」。官方頁沒有寫電子折數和退費時點。2020 年報導稱群益盤中零股當時仍維持 20 元，現已改為 1 元（官方）。",
+    "sources": [
+     "https://www.capital.com.tw/event/stock/oddLot/default.asp",
+     "https://grenade.tw/blog/taiwan-stock-broker-comparison/",
+     "https://uptogo.com.tw/?p=1757178",
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94"
+    ],
+    " confidence": "low-medium",
+    "confidence": "low-medium（零股低消：high；折數與退費：low）"
+   },
+   {
+    "broker": "元富證券（已併入台新證券）",
+    "market": "TW",
+    "channel": "電子下單（含富果 Fugle 帳戶）",
+    "feeRule": "合併前常見：0.1425% × 0.65；整股低消 20、零股低消 1",
+    "discount": "0.65",
+    "rebateTiming": "月退：次月 15 日退回（富果說明頁，以台新證券為例）",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "1",
+    "notes": "元富證券已於 2026-04-06 併入台新證券，台新證券為存續公司（優分析轉載鉅亨，2026-04-07）。建議不要再把元富當成獨立預設，或標為「原元富（現台新）」。6.5 折出自 money101 2026 和 kikinote 2021。富果說明頁（2026-08 修改）：「盤中整股交易與盤後定價交易每筆最低應收手續費為 20 元，零股交易每筆最低應收手續費則為 1 元」，退費在交易後的下個月 15 號。",
+    "sources": [
+     "https://uanalyze.com.tw/articles/6381050170",
+     "https://support.fugle.tw/?p=169",
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://kikinote.net/160178"
+    ],
+    "confidence": "low（合併：high；費率已不適用為獨立券商）"
+   },
+   {
+    "broker": "統一證券",
+    "market": "TW",
+    "channel": "e起發 App / UMONEY 數位帳戶",
+    "feeRule": "e起發依資產級距 2.5 折至 1.68 折（二手資料）；一般電子 6 折（2021 年舊資料）；零股 0.1425%，最低 1 元（官方）",
+    "discount": "0.6（一般，低信心）；e起發 0.25–0.168",
+    "rebateTiming": "月退（二手資料，官方沒寫日期）",
+    "minFeeRoundLot": "20（標準）；UMONEY 數位帳戶官方 FAQ 寫現股成交實際手續費「最低1元」",
+    "minFeeOddLot": "1（官方）",
+    "notes": "官方盤中零股頁：「與盤後零股手續費相同為0.1425%，最低收取1元」，範例「成交金額10,000元時，手續費為14.3元，收14元」，顯示元以下捨去。UMONEY FAQ：「現股買進及賣出成交時，實際手續費以手續費率(0.1425%)計算，最低1元」（購買力預估時以最低 20 元計）。e起發級距沒有找到官方原文。",
+    "sources": [
+     "https://eservices.pscnet.com.tw/dm/ODD/index.html",
+     "https://digital.pscnet.com.tw/FAQ.html",
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://uptogo.com.tw/?p=1757178"
+    ],
+    "confidence": "low-medium（零股低消：high；折數：low）"
+   },
+   {
+    "broker": "兆豐證券",
+    "market": "TW",
+    "channel": "電子下單",
+    "feeRule": "成交金額 × 0.1425% × 0.5（二手資料寫 5 至 6 折）",
+    "discount": "0.5",
+    "rebateTiming": "月退（二手資料）",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "1（二手資料 2026）",
+    "notes": "官方頁（events.emega.com.tw）沒有抓到費率內容。兆豐數位中心 2026/4/1–12/31 有「台股電子交易前200萬元成交量夢幻優惠價」，工商時報沒寫折數。uptogo 2026-07 寫兆豐過去整股最低 20 元。",
+    "sources": [
+     "https://uptogo.com.tw/?p=1910575",
+     "https://uptogo.com.tw/?p=1757178",
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://www.ctee.com.tw/news/20260401701033-430201"
+    ],
+    "confidence": "low"
+   },
+   {
+    "broker": "華南永昌證券",
+    "market": "TW",
+    "channel": "電子下單（華南e指發）",
+    "feeRule": "成交金額 × 0.1425% × 0.65（二手資料）",
+    "discount": "0.65",
+    "rebateTiming": "月退（二手資料）",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "1（kikinote 2021，未經 2026 年資料確認）",
+    "notes": "官方網站（entrust.com.tw）的 FAQ 和交易平台頁沒有抓到費率內容。6.5 折與月退出自 money101 2026-09 和 kikinote 2021。",
+    "sources": [
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://kikinote.net/160178"
+    ],
+    "confidence": "low"
+   },
+   {
+    "broker": "玉山證券",
+    "market": "TW",
+    "channel": "電子平台下單",
+    "feeRule": "級距累進（依月成交金額）：0–100萬 6折、100–300萬 5折、300萬以上 3.8折；Unicard 專案（2026/7/1–2027/3/31，需專屬連結開戶並登錄）2.8折",
+    "discount": "0.6（第一級距 / 小額投資人實際適用）；0.5；0.38；Unicard 0.28",
+    "rebateTiming": "月退：「折讓金額以隔月退」，次月 13 日（遇假日提前）退至交割帳戶（官方）",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "1",
+    "notes": "官方原文：「使用電子平台下單即享手續費折扣」「人工下單無優惠折扣，手續費同牌告費率」。級距是累進式，例如月成交 1,000 萬時，前 100 萬適用 6 折，次 200 萬適用 5 折，其餘 700 萬適用 3.8 折。官方：「零股交易每筆最低1元」「整股最低20元」，興櫃 50 元。",
+    "sources": [
+     "https://www.esunsec.com.tw/campaign/trade-fee",
+     "https://www.esunsec.com.tw/-/media/EsunSec/Files/trade-fee/11509.pdf"
+    ],
+    "confidence": "high"
+   },
+   {
+    "broker": "第一金證券",
+    "market": "TW",
+    "channel": "電子下單",
+    "feeRule": "成交金額 × 0.1425% × 0.6（二手資料）",
+    "discount": "0.6",
+    "rebateTiming": "月退（二手資料）",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "1（uptogo 2026-07；kikinote 2021 寫 2 元）",
+    "notes": "官方網站 firstsec.com.tw 的頁面無法抓取（CLIENT_ERROR），有一個官方頁標題是「台股零股電子手續費超優惠」，但看不到內容。2026 年新戶活動是固定金額的手續費抵用金（800 元），不是折數。",
+    "sources": [
+     "https://uptogo.com.tw/?p=1910575",
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://wantrich.chinatimes.com/news/20260106900640-420501"
+    ],
+    "confidence": "low"
+   },
+   {
+    "broker": "台新證券",
+    "market": "TW",
+    "channel": "電子下單（以台新銀行 / Richart 交割）",
+    "feeRule": "成交金額 × 0.1425% × 0.3（二手資料）",
+    "discount": "0.3",
+    "rebateTiming": "月退；富果說明頁以台新證券為例寫次月 15 日（遇假日提前一個營業日）",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "1（二手資料 2026）；官方試算器寫「未滿20元以20元計」，並套用到零股",
+    "notes": "官方試算器頁的公式是「股票價格 x 交易數量 x 0.1425% x 手續費折扣」，並寫零股和整股都「未滿20元以20元計」。官方 FAQ：「若單筆委託單，不同成交價，手續費分別計算收取」。2026-04-06 起已合併元富證券。2026 年官方活動都是電子手續費抵用金（3,888 / 888 元），不是折數。零股低消有衝突，請小心處理。",
+    "sources": [
+     "https://www.tssco.com.tw/FeeCalculator/",
+     "https://support.fugle.tw/?p=169",
+     "https://uptogo.com.tw/?p=1910575",
+     "https://www.money101.com.tw/blog/%E6%96%B0%E6%89%8B%E9%96%8B%E6%88%B6%E9%81%B8%E5%93%AA%E5%AE%B6%E5%93%AA%E5%AE%B6%E5%88%B8%E5%95%86%E6%89%8B%E7%BA%8C%E8%B2%BB%E6%9C%80%E4%BE%BF%E5%AE%9C%E3%80%81%E4%B8%8B%E5%96%AE%E8%BB%9F%E9%AB%94",
+     "https://www.tssco.com.tw/zip/dualopen/"
+    ],
+    "confidence": "low"
+   },
+   {
+    "broker": "中國信託證券",
+    "market": "TW",
+    "channel": "電子下單",
+    "feeRule": "成交金額 × 0.1425% × 0.6",
+    "discount": "0.6",
+    "rebateTiming": "月退（grenade 2026 寫次月 10 日，官方沒寫）",
+    "minFeeRoundLot": "20",
+    "minFeeOddLot": "20（grenade 2026-10 和 uptogo 2026-07 都寫零股最低 20 元，未經官方確認）",
+    "notes": "官方網站 ctbcsec.com 的頁面無法抓取（CLIENT_ERROR）。roo.cash（2026-08 修改）：「電子交易手續費6折優惠」、每筆最低 20 元。2026 年活動有 400 元手續費折抵金，排除盤中和盤後零股。",
+    "sources": [
+     "https://grenade.tw/blog/taiwan-stock-broker-comparison/",
+     "https://uptogo.com.tw/?p=1910575",
+     "https://roo.cash/blog/?p=81671",
+     "https://money.udn.com/money/amp/story/5607/9425058"
+    ],
+    "confidence": "low-medium"
+   },
+   {
+    "broker": "新光證券",
+    "market": "TW",
+    "channel": "富貴角多元下單（線上新開戶）",
+    "feeRule": "新戶：電子下單每月 100 萬元內「手續費震撼價」，連續 12 個月（二手資料寫 0 元或約 1 折）；非方案折數未公告",
+    "discount": "0.1（新戶方案，二手資料；也有「0 元」的說法）",
+    "rebateTiming": "日退（二手資料）",
+    "minFeeRoundLot": "20（grenade 2026）；roo.cash 寫 1",
+    "minFeeOddLot": "1",
+    "notes": "官方頁原文：「限時優惠：電子下單每月100萬元手續費震撼價(連續享有12個月)」，沒寫折數。新光證券不屬於台新新光金控，仍是獨立券商。2020–2021 年舊標準為 2.8 折。",
+    "sources": [
+     "https://www.skis.com.tw/n/onlineopen/open.html",
+     "https://www.skis.com.tw/n/onlineopen/sk.html",
+     "https://grenade.tw/blog/taiwan-stock-broker-comparison/",
+     "https://uptogo.com.tw/?p=1910575",
+     "https://roo.cash/securities/account-recommendation"
+    ],
+    "confidence": "low"
+   }
+  ],
+  "regulatoryFees": [
+   {
+    "name": "證券交易稅 — 股票（一般）",
+    "rule": "賣方負擔，成交金額 × 0.3%（千分之3）。買進不課稅。",
+    "effectiveFrom": "長期（證券交易稅條例第2條）",
+    "effectiveUntil": "無期限",
+    "sources": [
+     "https://6laws.net/6law/laws/證券交易稅條例.html",
+     "https://www.esunsec.com.tw/campaign/trade-fee"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "證券交易稅 — ETF / 受益憑證 / ETN / 權證",
+    "rule": "賣方負擔，成交金額 × 0.1%（第2條：「公司債及其他經政府核准之有價證券徵千分之一」）。現股當沖減半只適用於股票，ETF 當沖仍為 0.1%。",
+    "effectiveFrom": "長期",
+    "effectiveUntil": "無期限",
+    "sources": [
+     "https://6laws.net/6law/laws/證券交易稅條例.html",
+     "https://www.esunsec.com.tw/campaign/trade-fee"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "證券交易稅 — 現股當沖（股票）減半",
+    "rule": "同一帳戶同日買賣同一股票同數量的現股當沖，賣方稅率由 0.3% 降為 0.15%（第2條之2）。2024-12-31 三讀，2025-01-02 公布。",
+    "effectiveFrom": "2017-04-28（自營商 2018-04-28）",
+    "effectiveUntil": "2027-12-31",
+    "sources": [
+     "https://6laws.net/6law/laws/證券交易稅條例.html",
+     "https://www.ctee.com.tw/news/20250101700052-430104"
+    ],
+    "confidence": "high"
+   },
+   {
+    "name": "證券交易稅 — 債券ETF 停徵",
+    "rule": "上市櫃的被動式債券指數 ETF 受益憑證停徵證交稅，即 0%。槓桿型和反向型債券 ETF 不適用，按 0.1% 課徵（第2條之1第2項）。行政院 2026-10-01 通過修正草案，把公司債、金融債和被動式債券 ETF 的停徵延長 10 年到 2036-12-31，並把主動式債券 ETF 納入（2027-01-01 至 2036-12-31）。草案待立法院審議，目標年底前完成，截至 2026-10-10 還沒有成為法律。",
+    "effectiveFrom": "2017-01-01",
+    "effectiveUntil": "2026-12-31（現行法）；提案延長至 2036-12-31，尚待立法院通過",
+    "sources": [
+     "https://6laws.net/6law/laws/證券交易稅條例.html",
+     "https://www.ey.gov.tw/Page/9277F759E41CCD91/4d7b8a90-f834-4035-ab54-7728b91f243b",
+     "https://money.udn.com/money/story/5607/9787916"
+    ],
+    "confidence": "high（現行）；延長案：pending"
+   },
+   {
+    "name": "證券交易稅 — 公司債及金融債券 停徵",
+    "rule": "公司債和金融債券停徵證交稅，即 0%（第2條之1第1項）。延長到 2036-12-31 的案子同樣待立法院審議。",
+    "effectiveFrom": "2010-01-01",
+    "effectiveUntil": "2026-12-31（現行法）；提案延長至 2036-12-31",
+    "sources": [
+     "https://6laws.net/6law/laws/證券交易稅條例.html",
+     "https://www.ey.gov.tw/Page/9277F759E41CCD91/4d7b8a90-f834-4035-ab54-7728b91f243b"
+    ],
+    "confidence": "high"
+   }
+  ],
+  "roundingRules": "手續費：多數券商把元以下無條件捨去，取整數，例如 floor(成交金額 × 0.1425% × 折數)，再和最低手續費取較大者。證據：統一證券官方範例「手續費為14.3元，收14元」；富果說明頁寫「小數點以下無條件去除」；國泰官方註記寫成交價金「元以下無條件捨去」；roo.cash 2025 寫手續費與證交稅「皆採無條件捨去」。最低手續費按每筆委託計算，整股多為 20 元，零股多為 1 元。台新官方 FAQ 另寫「若單筆委託單，不同成交價，手續費分別計算收取」，也就是同一委託內不同成交價各自計費，各自套用低消。零股交割價金：自 2024-04-01 起，依證交所改善措施，同一委託書相同成交價格的成交合併計算，元以下無條件捨去（玉山與口袋證券 2024-03-29 公告）。月退或日退的券商，交割時先按 1.425‰ 全額收取（不足低消以低消計），之後退回折讓差額；淨手續費通常近似 max(低消, floor(成交金額 × 0.1425% × 折數))，但各家計算方式不同（推論，未逐家確認）。證交稅：成交金額 × 稅率，只在賣出時課，二手資料普遍寫元以下無條件捨去。沒有找到台幣證券證交稅捨入規則的官方條文；財政部 etax 問答只寫外幣計價證券的換算是「元以下四捨五入」。建議試算器預設 floor，並註明可能有 ±1 元差異。",
+  "notes": "1. 沒有標準的單一折數：各券商的電子折數會依客戶、分公司、開戶管道和活動不同。表中的 discount 是公告的標準值或常見值，試算器應讓使用者自行輸入折數，預設值只作參考。\n2. 有讀到官方原文的券商：玉山（費率頁與 PDF）、國泰（2.8 折、捨去規則）、永豐金（2 折、次月 15 日退、低收 1 元）、富邦（次月 5 日退、零股 1 元）、凱基（整股 20、零股 1）、元大（6 折、盤中零股 1 元）、群益（零股電子 1 元）、統一（零股 1 元）。其餘數值主要來自 2026 年的比較文章（money101 2026-09、uptogo 2026-06 和 2026-07、grenade 2026-10），各文章之間有衝突，已在每家的 notes 中標明。\n3. 無法抓取的官方網站：firstsec.com.tw、ctbcsec.com、masterlink.com.tw（robots）、law.moj.gov.tw（robots，法條改用 6laws.net 的條文）。華南永昌和兆豐的官方頁沒有費率內容。\n4. 結構變動：元富證券已於 2026-04-06 併入台新證券（台新證券存續）。新光證券仍是獨立券商。\n5. 即時折讓：本次查到的主要券商都沒有明確寫「即時折讓」，只有日退（國泰、元大、群益、新光，二手資料）和月退（富邦次月 5 日、永豐金次月 15 日、玉山次月 13 日、台新次月 15 日、中信次月 10 日，部分為二手資料）。\n6. 證交稅的時點：依第3條，代徵人在交割當日按規定稅率代徵。工商時報 2025-01-01 也寫稅負以交割日認定。因此 2026 年最後幾個交易日的債券 ETF 賣出，若延長案沒有通過，可能因為交割日落在 2027 年而適用 0.1%（推論，未經官方確認）。\n7. 其他：華南永昌官網 2026-09-07 有一則公告標題「12/7起盤中零股新制上路與整股同步開盤」，跟費用無關，但可能影響零股交易時段（只看到標題，未查證內容）。\n8. 這次沒有查美股 / 複委託費率。"
+ }
+}

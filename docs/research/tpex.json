@@ -1,0 +1,797 @@
+{
+ "key": "tpex",
+ "result": {
+  "datasets": [
+   {
+    "key": "tpex_mainboard_quotes",
+    "url": "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_quotes",
+    "format": "JSON array of flat objects (top-level array; no wrapper). Swagger summary: 上櫃股票收盤行情. Also offered as text/csv per swagger.",
+    "dataDate": "Record field \"Date\" = ROC compact yyyMMdd string, e.g. \"1151008\" = 2026-10-08 (year = first 3 digits + 1911). All rows carry the same Date (latest trading day only).",
+    "params": "None. No query params accepted (always latest trading day, whole market). Send a browser-like User-Agent (some community scrapers do).",
+    "fields": [
+     {
+      "name": "Date",
+      "meaning": "trading date (ROC yyyMMdd)"
+     },
+     {
+      "name": "SecuritiesCompanyCode",
+      "meaning": "security code (stocks 4-digit, ETFs 00xxx / 00xxxB / 00xxxA etc.)"
+     },
+     {
+      "name": "CompanyName",
+      "meaning": "short name"
+     },
+     {
+      "name": "Close",
+      "meaning": "closing price",
+      "unit": "TWD"
+     },
+     {
+      "name": "Change",
+      "meaning": "price change vs previous close; has explicit + sign; may be text like 除息",
+      "unit": "TWD"
+     },
+     {
+      "name": "Open",
+      "meaning": "open",
+      "unit": "TWD"
+     },
+     {
+      "name": "High",
+      "meaning": "high",
+      "unit": "TWD"
+     },
+     {
+      "name": "Low",
+      "meaning": "low",
+      "unit": "TWD"
+     },
+     {
+      "name": "TradingShares",
+      "meaning": "volume (round-lot trades only: 1240 on 1151008 shows 11000 here vs 11885 in daily_close_quotes)",
+      "unit": "shares"
+     },
+     {
+      "name": "TransactionAmount",
+      "meaning": "turnover value",
+      "unit": "TWD"
+     },
+     {
+      "name": "TransactionNumber",
+      "meaning": "number of trades"
+     },
+     {
+      "name": "LatestBidPrice",
+      "meaning": "last bid",
+      "unit": "TWD"
+     },
+     {
+      "name": "LatesAskPrice",
+      "meaning": "last ask (official typo 'Lates')",
+      "unit": "TWD"
+     },
+     {
+      "name": "Capitals",
+      "meaning": "issued shares/units (not capital in TWD; 1240 = 46443992)",
+      "unit": "shares"
+     },
+     {
+      "name": "NextLimitUp",
+      "meaning": "next-day limit-up price (9999.95 for no-limit securities e.g. bond ETFs)",
+      "unit": "TWD"
+     },
+     {
+      "name": "NextLimitDown",
+      "meaning": "next-day limit-down price (0.01 for no-limit securities)",
+      "unit": "TWD"
+     }
+    ],
+    "sampleRecord": "{\"Date\":\"1151008\",\"SecuritiesCompanyCode\":\"1240\",\"CompanyName\":\"茂生農經\",\"Close\":\"53.80\",\"Change\":\"-0.10\",\"Open\":\"54.20\",\"High\":\"54.20\",\"Low\":\"53.70\",\"TradingShares\":\"11000\",\"TransactionAmount\":\"593400\",\"TransactionNumber\":\"10\",\"LatestBidPrice\":\"53.80\",\"LatesAskPrice\":\"54.00\",\"Capitals\":\"46443992\",\"NextLimitUp\":\"59.10\",\"NextLimitDown\":\"48.45\"}",
+    "verified": false,
+    "notes": "Direct WebFetch of every tpex.org.tw/openapi/v1/* URL failed (CLIENT_ERROR; tpex.org.tw without www = ROBOTS_DISALLOWED) and shell network is blocked, so I could not hit the endpoint myself. Field list and sample come from a GitHub-stored raw copy of this endpoint (f312213213/legislator-wealth.tw data/tpex_mainboard_quotes.json, Date 1151008, values relayed field-by-field by the fetch tool and reassembled; all values are strings) and are cross-confirmed by a 2025-11-23 capture (jieyou-chyu/SwaggerAPISample) and a verbatim code comment in imZack/stockjs. 16 keys, no Average/NextReferencePrice. ETFs ARE included (first rows are 00411A 主動統一前沿科技, 00679B 元大美債20年). Missing-trade quirk: Close/Open/High/Low = \"----\", Change = \"---\" (e.g. 雄順). Change can be \"除息\" on ex-dividend day (00679B on 1141121). No thousands commas in values."
+   },
+   {
+    "key": "tpex_mainboard_daily_close_quotes",
+    "url": "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes",
+    "format": "JSON array of flat objects. Swagger summary: 上櫃股票行情. With header Accept: text/csv returns CSV with Chinese headers (資料日期,代號,名稱,收盤,漲跌,開盤,最高,最低,均價,成交股數,成交金額,成交筆數,最後買價,最後賣價,發行股數,次日參考價,次日漲停價,次日跌停價) per a 2026-05-25 third-party observation.",
+    "dataDate": "\"Date\" ROC yyyMMdd (e.g. \"1151008\"); single date per response.",
+    "params": "None (latest only).",
+    "fields": [
+     {
+      "name": "Date",
+      "meaning": "trading date ROC"
+     },
+     {
+      "name": "SecuritiesCompanyCode",
+      "meaning": "code"
+     },
+     {
+      "name": "CompanyName",
+      "meaning": "short name"
+     },
+     {
+      "name": "Close",
+      "meaning": "close",
+      "unit": "TWD"
+     },
+     {
+      "name": "Change",
+      "meaning": "change; '+' sign on gains; negatives observed with TRAILING SPACE (\"-0.05 \"); ex-div shows \"除息 \"",
+      "unit": "TWD"
+     },
+     {
+      "name": "Open",
+      "meaning": "open",
+      "unit": "TWD"
+     },
+     {
+      "name": "High",
+      "meaning": "high",
+      "unit": "TWD"
+     },
+     {
+      "name": "Low",
+      "meaning": "low",
+      "unit": "TWD"
+     },
+     {
+      "name": "Average",
+      "meaning": "average price",
+      "unit": "TWD"
+     },
+     {
+      "name": "TradingShares",
+      "meaning": "volume incl. odd-lot trades (larger than tpex_mainboard_quotes for same stock/day)",
+      "unit": "shares"
+     },
+     {
+      "name": "TransactionAmount",
+      "meaning": "value",
+      "unit": "TWD"
+     },
+     {
+      "name": "TransactionNumber",
+      "meaning": "trades"
+     },
+     {
+      "name": "LatestBidPrice",
+      "meaning": "last bid",
+      "unit": "TWD"
+     },
+     {
+      "name": "LatesAskPrice",
+      "meaning": "last ask (typo)",
+      "unit": "TWD"
+     },
+     {
+      "name": "Capitals",
+      "meaning": "issued shares",
+      "unit": "shares"
+     },
+     {
+      "name": "NextReferencePrice",
+      "meaning": "next-day reference price",
+      "unit": "TWD"
+     },
+     {
+      "name": "NextLimitUp",
+      "meaning": "next-day limit up",
+      "unit": "TWD"
+     },
+     {
+      "name": "NextLimitDown",
+      "meaning": "next-day limit down",
+      "unit": "TWD"
+     }
+    ],
+    "sampleRecord": "{\"Date\":\"1151008\",\"SecuritiesCompanyCode\":\"6026\",\"CompanyName\":\"福邦證\",\"Close\":\"15.80\",\"Change\":\"-0.05 \",\"Open\":\"15.85\",\"High\":\"15.90\",\"Low\":\"15.75\",\"Average\":\"15.84\",\"TradingShares\":\"447268\",\"TransactionAmount\":\"7083900\",\"TransactionNumber\":\"243\",\"LatestBidPrice\":\"15.80\",\"LatesAskPrice\":\"15.85\",\"Capitals\":\"396161841\",\"NextReferencePrice\":\"15.80\",\"NextLimitUp\":\"17.35\",\"NextLimitDown\":\"14.25\"}",
+    "verified": false,
+    "notes": "Sample copied verbatim from raw JSON stored by alger68/alger68.github.io (fetchedAt 2026-10-09T13:27:56Z, TPEX/6026.json) via GitHub code search; not fetched by me directly. Much larger universe: ~10,357 rows on 2026-05-25 (includes warrants, ETFs 006201/00679B, 'N'-suffix new listings 02xxxx, KY stocks), so filter by code pattern. Same Close as tpex_mainboard_quotes but volume/trades include odd lots (1240 on 1151008: 11885 shares/25 trades vs 11000/10). Alternative to dataset 1 if you want Average and NextReferencePrice."
+   },
+   {
+    "key": "tpex_etf_quotes_separate",
+    "url": "(none found)",
+    "format": "n/a",
+    "dataDate": "n/a",
+    "params": "",
+    "fields": [],
+    "sampleRecord": "",
+    "verified": false,
+    "notes": "No separate TPEx ETF quote dataset exists in the OpenAPI as far as I can tell: the swagger paths I read and a 225-path manifest (jieyou-chyu/SwaggerAPISample, Nov 2025; NTUyu016 also counted 225 paths on 2026-08-10) contain no 'etf' path. One repo references 'tpex_etf_quotes' but only inside a try/catch, so I treat it as unverified and probably nonexistent. TPEx-listed ETFs (00679B, 00687B, 00937B, 006201, 00411A, etc.) are included in tpex_mainboard_quotes, tpex_mainboard_daily_close_quotes, tpex_mainboard_margin_balance and tpex_3insti_daily_trading. They are NOT in tpex_mainboard_peratio_analysis. Possibly related but not inspected: /tpex_opfund_latest (開放式基金當日行情表)."
+   },
+   {
+    "key": "tpex_peratio",
+    "url": "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_peratio_analysis",
+    "format": "JSON array. Swagger summary: 上櫃股票個股本益比、殖利率、股價淨值比.",
+    "dataDate": "\"Date\" ROC yyyMMdd. Check it every run: a 2025-11-23 capture still returned Date 1140113 (Jan 2025, ETag 6786198a = 2025-01-14), so this feed has gone stale before. By 2026-10-09 it was current (Date 1151008).",
+    "params": "None.",
+    "fields": [
+     {
+      "name": "Date",
+      "meaning": "data date ROC"
+     },
+     {
+      "name": "SecuritiesCompanyCode",
+      "meaning": "code (stocks only, starts 1240; no ETFs)"
+     },
+     {
+      "name": "CompanyName",
+      "meaning": "short name"
+     },
+     {
+      "name": "PriceEarningRatio",
+      "meaning": "P/E; \"N/A\" when loss-making",
+      "unit": "x"
+     },
+     {
+      "name": "DividendPerShare",
+      "meaning": "cash dividend per share used for yield, 8 decimals; \"0.00000000\" if none",
+      "unit": "TWD"
+     },
+     {
+      "name": "YieldRatio",
+      "meaning": "dividend yield; \"0.00\" if none",
+      "unit": "%"
+     },
+     {
+      "name": "PriceBookRatio",
+      "meaning": "P/B",
+      "unit": "x"
+     }
+    ],
+    "sampleRecord": "{\"Date\":\"1151008\",\"SecuritiesCompanyCode\":\"6026\",\"CompanyName\":\"福邦證\",\"PriceEarningRatio\":\"5.72\",\"DividendPerShare\":\"1.36413977\",\"YieldRatio\":\"8.63\",\"PriceBookRatio\":\"0.99\"}",
+    "verified": false,
+    "notes": "Sample verbatim from alger68 raw store (fetched 2026-10-09). The \"N/A\" P/E placeholder was seen in the Nov-2025 SwaggerAPISample capture (1569 濱川, 1591 駿吉-KY, 1595 川寶). Parse defensively and treat '', 'N/A', '--' and '-' as null."
+   },
+   {
+    "key": "tpex_monthly_revenue",
+    "url": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap05_O",
+    "format": "JSON array. Summary: 上櫃公司每月營業收入彙總表. Chinese keys.",
+    "dataDate": "資料年月 = revenue month, ROC yyyMM (\"11508\" = 2026-08). 出表日期 = generation date, ROC yyyMMdd. Latest month only. On 2026-10-09 it still showed 11508, because September revenue is due by the 10th.",
+    "params": "None (latest period only; history needs MOPS).",
+    "fields": [
+     {
+      "name": "出表日期",
+      "meaning": "report generation date ROC"
+     },
+     {
+      "name": "資料年月",
+      "meaning": "revenue month ROC yyyMM"
+     },
+     {
+      "name": "公司代號",
+      "meaning": "company code"
+     },
+     {
+      "name": "公司名稱",
+      "meaning": "short name"
+     },
+     {
+      "name": "產業別",
+      "meaning": "industry NAME in Chinese (e.g. 金融業, 農業科技, 半導體業)"
+     },
+     {
+      "name": "營業收入-當月營收",
+      "meaning": "this month revenue (can be negative for brokers)",
+      "unit": "TWD thousand (仟元)"
+     },
+     {
+      "name": "營業收入-上月營收",
+      "meaning": "previous month revenue",
+      "unit": "TWD thousand"
+     },
+     {
+      "name": "營業收入-去年當月營收",
+      "meaning": "same month last year",
+      "unit": "TWD thousand"
+     },
+     {
+      "name": "營業收入-上月比較增減(%)",
+      "meaning": "MoM %",
+      "unit": "%"
+     },
+     {
+      "name": "營業收入-去年同月增減(%)",
+      "meaning": "YoY %",
+      "unit": "%"
+     },
+     {
+      "name": "累計營業收入-當月累計營收",
+      "meaning": "YTD revenue",
+      "unit": "TWD thousand"
+     },
+     {
+      "name": "累計營業收入-去年累計營收",
+      "meaning": "last-year YTD",
+      "unit": "TWD thousand"
+     },
+     {
+      "name": "累計營業收入-前期比較增減(%)",
+      "meaning": "YTD YoY %",
+      "unit": "%"
+     },
+     {
+      "name": "備註",
+      "meaning": "remark ('-' if none)"
+     }
+    ],
+    "sampleRecord": "{\"出表日期\":\"1150917\",\"資料年月\":\"11508\",\"公司代號\":\"6023\",\"公司名稱\":\"元大期貨\",\"產業別\":\"金融業\",\"營業收入-當月營收\":\"344450\",\"營業收入-上月營收\":\"513559\",\"營業收入-去年當月營收\":\"280825\",\"營業收入-上月比較增減(%)\":\"-32.92883582996306\",\"營業收入-去年同月增減(%)\":\"22.65645864862459\",\"累計營業收入-當月累計營收\":\"3336963\",\"累計營業收入-去年累計營收\":\"2342863\",\"累計營業收入-前期比較增減(%)\":\"42.4309914834969\",\"備註\":\"-\"}",
+    "verified": false,
+    "notes": "Sample verbatim from alger68 raw store (fetched 2026-10-09). Same keys appear in a Nov-2025 capture. Percentages are long unrounded floats. The unit (仟元) is inferred: a company remark quoting 仟元 sums exactly to its 當月營收, and the amounts agree with t187ap14_O revenue. Related endpoints, not inspected: mopsfin_t187ap05_OA (二十九大類股營收變化統計表) and mopsfin_t187ap05_OB (營收創新高一覽表)."
+   },
+   {
+    "key": "tpex_company_basic",
+    "url": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O",
+    "format": "JSON array. Summary: 上櫃股票基本資料. English keys (unlike TWSE's Chinese).",
+    "dataDate": "\"Date\" ROC yyyMMdd (e.g. \"1141122\"). DateOfIncorporation/DateOfListing are GREGORIAN yyyyMMdd.",
+    "params": "None.",
+    "fields": [
+     {
+      "name": "Date",
+      "meaning": "data date ROC"
+     },
+     {
+      "name": "SecuritiesCompanyCode",
+      "meaning": "code"
+     },
+     {
+      "name": "CompanyName",
+      "meaning": "full legal name"
+     },
+     {
+      "name": "CompanyAbbreviation",
+      "meaning": "short name"
+     },
+     {
+      "name": "Registration",
+      "meaning": "foreign registration country ('－' if none)"
+     },
+     {
+      "name": "SecuritiesIndustryCode",
+      "meaning": "industry CODE, 2-digit string e.g. \"24\""
+     },
+     {
+      "name": "Address",
+      "meaning": "address"
+     },
+     {
+      "name": "UnifiedBusinessNo.",
+      "meaning": "tax ID"
+     },
+     {
+      "name": "Chairman",
+      "meaning": "chairman"
+     },
+     {
+      "name": "GeneralManager",
+      "meaning": "GM"
+     },
+     {
+      "name": "Spokesman",
+      "meaning": "spokesman"
+     },
+     {
+      "name": "TitleOfSpokesman",
+      "meaning": "spokesman title"
+     },
+     {
+      "name": "DeputySpokesperson",
+      "meaning": "deputy"
+     },
+     {
+      "name": "Telephone",
+      "meaning": "phone"
+     },
+     {
+      "name": "DateOfIncorporation",
+      "meaning": "incorporation date, Gregorian"
+     },
+     {
+      "name": "DateOfListing",
+      "meaning": "TPEx listing date, Gregorian"
+     },
+     {
+      "name": "ParValueOfCommonStock",
+      "meaning": "par value text, padded e.g. '新台幣                 10.0000元'"
+     },
+     {
+      "name": "Paidin.Capital.NTDollars",
+      "meaning": "paid-in capital",
+      "unit": "TWD"
+     },
+     {
+      "name": "PrivateStock.shares",
+      "meaning": "private placement shares",
+      "unit": "shares"
+     },
+     {
+      "name": "PreferredStock.shares",
+      "meaning": "preferred shares",
+      "unit": "shares"
+     },
+     {
+      "name": "PreparationOfFinancialReportType",
+      "meaning": "report type code"
+     },
+     {
+      "name": "StockTransferAgent",
+      "meaning": "transfer agent"
+     },
+     {
+      "name": "StockTransferAgentTelephone",
+      "meaning": ""
+     },
+     {
+      "name": "StockTransferAgentAddress",
+      "meaning": ""
+     },
+     {
+      "name": "AccountingFirm",
+      "meaning": "auditor"
+     },
+     {
+      "name": "CPA.CharteredPublicAccountant.First",
+      "meaning": "CPA 1"
+     },
+     {
+      "name": "CPA.CharteredPublicAccountant.Second",
+      "meaning": "CPA 2"
+     },
+     {
+      "name": "Symbol",
+      "meaning": "English short name"
+     },
+     {
+      "name": "Fax",
+      "meaning": ""
+     },
+     {
+      "name": "EmailAddress",
+      "meaning": ""
+     },
+     {
+      "name": "WebAddress",
+      "meaning": ""
+     },
+     {
+      "name": "IssueShares",
+      "meaning": "issued common shares",
+      "unit": "shares"
+     }
+    ],
+    "sampleRecord": "{\"Date\":\"1141122\",\"SecuritiesCompanyCode\":\"1240\",\"CompanyName\":\"茂生農經股份有限公司\",\"CompanyAbbreviation\":\"茂生農經\",\"SecuritiesIndustryCode\":\"33\",\"UnifiedBusinessNo.\":\"18795706\",\"DateOfIncorporation\":\"19670218\",\"DateOfListing\":\"20180808\",\"Paidin.Capital.NTDollars\":\"442323730\",\"IssueShares\":\"44232373\"}  (subset of keys, values as relayed from 2025-11-23 capture)",
+    "verified": false,
+    "notes": "Key list comes from the jieyou-chyu/SwaggerAPISample capture (2025-11-23). SecuritiesCompanyCode, SecuritiesIndustryCode, CompanyAbbreviation, Symbol and IssueShares are confirmed in many repos' code. About 890 rows on 2026-08-10, common stocks only. Values can carry trailing half-width or full-width spaces, so trim them. INDUSTRY MAPPING: TPEx has no official code-to-name endpoint. Derive it by joining 公司代號 with the 產業別 name in mopsfin_t187ap05_O, or use 產業別 from mopsfin_t187ap14_O directly. The community-derived TPEx map (NTUyu016, verified 2026-08-10, 28 codes) is: 02 食品工業, 03 塑膠工業, 04 紡織纖維, 05 電機機械, 06 電器電纜, 10 鋼鐵工業, 14 建材營造, 15 航運業, 16 觀光餐旅, 17 金融業, 20 其他, 21 化學工業, 22 生技醫療業, 23 油電燃氣業, 24 半導體業, 25 電腦及週邊設備業, 26 光電業, 27 通信網路業, 28 電子零組件業, 29 電子通路業, 30 資訊服務業, 31 其他電子業, 32 文化創意業, 33 農業科技, 35 綠能環保, 36 數位雲端, 37 運動休閒, 38 居家生活. Other repos also list 34 電子商務 and 80 管理股票 (unverified for TPEx). Note that TPEx 17 = 金融業, while TWSE 17 = 金融保險業."
+   },
+   {
+    "key": "tpex_quarterly_eps",
+    "url": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap14_O",
+    "format": "JSON array. Summary: 上櫃公司各產業EPS統計資訊. Per company (despite the name). Mixed English/Chinese keys.",
+    "dataDate": "Period = Year (ROC 3-digit, e.g. \"114\") + 季別 (\"1\"-\"4\"). \"Date\" = generation date ROC yyyMMdd.",
+    "params": "None (latest quarter only).",
+    "fields": [
+     {
+      "name": "Date",
+      "meaning": "generation date ROC"
+     },
+     {
+      "name": "Year",
+      "meaning": "fiscal year ROC"
+     },
+     {
+      "name": "季別",
+      "meaning": "quarter 1-4"
+     },
+     {
+      "name": "SecuritiesCompanyCode",
+      "meaning": "code"
+     },
+     {
+      "name": "CompanyName",
+      "meaning": "FULL legal name (e.g. 茂生農經股份有限公司)"
+     },
+     {
+      "name": "產業別",
+      "meaning": "industry name in Chinese"
+     },
+     {
+      "name": "基本每股盈餘",
+      "meaning": "basic EPS, YEAR-TO-DATE cumulative (Q3 = Jan-Sep)",
+      "unit": "TWD"
+     },
+     {
+      "name": "普通股每股面額",
+      "meaning": "par value text (padded)"
+     },
+     {
+      "name": "營業收入",
+      "meaning": "YTD revenue",
+      "unit": "TWD thousand"
+     },
+     {
+      "name": "營業利益",
+      "meaning": "YTD operating income",
+      "unit": "TWD thousand"
+     },
+     {
+      "name": "營業外收入及支出",
+      "meaning": "YTD non-operating",
+      "unit": "TWD thousand"
+     },
+     {
+      "name": "稅後淨利",
+      "meaning": "YTD net income",
+      "unit": "TWD thousand"
+     }
+    ],
+    "sampleRecord": "{\"Date\":\"1141122\",\"Year\":\"114\",\"季別\":\"3\",\"SecuritiesCompanyCode\":\"1240\",\"CompanyName\":\"茂生農經股份有限公司\",\"產業別\":\"農業科技\",\"基本每股盈餘\":\"3.84\",\"營業收入\":\"2045285.00\",\"營業利益\":\"110095.00\",\"營業外收入及支出\":\"65384.00\",\"稅後淨利\":\"165197.00\"}  (values as relayed from 2025-11-23 capture; 普通股每股面額 omitted because of its padded spaces)",
+    "verified": false,
+    "notes": "From the SwaggerAPISample capture; keys Year/季別/SecuritiesCompanyCode/基本每股盈餘 are confirmed in acronhuang/TW_STOCK code. The key is 基本每股盈餘 with no （元） suffix. TWSE t187ap14_L uses 年度 instead of Year, so don't share a parser. EPS is cumulative: single-quarter EPS = this quarter's YTD minus the previous quarter's YTD, so you must store history. Alternative with full income statement: mopsfin_t187ap06_O_ci (一般業; also _basi/_bd/_fh/_ins/_mim). Its keys are Date, Year, Season (not 季別), SecuritiesCompanyCode, CompanyName, ..., 基本每股盈餘（元） with full-width parentheses. A third-party fixture shows Year 115 / Season 2 data dated 1150831."
+   },
+   {
+    "key": "tpex_margin_balance",
+    "url": "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_margin_balance",
+    "format": "JSON array. Summary: 上櫃股票融資融券餘額.",
+    "dataDate": "\"Date\" ROC yyyMMdd.",
+    "params": "None.",
+    "fields": [
+     {
+      "name": "Date",
+      "meaning": "date ROC"
+     },
+     {
+      "name": "SecuritiesCompanyCode",
+      "meaning": "code (includes ETFs)"
+     },
+     {
+      "name": "CompanyName",
+      "meaning": "name"
+     },
+     {
+      "name": "MarginPurchaseBalancePreviousDay",
+      "meaning": "融資前日餘額",
+      "unit": "lots (張=1000 shares)"
+     },
+     {
+      "name": "MarginPurchase",
+      "meaning": "融資買進",
+      "unit": "lots"
+     },
+     {
+      "name": "MarginSales",
+      "meaning": "融資賣出",
+      "unit": "lots"
+     },
+     {
+      "name": "CashRedemption",
+      "meaning": "現金償還",
+      "unit": "lots"
+     },
+     {
+      "name": "MarginPurchaseBalance",
+      "meaning": "融資今日餘額",
+      "unit": "lots"
+     },
+     {
+      "name": "MarginPurchaseBalanceBelongSecuritiesFinanceEnterprise",
+      "meaning": "資屬證金",
+      "unit": "lots"
+     },
+     {
+      "name": "MarginPurchaseUtilizationRate",
+      "meaning": "融資使用率",
+      "unit": "%"
+     },
+     {
+      "name": "MarginPurchaseQuota",
+      "meaning": "融資限額",
+      "unit": "lots"
+     },
+     {
+      "name": "ShortSaleBalancePreviousDay",
+      "meaning": "融券前日餘額",
+      "unit": "lots"
+     },
+     {
+      "name": "ShortSale",
+      "meaning": "融券賣出 (adds to balance)",
+      "unit": "lots"
+     },
+     {
+      "name": "ShortConvering",
+      "meaning": "融券買進/回補 (official typo 'Convering'; reduces balance)",
+      "unit": "lots"
+     },
+     {
+      "name": "StockRedemption",
+      "meaning": "現券償還",
+      "unit": "lots"
+     },
+     {
+      "name": "ShortSaleBalance",
+      "meaning": "融券今日餘額",
+      "unit": "lots"
+     },
+     {
+      "name": "ShortSaleBalanceBelongSecuritiesFinanceEnterprise",
+      "meaning": "券屬證金",
+      "unit": "lots"
+     },
+     {
+      "name": "ShortSaleUtilizationRate",
+      "meaning": "融券使用率",
+      "unit": "%"
+     },
+     {
+      "name": "ShortSaleQuota",
+      "meaning": "融券限額",
+      "unit": "lots"
+     },
+     {
+      "name": "Offsetting",
+      "meaning": "資券相抵",
+      "unit": "lots"
+     },
+     {
+      "name": "Note",
+      "meaning": "remark (often empty)"
+     }
+    ],
+    "sampleRecord": "{\"Date\":\"1141121\",\"SecuritiesCompanyCode\":\"00679B\",\"CompanyName\":\"元大美債20年\",\"MarginPurchaseBalancePreviousDay\":\"13502\",\"MarginPurchase\":\"271\",\"MarginSales\":\"391\",\"CashRedemption\":\"0\",\"MarginPurchaseBalance\":\"13382\",\"MarginPurchaseBalanceBelongSecuritiesFinanceEnterprise\":\"500\",\"MarginPurchaseUtilizationRate\":\"0.6\",\"MarginPurchaseQuota\":\"2211548\",\"ShortSaleBalancePreviousDay\":\"0\",\"ShortSale\":\"1\",\"ShortConvering\":\"0\",\"StockRedemption\":\"0\",\"ShortSaleBalance\":\"1\",\"ShortSaleBalanceBelongSecuritiesFinanceEnterprise\":\"0\",\"ShortSaleUtilizationRate\":\"0.0\",\"ShortSaleQuota\":\"2211548\",\"Offsetting\":\"18\",\"Note\":\"\"}",
+    "verified": false,
+    "notes": "Reassembled from the 2025-11-23 capture (values relayed field by field). Keys match a 2026 test fixture (Date 1150923) in weeei001/115409. Semantics were checked arithmetically: prev 13502 + 271 - 391 - 0 = 13382, and short 0 + 1 - 0 - 0 = 1 (00687B: 88 - 2 = 86). Units are lots (張): Quota is about 25% of issued units / 1000, and a third party cross-checked utilization for 6147. Multiply by 1000 for shares."
+   },
+   {
+    "key": "tpex_3insti_daily",
+    "url": "https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading",
+    "format": "JSON array. Summary: 上櫃股票三大法人買賣明細資訊. English keys with INCONSISTENT spaces (one has a LEADING space); duplicate source columns were collapsed, so 20 keys instead of the website's 24 columns.",
+    "dataDate": "\"Date\" ROC yyyMMdd (e.g. \"1150817\").",
+    "params": "None.",
+    "fields": [
+     {
+      "name": "Date",
+      "meaning": "date ROC"
+     },
+     {
+      "name": "SecuritiesCompanyCode",
+      "meaning": "code (includes ETFs)"
+     },
+     {
+      "name": "CompanyName",
+      "meaning": "name"
+     },
+     {
+      "name": "Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Total Buy",
+      "meaning": "外資及陸資(不含外資自營商) buy",
+      "unit": "shares"
+     },
+     {
+      "name": " Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Total Sell",
+      "meaning": "same, sell (KEY STARTS WITH A SPACE)",
+      "unit": "shares"
+     },
+     {
+      "name": "Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference",
+      "meaning": "外資(不含外資自營商) net",
+      "unit": "shares"
+     },
+     {
+      "name": "Foreign Dealers-Total Buy",
+      "meaning": "外資自營商 buy",
+      "unit": "shares"
+     },
+     {
+      "name": "Foreign Dealers-TotalSell",
+      "meaning": "外資自營商 sell",
+      "unit": "shares"
+     },
+     {
+      "name": "ForeignDealers-Difference",
+      "meaning": "外資自營商 net",
+      "unit": "shares"
+     },
+     {
+      "name": "ForeignInvestorsIncludeMainlandAreaInvestors-TotalBuy",
+      "meaning": "外資及陸資合計 buy",
+      "unit": "shares"
+     },
+     {
+      "name": "ForeignInvestorsIncludeMainlandAreaInvestors-TotalSell",
+      "meaning": "外資及陸資合計 sell",
+      "unit": "shares"
+     },
+     {
+      "name": "ForeignInvestorsInclude MainlandAreaInvestors-Difference",
+      "meaning": "外資及陸資合計 NET (space after 'Include'), the usual 'foreign net'",
+      "unit": "shares"
+     },
+     {
+      "name": "SecuritiesInvestmentTrustCompanies-TotalBuy",
+      "meaning": "投信 buy",
+      "unit": "shares"
+     },
+     {
+      "name": "SecuritiesInvestmentTrustCompanies-TotalSell",
+      "meaning": "投信 sell",
+      "unit": "shares"
+     },
+     {
+      "name": "SecuritiesInvestmentTrustCompanies-Difference",
+      "meaning": "投信 NET",
+      "unit": "shares"
+     },
+     {
+      "name": "Dealers-TotalBuy",
+      "meaning": "自營商合計 buy",
+      "unit": "shares"
+     },
+     {
+      "name": "Dealers-TotalSell",
+      "meaning": "自營商合計 sell",
+      "unit": "shares"
+     },
+     {
+      "name": "Dealers-Difference",
+      "meaning": "自營商合計 NET (self + hedge)",
+      "unit": "shares"
+     },
+     {
+      "name": "Dealers -TotalSell",
+      "meaning": "buggy duplicate; equals only the hedge-sell part per third-party audit. Do not use.",
+      "unit": "shares"
+     },
+     {
+      "name": "TotalDifference",
+      "meaning": "三大法人合計 net = foreign(excl. foreign dealers) + trust + dealers",
+      "unit": "shares"
+     }
+    ],
+    "sampleRecord": "{\"Date\":\"1141121\",\"SecuritiesCompanyCode\":\"00679B\",\"CompanyName\":\"元大美債20年\",\"Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Total Buy\":\"22147000\",\" Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Total Sell\":\"2000\",\"Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference\":\"22145000\",\"Foreign Dealers-Total Buy\":\"0\",\"Foreign Dealers-TotalSell\":\"0\",\"ForeignDealers-Difference\":\"0\",\"ForeignInvestorsIncludeMainlandAreaInvestors-TotalBuy\":\"22147000\",\"ForeignInvestorsIncludeMainlandAreaInvestors-TotalSell\":\"2000\",\"ForeignInvestorsInclude MainlandAreaInvestors-Difference\":\"22145000\",\"SecuritiesInvestmentTrustCompanies-TotalBuy\":\"0\",\"SecuritiesInvestmentTrustCompanies-TotalSell\":\"0\",\"SecuritiesInvestmentTrustCompanies-Difference\":\"0\",\"Dealers-TotalBuy\":\"13472874\",\"Dealers-TotalSell\":\"7719000\",\"Dealers-Difference\":\"5753874\",\"Dealers -TotalSell\":\"7612000\",\"TotalDifference\":\"27898874\"}",
+    "verified": false,
+    "notes": "Exact key spellings, including the leading space and the odd spacing, are confirmed by a 2026-08-17 live dump (ElMooro/si: HTTP 200, 911 rows, row0 Date \"1150817\" 00679B) and by several repos' code. Sample reassembled from the 2025-11-23 capture. The arithmetic checks out: 22145000 + 0 + 5753874 = 27898874. Unit is SHARES, not lots: values like 13472874 are not multiples of 1000, and a third party recorded unit_proof=share. One repo wrongly multiplies by 1000. Recommended mapping: foreign net = 'ForeignInvestorsInclude MainlandAreaInvestors-Difference' (or the '(Foreign Dealers excluded)-Difference' version, which TotalDifference uses), trust net = 'SecuritiesInvestmentTrustCompanies-Difference', dealer net = 'Dealers-Difference', total = 'TotalDifference'. No self/hedge split is available. Look keys up via a whitespace-normalized map."
+   },
+   {
+    "key": "tpex_index",
+    "url": "https://www.tpex.org.tw/openapi/v1/tpex_index",
+    "format": "JSON array, month-to-date rows ascending (15-22 rows). Summary: 櫃買指數歷史資料. CSV headers: 資料日期,開市,最高價,最低價,收市,漲跌.",
+    "dataDate": "\"Date\" is GREGORIAN yyyyMMdd (e.g. \"20251121\"), unlike almost every other TPEx dataset. Take the last row for the latest close.",
+    "params": "None.",
+    "fields": [
+     {
+      "name": "Date",
+      "meaning": "date Gregorian yyyyMMdd"
+     },
+     {
+      "name": "Open",
+      "meaning": "open",
+      "unit": "index pts"
+     },
+     {
+      "name": "High",
+      "meaning": "high",
+      "unit": "index pts"
+     },
+     {
+      "name": "Low",
+      "meaning": "low",
+      "unit": "index pts"
+     },
+     {
+      "name": "Close",
+      "meaning": "close (櫃買指數)",
+      "unit": "index pts"
+     },
+     {
+      "name": "Change",
+      "meaning": "change",
+      "unit": "index pts"
+     }
+    ],
+    "sampleRecord": "{\"Date\":\"20251121\",\"Open\":\"251.63\",\"High\":\"251.63\",\"Low\":\"244.74\",\"Close\":\"245.97\",\"Change\":\"-6.98\"}",
+    "verified": false,
+    "notes": "From the 2025-11-23 capture (15 rows, 20251103 to 20251121). A 2026-05-25 third-party run (bobodancing/ai_advisor) also saw Gregorian dates (16 rows, 20260504 to 20260525). Alternatives: /tpex_reward_index has keys Date (ROC 7-digit), TPExIndex, TPExTotalReturnIndex, e.g. {\"Date\":\"1141121\",\"TPExIndex\":\"245.97\",\"TPExTotalReturnIndex\":\"449.04\"}. /tpex_daily_trading_index has keys Date (ROC), TradeVolume, TradeAmount, NumberOfTransactions, TPExIndex, Change; some of these values reportedly contain thousands commas."
+   }
+  ],
+  "notes": "VERIFICATION STATUS: I did not verify any of these datasets by calling the TPEx endpoints myself, so every verified flag is false. Only the first two WebFetch calls to https://www.tpex.org.tw/openapi/swagger.json worked; they listed paths through /t187ap46_O_19 and then the response was cut off at about 55k characters. Every later call to www.tpex.org.tw failed with CLIENT_ERROR: all /openapi/v1/* data endpoints, swagger.json?v=2, /openapi/ and robots.txt. tpex.org.tw without www returned ROBOTS_DISALLOWED. Shell networking is blocked as instructed. Field names and samples therefore come from captured raw TPEx responses stored on GitHub, read with WebFetch on raw.githubusercontent.com and GitHub code search:\n(a) jieyou-chyu/SwaggerAPISample docs/swagger/tpex/GET__*.json, real responses captured 2025-11-23 with HTTP headers, plus a 225-path manifest.\n(b) alger68/alger68.github.io, raw rows fetched 2026-10-09T13:27Z with Date 1151008. These are copied verbatim from code-search text and are the best samples.\n(c) f312213213/legislator-wealth.tw data/tpex_mainboard_quotes.json, Date 1151008.\n(d) ElMooro/si, a live key dump of tpex_3insti_daily_trading on 2026-08-17.\nSamples marked 'reassembled' were relayed field by field by the fetch model, so exact whitespace inside values may be lost. Re-check them on the first GitHub Actions run.\n\nGENERAL QUIRKS\n- Base URL is https://www.tpex.org.tw/openapi/v1/<path>.\n- No query parameters: each endpoint returns only the latest trading day, or the latest month or quarter, for the whole market. History must be accumulated by the daily job.\n- Swagger also offers text/csv (Accept header), which uses Chinese column headers.\n- Every value is a string. Per-stock OpenAPI JSON has no thousands commas (the website endpoints do). Convert with Number() after trim().\n- Date formats:\n  - ROC compact yyyMMdd ('1151008' = 2026-10-08) for quotes, peratio, margin, 3insti, t187ap03_O Date, t187ap14_O Date, tpex_reward_index and tpex_daily_trading_index.\n  - Gregorian yyyyMMdd for tpex_index and for t187ap03_O DateOfIncorporation/DateOfListing.\n  - ROC yyyMM ('11508') for revenue 資料年月.\n  - ROC year '114' plus 季別 or Season for financials.\n- Placeholders:\n  - '----' for Close/Open/High/Low and '---' for Change when a stock did not trade.\n  - Change may be '除息', sometimes with a trailing space.\n  - Change has an explicit '+' sign. In daily_close_quotes, negative values carry a trailing space ('-0.05 ').\n  - 'N/A' for P/E when a company is loss-making. '0.00000000' and '0.00' when there is no dividend.\n  - '-' in 備註 when there is no remark.\n  - NextLimitUp 9999.95 and NextLimitDown 0.01 for securities with no price limit.\n- Text values in t187ap03_O can have trailing half-width or full-width spaces.\n- Official key typos you must copy exactly: LatesAskPrice, ShortConvering, and the 3insti keys with odd spaces.\n- Monthly revenue is in 仟元 and margin is in lots (張). Quote volume and 3insti values are in shares.\n- Freshness: in Nov 2025 the peratio feed was still serving Jan 2025 data, so always compare each dataset's Date to the expected trading day and keep the previous file if it is stale. I could not verify the time of day TPEx publishes. A GitHub Actions project (0301kenny/wfnt-snapshot-data) polls at 17:37, 19:37 and 21:37 Taipei time, and some scrapers send a random browser User-Agent.\n- 2026-10-09 was a market holiday (observed National Day), so the latest data on 2026-10-10 is 1151008.\n\nDATASET CHOICE\n- Quotes: use tpex_mainboard_quotes (round-lot volume, ETFs included) or tpex_mainboard_daily_close_quotes (adds Average and NextReferencePrice; volume includes odd lots; about 10k rows including warrants).\n- ETFs: no separate ETF endpoint found.\n- Industry: no official code-to-name endpoint. Prefer the 產業別 name in t187ap14_O or t187ap05_O, with SecuritiesIndustryCode from t187ap03_O plus the derived map as a fallback.\n- EPS: mopsfin_t187ap14_O gives latest-quarter EPS that is cumulative year to date.\n- Index: tpex_index (OHLC, Gregorian dates) or tpex_reward_index (ROC dates).\n\nOTHER RELEVANT PATHS SEEN IN THE SWAGGER (not inspected)\n/tpex_3insti_qfii (foreign holding %), /tpex_exright_prepost, /tpex_margin_sbl, /mopsfin_t187ap39_O (dividends, from the manifest), /tpex_daily_market_value."
+ }
+}
