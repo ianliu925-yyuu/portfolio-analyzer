@@ -1,0 +1,19 @@
+{
+"data": {
+"dataAsOf": "Oct 9, 2026",
+"data": {
+"asOf": null,
+"headers": {"symbol":"SYMBOL","companyName":"NAME","lastSalePrice":"LAST PRICE","netChange":"NET CHANGE","percentageChange":"% CHANGE","oneYearPercentagechange":"1 yr % CHANGE"},
+"rows": [
+{"symbol":"AIVI","companyName":"WisdomTree International AI Enhanced Value Fund","lastSalePrice":"$56.8056","netChange":"-0.3804","percentageChange":"-0.67%","oneYearPercentage":"17.83%","deltaIndicator":"down"},
+{"symbol":"SMH","companyName":"VanEck Semiconductor ETF","lastSalePrice":"$356.20","netChange":"-1.44","percentageChange":"-0.40%","oneYearPercentage":"48.12%","deltaIndicator":"down"},
+{"symbol":"SPY","companyName":"SPDR S&P 500 ETF Trust","lastSalePrice":"$666.12","netChange":"-1.31","percentageChange":"-0.20%","oneYearPercentage":"16.95%","deltaIndicator":"down"},
+{"symbol":"TLT","companyName":"iShares 20+ Year Treasury Bond ETF","lastSalePrice":"$91.37","netChange":"0.42","percentageChange":"0.46%","oneYearPercentage":"-1.25%","deltaIndicator":"up"},
+{"symbol":"VOO","companyName":"Vanguard S&P 500 ETF","lastSalePrice":"$612.35","netChange":"-1.20","percentageChange":"-0.20%","oneYearPercentage":"17.02%","deltaIndicator":"down"},
+{"symbol":"VT","companyName":"Vanguard Total World Stock ETF","lastSalePrice":"$138.40","netChange":"-0.15","percentageChange":"-0.11%","oneYearPercentage":"15.40%","deltaIndicator":"down"}
+]
+}
+},
+"message": null,
+"status": {"rCode": 200, "bCodeMessage": null, "developerMessage": null}
+}

@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-10-09T23:17:05Z",
+  "tw": {
+    "asOf": "2026-10-08",
+    "nextTradingDay": "2026-10-12",
+    "holidayNote": "10/09–10/11 國慶連假休市",
+    "upcomingHolidays": [{ "date": "2026-10-09", "name": "國慶日" }],
+    "index": {
+      "taiex": { "close": 27345.67, "change": 210.3, "changePct": 0.78 },
+      "tpex": { "close": 268.12, "change": -1.05, "changePct": -0.39 }
+    }
+  },
+  "us": {
+    "asOf": "2026-10-09",
+    "nextTradingDay": "2026-10-12",
+    "holidayNote": "",
+    "upcomingHolidays": [],
+    "index": {
+      "spx": { "close": 6712.4, "change": 25.1, "changePct": 0.38 },
+      "ndx": { "close": 24890.2, "change": -40.6, "changePct": -0.16 },
+      "sox": { "close": 6120.8, "change": 61.2, "changePct": 1.01 }
+    }
+  },
+  "fx": { "USDTWD": 32.15, "date": "2026-10-09", "source": "臺灣銀行即期賣出匯率" },
+  "news": {
+    "tw": [
+      { "title": "台股收盤上漲 210 點，電子權值股領軍", "link": "https://news.example.com/tw/1", "source": "範例新聞", "pubDate": "2026-10-08T07:30:00Z" },
+      { "title": "外資連三買，賣超金額縮小 <b>測試</b>", "link": "https://news.example.com/tw/2", "source": "範例財經", "pubDate": "2026-10-08T06:10:00Z" }
+    ],
+    "us": [
+      { "title": "Stocks edge higher as chip makers rally", "link": "https://news.example.com/us/1", "source": "Example Wire", "pubDate": "2026-10-09T21:05:00Z" }
+    ]
+  },
+  "industryPe": { "TW:半導體業": 22.4, "TW:其他電子業": 15.2, "TW:電子零組件業": 18.1 },
+  "events": [
+    { "date": "2026-10-10", "title": "9 月營收公布期限（台股）" },
+    { "date": "2026-11-14", "title": "第 3 季財報公布期限（台股）" }
+  ],
+  "status": { "twse_quotes": "ok", "tpex_quotes": "ok", "t86": "ok", "margin": "stale", "revenue": "ok", "eps": "ok", "pe": "ok", "us_quotes": "ok", "history": "ok", "fx": "ok", "news": "ok", "index": "ok" }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "portfolio-analyzer",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test scripts/test/*.test.mjs",
+    "fetch": "node scripts/fetch-data.mjs"
+  }
+}

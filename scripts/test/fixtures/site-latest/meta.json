@@ -1,0 +1,251 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-10-10T23:17:05Z",
+  "tw": {
+    "asOf": "2026-10-08",
+    "nextTradingDay": "2026-10-12",
+    "holidayNote": "10/09–10/11 國慶日連假休市",
+    "upcomingHolidays": [
+      {
+        "date": "2026-10-09",
+        "name": "國慶日"
+      },
+      {
+        "date": "2026-10-26",
+        "name": "臺灣光復暨金門古寧頭大捷紀念日"
+      }
+    ],
+    "index": {
+      "taiex": {
+        "date": "2026-10-08",
+        "close": 49313.44,
+        "change": -492.93,
+        "changePct": -0.99
+      },
+      "tpex": {
+        "date": "2026-10-08",
+        "close": 412.37,
+        "change": -3.55,
+        "changePct": -0.85
+      }
+    }
+  },
+  "us": {
+    "asOf": "2026-10-09",
+    "nextTradingDay": "2026-10-12",
+    "holidayNote": "",
+    "upcomingHolidays": [],
+    "index": {
+      "spx": {
+        "date": "2026-10-09",
+        "close": 7180.52,
+        "change": 52.49,
+        "changePct": 0.74
+      },
+      "ndx": {
+        "date": "2026-10-09",
+        "close": 26543.21,
+        "change": -308.84,
+        "changePct": -1.15
+      },
+      "sox": {
+        "date": "2026-10-09",
+        "close": 7412.88,
+        "change": 84.89,
+        "changePct": 1.16
+      }
+    }
+  },
+  "fx": {
+    "USDTWD": 31.88,
+    "date": "2026-10-11",
+    "source": "臺灣銀行即期買賣中價"
+  },
+  "news": {
+    "tw": [
+      {
+        "title": "台股國慶連假前量縮整理 加權指數跌492點收49313點",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ40?oc=5",
+        "source": "經濟日報",
+        "pubDate": "2026-10-08T07:12:00Z"
+      },
+      {
+        "title": "外資連2賣 台積電終場收2455元",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ41?oc=5",
+        "source": "鉅亨網",
+        "pubDate": "2026-10-08T08:03:41Z"
+      },
+      {
+        "title": "連假後台股怎麼走？法人：留意美國CPI與財報季",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ42?oc=5",
+        "source": "中央社 CNA",
+        "pubDate": "2026-10-10T02:15:09Z"
+      },
+      {
+        "title": "AI伺服器拉貨強勁 廣達、緯創9月營收可望再創高",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ43?oc=5",
+        "source": "工商時報",
+        "pubDate": "2026-10-10T01:40:22Z"
+      },
+      {
+        "title": "美債殖利率回落 債券ETF 00679B連三紅",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ44?oc=5",
+        "source": "MoneyDJ理財網",
+        "pubDate": "2026-10-09T23:05:51Z"
+      },
+      {
+        "title": "「台股&美股」雙市場配置 投信：高股息ETF仍是主流",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ45?oc=5",
+        "source": "Yahoo奇摩股市",
+        "pubDate": "2026-10-10T03:22:10Z"
+      },
+      {
+        "title": "櫃買指數下跌3.55點 矽光子族群逆勢走強",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ46?oc=5",
+        "source": "自由財經",
+        "pubDate": "2026-10-08T08:30:00Z"
+      },
+      {
+        "title": "融資餘額減少 散戶連假前調節持股",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ47?oc=5",
+        "source": "聯合新聞網",
+        "pubDate": "2026-10-08T12:44:31Z"
+      },
+      {
+        "title": "金管會：證所稅無開徵規劃 債券ETF交易稅停徵延長案審議中",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ48?oc=5",
+        "source": "中時新聞網",
+        "pubDate": "2026-10-09T10:11:00Z"
+      },
+      {
+        "title": "聯發科天璣新晶片亮相 法人上修明年獲利預估",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ49?oc=5",
+        "source": "數位時代",
+        "pubDate": "2026-10-10T04:01:45Z"
+      },
+      {
+        "title": "新台幣連假前收31.95元 外資匯出",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ410?oc=5",
+        "source": "經濟日報",
+        "pubDate": "2026-10-08T08:45:12Z"
+      },
+      {
+        "title": "10月營收公布倒數 電子權值股動向成焦點",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ411?oc=5",
+        "source": "鉅亨網",
+        "pubDate": "2026-10-10T05:30:00Z"
+      }
+    ],
+    "us": [
+      {
+        "title": "Stocks slip as investors weigh Fed minutes & bond yields",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ40?oc=5",
+        "source": "Reuters",
+        "pubDate": "2026-10-09T20:35:00Z"
+      },
+      {
+        "title": "S&P 500 ends week lower; Nvidia's slide weighs on tech",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ41?oc=5",
+        "source": "CNBC",
+        "pubDate": "2026-10-09T21:05:43Z"
+      },
+      {
+        "title": "Stock market today: Dow, S&P 500, Nasdaq close mixed ahead of earnings season",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ42?oc=5",
+        "source": "Yahoo Finance",
+        "pubDate": "2026-10-09T20:10:11Z"
+      },
+      {
+        "title": "Bank earnings kick off next week. Here is what to watch",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ43?oc=5",
+        "source": "MarketWatch",
+        "pubDate": "2026-10-10T12:00:00Z"
+      },
+      {
+        "title": "Treasury yields fall as traders bet on December rate cut",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ44?oc=5",
+        "source": "Bloomberg",
+        "pubDate": "2026-10-09T19:48:02Z"
+      },
+      {
+        "title": "Apple shares tick higher on iPhone demand data",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ45?oc=5",
+        "source": "The Wall Street Journal",
+        "pubDate": "2026-10-09T18:22:30Z"
+      },
+      {
+        "title": "Chip stocks retreat after export-control headlines",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ46?oc=5",
+        "source": "Investor's Business Daily",
+        "pubDate": "2026-10-09T17:55:14Z"
+      },
+      {
+        "title": "Oil prices drop as OPEC+ signals higher output",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ47?oc=5",
+        "source": "Reuters",
+        "pubDate": "2026-10-09T16:40:00Z"
+      },
+      {
+        "title": "What the latest jobs data means for the stock market",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ48?oc=5",
+        "source": "Barron's",
+        "pubDate": "2026-10-10T10:15:00Z"
+      },
+      {
+        "title": "Small caps lag as Russell 2000 posts weekly loss",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ49?oc=5",
+        "source": "CNBC",
+        "pubDate": "2026-10-09T21:30:00Z"
+      },
+      {
+        "title": "Gold steadies near record as dollar eases",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ410?oc=5",
+        "source": "Kitco NEWS",
+        "pubDate": "2026-10-09T19:00:00Z"
+      },
+      {
+        "title": "Thanksgiving week trading hours: when is the stock market open?",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1qNmZZcnpQWXkyYi1ydmZMb0pIZ3dQeUl3MTVFYktMdXVLUEN5UmhYMy1QTVJkVVZadU01WW1iSzdfdmtVV1U5TU1XTk1WVjJ411?oc=5",
+        "source": "USA TODAY",
+        "pubDate": "2026-10-10T13:45:00Z"
+      }
+    ]
+  },
+  "industryPe": {
+    "TW:光電業": 26.8,
+    "TW:其他電子業": 16.88,
+    "TW:半導體業": 24.1,
+    "TW:農業科技": 12.34,
+    "TW:金融保險業": 10.16,
+    "TW:金融業": 5.72,
+    "TW:電腦及週邊設備業": 17.95
+  },
+  "events": [
+    {
+      "date": "2026-10-26",
+      "title": "臺灣光復暨金門古寧頭大捷紀念日休市（台股）"
+    },
+    {
+      "date": "2026-11-10",
+      "title": "10 月營收公布期限（台股）"
+    },
+    {
+      "date": "2026-11-14",
+      "title": "第 3 季財報公布期限（台股）"
+    }
+  ],
+  "status": {
+    "twse_quotes": "ok",
+    "tpex_quotes": "ok",
+    "t86": "ok",
+    "margin": "ok",
+    "revenue": "ok",
+    "eps": "ok",
+    "pe": "ok",
+    "us_quotes": "ok",
+    "index": "ok",
+    "history": "ok",
+    "fx": "ok",
+    "news": "ok"
+  }
+}

@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>持倉分析</title>
+<meta name="description" content="免費的台股、美股持股分析：輸入自己的交易，算出扣掉手續費與交易稅的淨損益、資產配置與依規則的參考提示，也可以用自己的 Claude API 金鑰做 AI 分析。持股只存在你的瀏覽器。">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232457d6'/%3E%3Ccircle cx='32' cy='32' r='17' fill='none' stroke='%23ffffff' stroke-opacity='.35' stroke-width='7'/%3E%3Cpath d='M32 15a17 17 0 0 1 16.2 22.1' fill='none' stroke='%23ff8a80' stroke-width='7' stroke-linecap='round'/%3E%3Cpath d='M48.2 37.1A17 17 0 0 1 23 46.4' fill='none' stroke='%23ffffff' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem('pa:theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要內容</a>
+
+<header class="site-header">
+  <div class="wrap header-top">
+    <div class="brand">
+      <img src="assets/icon.svg" alt="" width="36" height="36">
+      <div>
+        <h1>持倉分析</h1>
+        <p class="tagline">台股・美股持股損益、配置與參考提示</p>
+      </div>
+    </div>
+    <div class="header-tools">
+      <div class="seg seg-sm" role="group" aria-label="外觀主題">
+        <button type="button" data-theme-set="auto">自動</button>
+        <button type="button" data-theme-set="light">淺色</button>
+        <button type="button" data-theme-set="dark">深色</button>
+      </div>
+      <button type="button" class="btn btn-sm" id="openSettings">設定</button>
+    </div>
+  </div>
+  <div class="wrap header-info">
+    <p id="dataDates" class="data-dates">每日資料載入中…</p>
+    <p id="nextDay" class="muted"></p>
+    <p id="holidayNotes" class="holiday"></p>
+    <div id="indices" class="indices"></div>
+    <p class="disclaimer"><strong>僅供參考，非投資建議。</strong>建議是依規則算出的參考提示；持股只存在你的瀏覽器。</p>
+  </div>
+</header>
+
+<div class="wrap"><div id="banner" class="banner" role="status" aria-live="polite"></div></div>
+
+<main id="main" class="wrap">
+
+  <section id="trade" class="card" aria-labelledby="tradeTitle">
+    <div class="card-head">
+      <h2 id="tradeTitle">新增交易</h2>
+      <span id="editBadge" class="badge" hidden>修改中</span>
+    </div>
+    <form id="tradeForm" novalidate autocomplete="off">
+      <div class="form-grid">
+        <fieldset class="field f-market">
+          <legend>市場</legend>
+          <div class="seg">
+            <label><input type="radio" name="market" value="TW" checked><span>台股</span></label>
+            <label><input type="radio" name="market" value="US"><span>美股</span></label>
+          </div>
+        </fieldset>
+        <div class="field f-code">
+          <label for="fCode">代號</label>
+          <div class="combo">
+            <input id="fCode" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="codeList" aria-describedby="codeInfo" placeholder="例：2330 或 台積電" spellcheck="false" autocapitalize="characters">
+            <ul id="codeList" class="combo-list" role="listbox" aria-label="代號建議" hidden></ul>
+          </div>
+          <p id="codeInfo" class="hint"></p>
+        </div>
+        <fieldset class="field f-side">
+          <legend>買賣</legend>
+          <div class="seg">
+            <label><input type="radio" name="side" value="buy" checked><span>買進</span></label>
+            <label><input type="radio" name="side" value="sell"><span>賣出</span></label>
+          </div>
+        </fieldset>
+        <div class="field f-shares">
+          <label for="fShares">股數</label>
+          <input id="fShares" type="number" inputmode="numeric" min="0" step="1" aria-describedby="sharesHint">
+          <p id="sharesHint" class="hint">1 張 = 1000 股，可輸入零股</p>
+        </div>
+        <div class="field f-price">
+          <label for="fPrice">價位</label>
+          <input id="fPrice" type="number" inputmode="decimal" min="0" step="any" aria-describedby="priceHint">
+          <p id="priceHint" class="hint"></p>
+        </div>
+        <div class="field f-date">
+          <label for="fDate">日期</label>
+          <input id="fDate" type="date">
+        </div>
+        <div class="field f-broker">
+          <label for="fBroker">券商</label>
+          <select id="fBroker" aria-describedby="brokerHint"></select>
+          <p id="brokerHint" class="hint"></p>
+        </div>
+        <div class="field f-fee">
+          <label class="check"><input type="checkbox" id="fFeeIncluded"> 價位已含手續費</label>
+          <p class="hint">勾選後，價位當成已含費用的每股成本，不另加手續費。</p>
+        </div>
+      </div>
+      <div id="feePreview" class="preview" aria-live="polite"></div>
+      <p id="formMsg" class="form-msg" role="alert"></p>
+      <div class="form-actions">
+        <button type="submit" class="btn primary" id="submitBtn">加入</button>
+        <button type="button" class="btn" id="cancelEdit" hidden>取消修改</button>
+      </div>
+    </form>
+    <div class="cash">
+      <h3>現金</h3>
+      <div class="cash-grid">
+        <div class="field">
+          <label for="cashTWD">台幣現金（NT$）</label>
+          <input id="cashTWD" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+        </div>
+        <div class="field">
+          <label for="cashUSD">美元現金（US$）</label>
+          <input id="cashUSD" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+        </div>
+      </div>
+      <p class="hint">用來算現金比例；沒填會當成資金全部在股票裡（全倉）。</p>
+    </div>
+  </section>
+
+  <section id="overview" aria-labelledby="overviewTitle">
+    <h2 id="overviewTitle" class="section-title">總覽 <span class="muted small">（台幣計）</span></h2>
+    <div id="stats" class="stats"></div>
+    <p id="statsLine" class="stats-line"></p>
+  </section>
+
+  <section id="allocation" class="card" aria-labelledby="allocTitle">
+    <div class="card-head">
+      <h2 id="allocTitle">資產配置</h2>
+      <div class="seg seg-sm" role="group" aria-label="圓環圖分組">
+        <button type="button" data-alloc="stock">個股</button>
+        <button type="button" data-alloc="industry">產業</button>
+      </div>
+    </div>
+    <div id="allocBody"></div>
+  </section>
+
+  <section id="holdings" class="card" aria-labelledby="holdingsTitle">
+    <div class="card-head">
+      <h2 id="holdingsTitle">持股明細</h2>
+      <p class="hint">金額為原幣；占比是占股票市值。點一列看詳細分析。</p>
+    </div>
+    <div id="holdingsWrap"></div>
+  </section>
+
+  <section id="details" aria-labelledby="detailsTitle">
+    <h2 id="detailsTitle" class="section-title">個股詳細分析</h2>
+    <div id="cards" class="cards"></div>
+  </section>
+
+  <section id="advice" class="card" aria-labelledby="adviceTitle">
+    <h2 id="adviceTitle">整體組合建議</h2>
+    <div id="adviceBody"></div>
+  </section>
+
+  <section id="ai" class="card" aria-labelledby="aiTitle">
+    <h2 id="aiTitle">AI 分析</h2>
+    <p class="lead">用你自己的 Anthropic API 金鑰，請 Claude 依「行情、損益、籌碼、基本面、估值、產業與題材、多空辯論、價位與建議」8 個步驟逐檔分析。只有按「分析」才會執行，費用由你的 Anthropic 帳戶支付。</p>
+    <div class="ai-grid">
+      <div class="field">
+        <label for="aiKey">Anthropic API 金鑰</label>
+        <div class="key-row">
+          <input id="aiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…" aria-describedby="aiKeyHint">
+          <button type="button" class="btn" id="aiKeyToggle" aria-pressed="false">顯示</button>
+          <button type="button" class="btn" id="aiKeyClear">清除</button>
+        </div>
+        <p id="aiKeyHint" class="hint">金鑰只存在這個瀏覽器（localStorage）。按「分析」時，持股摘要與金鑰只會從你的瀏覽器直接送到 api.anthropic.com，不會經過本網站或其他伺服器。共用電腦用完請按「清除」。沒有金鑰？到 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">Anthropic Console</a> 建立。</p>
+      </div>
+      <div class="field">
+        <label for="aiModel">模型</label>
+        <select id="aiModel"></select>
+        <p id="aiPrice" class="hint"></p>
+      </div>
+    </div>
+    <p id="aiEstimate" class="estimate"></p>
+    <p class="hint">按「分析」時也會透過公開的 CORS 代理服務抓 Google 新聞標題（只送出公司名稱或代號，不含股數與金額）；抓不到就略過。</p>
+    <div class="ai-actions">
+      <button type="button" class="btn primary" id="aiRun">分析</button>
+      <button type="button" class="btn" id="aiCancel" hidden>取消</button>
+      <button type="button" class="btn" id="aiClear">清除 AI 結果</button>
+    </div>
+    <div id="aiStatus" class="ai-status" role="status" aria-live="polite"></div>
+    <div id="aiResultMeta" class="ai-result-meta"></div>
+  </section>
+
+  <section id="log" class="card" aria-labelledby="logTitle">
+    <div class="card-head">
+      <h2 id="logTitle">交易紀錄</h2>
+      <div class="log-tools">
+        <button type="button" class="btn btn-sm" id="exportJson">匯出備份</button>
+        <label class="btn btn-sm file-btn">匯入備份<input type="file" id="importFile" accept="application/json,.json"></label>
+        <button type="button" class="btn btn-sm" id="exportCsv">下載 CSV</button>
+      </div>
+    </div>
+    <p class="hint">交易紀錄只存在這個瀏覽器；換電腦或清除瀏覽資料前，請先「匯出備份」。</p>
+    <div id="logErrors"></div>
+    <div id="logBody"></div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p><strong>資料來源</strong>：<a href="https://www.twse.com.tw/" target="_blank" rel="noopener noreferrer">臺灣證券交易所</a>、<a href="https://www.tpex.org.tw/" target="_blank" rel="noopener noreferrer">證券櫃檯買賣中心</a>、<a href="https://www.nasdaq.com/" target="_blank" rel="noopener noreferrer">Nasdaq</a>、<a href="https://finance.yahoo.com/" target="_blank" rel="noopener noreferrer">Yahoo Finance</a>、<a href="https://rate.bot.com.tw/xrt" target="_blank" rel="noopener noreferrer">臺灣銀行</a>、<a href="https://news.google.com/" target="_blank" rel="noopener noreferrer">Google News</a>。</p>
+    <p id="feeSources"></p>
+    <p id="updatedAt">每日資料更新時間：—</p>
+    <p><strong>僅供參考，非投資建議。</strong>所有數字依公開資料與你輸入的交易計算，可能有延遲或錯誤；投資前請自行查證並承擔風險。</p>
+  </div>
+</footer>
+
+<dialog id="settingsDialog" aria-labelledby="settingsTitle">
+  <form method="dialog" id="settingsForm" novalidate>
+    <h2 id="settingsTitle">設定</h2>
+    <fieldset>
+      <legend>台股手續費</legend>
+      <div class="field">
+        <label for="sTwBroker">預設券商</label>
+        <select id="sTwBroker"></select>
+      </div>
+      <div class="grid3">
+        <div class="field">
+          <label for="sTwDiscount">折數</label>
+          <input id="sTwDiscount" type="number" inputmode="decimal" min="0.1" max="10" step="any">
+          <p class="hint">6 = 6 折，2.8 = 2.8 折，不打折填 10</p>
+        </div>
+        <div class="field">
+          <label for="sTwMin">整股最低（元）</label>
+          <input id="sTwMin" type="number" inputmode="numeric" min="0" step="1">
+        </div>
+        <div class="field">
+          <label for="sTwOdd">零股最低（元）</label>
+          <input id="sTwOdd" type="number" inputmode="numeric" min="0" step="1">
+        </div>
+      </div>
+      <p id="sTwNote" class="hint"></p>
+    </fieldset>
+    <fieldset>
+      <legend>美股手續費</legend>
+      <div class="field">
+        <label for="sUsBroker">預設券商</label>
+        <select id="sUsBroker"></select>
+      </div>
+      <div class="grid3" id="sUsFields">
+        <div class="field" data-us="rate">
+          <label for="sUsRate">費率（%）</label>
+          <input id="sUsRate" type="number" inputmode="decimal" min="0" max="5" step="any">
+        </div>
+        <div class="field" data-us="perShare">
+          <label for="sUsPerShare">每股（US$）</label>
+          <input id="sUsPerShare" type="number" inputmode="decimal" min="0" max="1" step="any">
+        </div>
+        <div class="field" data-us="minFee">
+          <label for="sUsMin">每筆最低（US$）</label>
+          <input id="sUsMin" type="number" inputmode="decimal" min="0" step="any">
+        </div>
+      </div>
+      <p id="sUsNote" class="hint"></p>
+    </fieldset>
+    <fieldset>
+      <legend>停損</legend>
+      <div class="field">
+        <label for="sStopPct">預設停損（%）</label>
+        <input id="sStopPct" type="number" inputmode="decimal" min="1" max="50" step="any">
+        <p class="hint">停損價 = 成本 × (1 − 這個 %) 與「支撐 × 0.97」取較高者；個股卡裡可以另外自訂。</p>
+      </div>
+    </fieldset>
+    <p id="settingsMsg" class="form-msg" role="alert"></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn" id="settingsReset">還原券商預設值</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="settingsCancel">取消</button>
+      <button value="save" class="btn primary" id="settingsSave">儲存</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

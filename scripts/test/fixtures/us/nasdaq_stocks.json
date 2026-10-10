@@ -1,0 +1,24 @@
+{
+"data": {
+"asOf": null,
+"headers": {"symbol":"Symbol","name":"Name","lastsale":"Last Sale","netchange":"Net Change","pctchange":"% Change","marketCap":"Market Cap","country":"Country","ipoyear":"IPO Year","volume":"Volume","sector":"Sector","industry":"Industry","url":"Url"},
+"rows": [
+{"symbol":"AACG","name":"ATA Creativity Global American Depositary Shares","lastsale":"$0.8789","netchange":"-0.0316","pctchange":"-3.471%","volume":"5869","marketCap":"60173027.00","country":"China","ipoyear":"2008","industry":"Other Consumer Services","sector":"Real Estate","url":"/market-activity/stocks/aacg"},
+{"symbol":"AAPL","name":"Apple Inc. Common Stock","lastsale":"$258.42","netchange":"1.13","pctchange":"0.439%","volume":"41234567","marketCap":"3834563210000.00","country":"United States","ipoyear":"1980","industry":"Computer Manufacturing","sector":"Technology","url":"/market-activity/stocks/aapl"},
+{"symbol":"ABNB","name":"Airbnb, Inc. Class A Common Stock","lastsale":"$128.06","netchange":"-2.14","pctchange":"-1.644%","volume":"4567890","marketCap":"78123456789.00","country":"United States","ipoyear":"2020","industry":"Business Services","sector":"Consumer Discretionary","url":"/market-activity/stocks/abnb"},
+{"symbol":"AMD","name":"Advanced Micro Devices, Inc. Common Stock","lastsale":"$214.33","netchange":"5.87","pctchange":"2.816%","volume":"58765432","marketCap":"347654321000.00","country":"United States","ipoyear":"","industry":"Semiconductors","sector":"Technology","url":"/market-activity/stocks/amd"},
+{"symbol":"ASPCW","name":"A SPAC III Acquisition Corp. Warrant","lastsale":"$0.12","netchange":"0.01","pctchange":"9.09%","volume":"1200","marketCap":"0.00","country":"","ipoyear":"2024","industry":"Blank Checks","sector":"Finance","url":"/market-activity/stocks/aspcw"},
+{"symbol":"BAC^K","name":"Bank of America Corporation Depositary Shares, each representing a 1/1,000th interest in a share of 5.875% Non-Cumulative Preferred Stock, Series K","lastsale":"$24.80","netchange":"0.05","pctchange":"0.202%","volume":"34567","marketCap":"","country":"United States","ipoyear":"","industry":"Major Banks","sector":"Finance","url":"/market-activity/stocks/bac^k"},
+{"symbol":"BRK/B","name":"Berkshire Hathaway Inc.","lastsale":"$489.12","netchange":"-3.05","pctchange":"-0.62%","volume":"3456789","marketCap":"1054321098765.00","country":"United States","ipoyear":"","industry":"Property-Casualty Insurers","sector":"Finance","url":"/market-activity/stocks/brk~b"},
+{"symbol":"MSFT","name":"Microsoft Corporation Common Stock","lastsale":"$523.61","netchange":"-2.47","pctchange":"-0.47%","volume":"19876543","marketCap":"3892345678900.00","country":"United States","ipoyear":"1986","industry":"Computer Software: Prepackaged Software","sector":"Technology","url":"/market-activity/stocks/msft"},
+{"symbol":"NVDA","name":"NVIDIA Corporation Common Stock","lastsale":"$192.57","netchange":"-1.88","pctchange":"-0.967%","volume":"152345678","marketCap":"4692345678900.00","country":"United States","ipoyear":"1999","industry":"Semiconductors","sector":"Technology","url":"/market-activity/stocks/nvda"},
+{"symbol":"NVTS","name":"Navitas Semiconductor Corporation Class A Common Stock","lastsale":"$7.45","netchange":"0.32","pctchange":"4.488%","volume":"23456789","marketCap":"1598765432.00","country":"United States","ipoyear":"2020","industry":"Semiconductors","sector":"Technology","url":"/market-activity/stocks/nvts"},
+{"symbol":"QQQ","name":"Invesco QQQ Trust, Series 1","lastsale":"$601.50","netchange":"-1.95","pctchange":"-0.323%","volume":"45678901","marketCap":"","country":"United States","ipoyear":"1999","industry":"Investment Trusts/Mutual Funds","sector":"Finance","url":"/market-activity/stocks/qqq"},
+{"symbol":"TSM","name":"Taiwan Semiconductor Manufacturing Company Ltd.","lastsale":"$305.88","netchange":"-4.12","pctchange":"-1.329%","volume":"12345678","marketCap":"1586543210000.00","country":"Taiwan","ipoyear":"1997","industry":"Semiconductors","sector":"Technology","url":"/market-activity/stocks/tsm"},
+{"symbol":"V","name":"Visa Inc.","lastsale":"$348.10","netchange":"2.36","pctchange":"0.683%","volume":"6789012","marketCap":"675432109876.00","country":"United States","ipoyear":"2008","industry":"Business Services","sector":"Consumer Discretionary","url":"/market-activity/stocks/v"},
+{"symbol":"VZ","name":"Verizon Communications Inc. Common Stock","lastsale":"$43.21","netchange":"0.18","pctchange":"0.418%","volume":"15678901","marketCap":"182345678901.00","country":"United States","ipoyear":"","industry":"Telecommunications Equipment","sector":"Telecommunications","url":"/market-activity/stocks/vz"}
+]
+},
+"message": null,
+"status": {"rCode": 200, "bCodeMessage": null, "developerMessage": null}
+}
