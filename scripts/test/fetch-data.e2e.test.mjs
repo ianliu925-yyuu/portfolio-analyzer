@@ -61,7 +61,7 @@ test('first run from an empty store writes the DESIGN section 3 files', async (t
     assert.ok(meta.us.index[key].close > 0 && isNumOrNull(meta.us.index[key].changePct));
   }
   assert.equal(meta.us.index.spx.close, 7180.52);
-  assert.deepEqual(meta.fx, { USDTWD: 31.88, date: '2026-10-11', source: '臺灣銀行即期買賣中價' });
+  assert.deepEqual(meta.fx, { USDTWD: 31.955, date: '2026-10-11', source: '臺灣銀行即期賣出匯率' });
   for (const locale of ['tw', 'us']) {
     assert.equal(meta.news[locale].length, 12);
     for (const n of meta.news[locale]) assert.deepEqual(Object.keys(n), ['title', 'link', 'source', 'pubDate']);
@@ -202,7 +202,7 @@ test('the next trading day appends one bar and one chip entry per code', async (
   assert.deepEqual(bars.slice(-2), [['2026-10-08', 2455, 28512345], ['2026-10-12', 2470, 30000000]]);
   const tsmc = (await readJson(store, 'latest', 'tw', '23.json'))['2330'];
   assert.equal(tsmc.hist.days, 251);
-  assert.equal(tsmc.hist.high20, 2470);
+  assert.equal(tsmc.hist.high20, 2455, 'high20 covers the 20 sessions before the new 2470 close');
   assert.deepEqual(
     [tsmc.chips.date, tsmc.chips.foreignStreak, tsmc.chips.foreign5, tsmc.chips.trustStreak, tsmc.chips.margin],
     ['2026-10-12', 2, 6913578, -2, 23336],
@@ -230,9 +230,15 @@ test('undated openapi MI_MARGN is used only when it continues stored balances', 
   assert.equal((await readJson(empty, 'latest', 'tw', '23.json'))['2330'].chips.margin, null);
 });
 
-test('exit code is non-zero only when every price source failed', async (t) => {
+const PRICE_SOURCES = ['twseQuotes', 'tpexQuotes', 'usStocks', 'usEtfs'];
+const EVERY_SOURCE = [
+  ...PRICE_SOURCES, 'twseVal', 'twseRev', 'twseEps', 'twseMarginOpen', 'taiex', 'holidays', 't86Rwd', 't86', 'marginRwd', 'marginDated',
+  'tpexVal', 'tpexRev', 'tpexEps', 'tpexMargin', 'tpexInsti', 'tpexIndex', 'bot', 'erApi', 'newsTw', 'newsUs', 'yahoo',
+];
+
+test('exit code is non-zero only when every source failed', async (t) => {
   const store = await tempStore(t);
-  const all = await runWith(store, { fail: ['twseQuotes', 'tpexQuotes', 'usStocks', 'usEtfs'] });
+  const all = await runWith(store, { fail: EVERY_SOURCE });
   assert.equal(all.exitCode, 1);
   assert.equal(await exists(join(store, 'latest')), false, 'nothing is written');
 
@@ -241,6 +247,48 @@ test('exit code is non-zero only when every price source failed', async (t) => {
   assert.equal(twOnly.status.twse_quotes, 'error');
   assert.equal(twOnly.status.us_quotes, 'ok');
   assert.deepEqual(await readJson(store, 'latest', 'index-tw.json'), []);
+});
+
+test('price sources down but news and FX answer: quotes are kept and fresh news and FX are written', async (t) => {
+  const store = await tempStore(t);
+  await runWith(store);
+  const before = await readJson(store, 'latest', 'meta.json');
+  const tsmcBefore = (await readJson(store, 'latest', 'tw', '23.json'))['2330'];
+  const aaplBefore = (await readJson(store, 'latest', 'us', 'A.json')).AAPL;
+
+  const later = new Date('2026-10-12T12:17:00Z');
+  const { exitCode, status } = await runWith(store, { now: later, fail: PRICE_SOURCES });
+  assert.equal(exitCode, 0);
+  assert.deepEqual([status.twse_quotes, status.tpex_quotes, status.us_quotes], ['stale', 'stale', 'stale']);
+  assert.deepEqual([status.fx, status.news], ['ok', 'ok']);
+  const meta = await readJson(store, 'latest', 'meta.json');
+  assert.equal(meta.generatedAt, '2026-10-12T12:17:00Z');
+  assert.deepEqual(meta.fx, { ...before.fx, date: '2026-10-12' }, 'FX refreshed');
+  assert.equal(meta.news.tw.length, 12);
+  assert.deepEqual([meta.tw.asOf, meta.us.asOf], [before.tw.asOf, before.us.asOf], 'quote dates stay with the kept quotes');
+  assert.equal((await readJson(store, 'latest', 'tw', '23.json'))['2330'].close, tsmcBefore.close);
+  assert.equal((await readJson(store, 'latest', 'us', 'A.json')).AAPL.close, aaplBefore.close);
+  assert.equal((await readJson(store, 'history', 'tw', '23.json'))['2330'].length, 250, 'history is kept, not rebuilt');
+});
+
+test('a frozen P/E feed keeps the previous P/E, P/B, yield and eps4q', async (t) => {
+  const store = await tempStore(t);
+  await runWith(store);
+  const before = (await readJson(store, 'latest', 'tw', '12.json'))['1240'];
+  const beforeMeta = await readJson(store, 'latest', 'meta.json');
+  assert.equal(before.exchange, 'TPEx');
+  assert.ok(before.fund.pe > 0 && before.fund.eps4q > 0);
+
+  // tpex.json: the peratio feed once still served Date 1140113 months later
+  const rows = JSON.parse(readFileSync(join(FIXTURES, 'tpex/tpex_mainboard_peratio_analysis.json'), 'utf8'));
+  const frozen = rows.map((r) => ({ ...r, Date: '1140113', PriceEarningRatio: '99.00', PriceBookRatio: '9.00', YieldRatio: '9.00' }));
+  const { status } = await runWith(store, { overrides: { tpexVal: { body: JSON.stringify(frozen) } } });
+  assert.equal(status.pe, 'stale');
+  const after = (await readJson(store, 'latest', 'tw', '12.json'))['1240'];
+  for (const k of ['pe', 'pb', 'yield', 'eps4q']) assert.equal(after.fund[k], before.fund[k], k);
+  const meta = await readJson(store, 'latest', 'meta.json');
+  assert.deepEqual(meta.industryPe, beforeMeta.industryPe, 'industry medians are not skewed by the frozen feed');
+  assert.equal((await readJson(store, 'latest', 'tw', '23.json'))['2330'].fund.pe, 29.56, 'the TWSE feed is still used');
 });
 
 test('Yahoo bootstrap honours MAX_BOOTSTRAP and continues on the next run', async (t) => {
@@ -267,9 +315,11 @@ test('repeated Yahoo 429s stop the run politely; 404s are remembered for a week'
   const throttled = await tempStore(t);
   const r = await runWith(throttled, { yahoo429: 10_000 });
   assert.equal(r.exitCode, 0);
-  assert.equal(r.status.history, 'stale');
+  assert.equal(r.status.history, 'error', 'nothing fetched and no earlier history');
   assert.equal(r.status.index, 'stale');
   assert.ok(r.calls.filter((u) => u.includes('finance.yahoo.com')).length < 40, 'circuit breaker stops early');
+  const throttledAgain = await runWith(throttled, { yahoo429: 10_000 });
+  assert.equal(throttledAgain.status.history, 'stale');
 
   const missing = await tempStore(t);
   await runWith(missing, { yahoo404: ['1258.TWO'] });
@@ -277,6 +327,19 @@ test('repeated Yahoo 429s stop the run politely; 404s are remembered for a week'
   assert.deepEqual(state.yahoo['TW:1258'], { at: '2026-10-11', ok: false, n: 1 });
   const again = await runWith(missing, { yahoo404: ['1258.TWO'] });
   assert.ok(!again.calls.some((u) => u.includes('1258.TWO')), 'not retried the same week');
+});
+
+test('history is not "ok" when every Yahoo request failed without a 429', async (t) => {
+  const store = await tempStore(t);
+  const first = await runWith(store, { fail: ['yahoo'] });
+  assert.equal(first.exitCode, 0);
+  assert.equal(first.status.history, 'error');
+  assert.equal((await readJson(store, 'latest', 'tw', '23.json'))['2330'].hist.days, 1);
+
+  const fixed = await runWith(store);
+  assert.equal(fixed.status.history, 'ok');
+  const down = await runWith(store, { fail: ['yahoo'] });
+  assert.equal(down.status.history, 'stale');
 });
 
 test('CLI prints usage without --store', () => {

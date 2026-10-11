@@ -44,13 +44,28 @@ test('valuation: "" and N/A are missing, yield 0 stays 0', () => {
 
 test('buildFund overlays fresh data on the previous fund and derives eps4q from P/E', () => {
   const prev = { revYm: '2026-08', rev: 1, mom: 1, yoy: 1, ytdYoy: 1, eps: 20, epsPeriod: '2026Q1累計', eps4q: 70, pe: 30, pb: 9, yield: 1 };
-  const f = buildFund(prev, { eps: { eps: 41.72, epsPeriod: '2026Q2累計' }, val: { pe: 29.56, pb: 10.28, yield: 0.86 } }, 2455);
+  const val = { pe: 29.56, pb: 10.28, yield: 0.86, date: '2026-10-08' };
+  const f = buildFund(prev, { eps: { eps: 41.72, epsPeriod: '2026Q2累計' }, val }, 2455, '2026-10-08');
   assert.deepEqual(f, { revYm: '2026-08', rev: 1, mom: 1, yoy: 1, ytdYoy: 1, eps: 41.72, epsPeriod: '2026Q2累計', eps4q: 83.05, pe: 29.56, pb: 10.28, yield: 0.86 });
-  // an older revenue month never replaces a newer one; a failed source keeps everything
-  const kept = buildFund(f, { rev: { revYm: '2026-07', rev: 9, mom: 9, yoy: 9, ytdYoy: 9 } }, 2455);
+  // an older revenue month never replaces a newer one; a failed source keeps everything, eps4q included
+  const kept = buildFund(f, { rev: { revYm: '2026-07', rev: 9, mom: 9, yoy: 9, ytdYoy: 9 } }, 2600, '2026-10-12');
   assert.equal(kept.revYm, '2026-08');
   assert.equal(kept.rev, 1);
+  assert.deepEqual([kept.pe, kept.eps4q], [29.56, 83.05], 'no P/E today: eps4q is not re-derived from yesterday\'s P/E');
   assert.equal(buildFund(null, {}, 100), null);
+});
+
+test('buildFund ignores P/E-P/B-yield older than the close', () => {
+  const prev = { pe: 12.34, pb: 1.5, yield: 3, eps4q: 4.36 };
+  const frozen = buildFund(prev, { val: { pe: 99, pb: 9, yield: 9, date: '2025-01-13' } }, 53.8, '2026-10-08');
+  assert.deepEqual([frozen.pe, frozen.pb, frozen.yield, frozen.eps4q], [12.34, 1.5, 3, 4.36]);
+  const undated = buildFund(prev, { val: { pe: 99, pb: 9, yield: 9, date: '' } }, 53.8, '2026-10-08');
+  assert.equal(undated.pe, 12.34, 'a dataset without a date cannot be checked, so it is not used');
+  // P/E newer than a kept (stale) close: take the ratios, but close / P/E would mix two days
+  const newer = buildFund(prev, { val: { pe: 13, pb: 1.6, yield: 2.9, date: '2026-10-12' } }, 53.8, '2026-10-08');
+  assert.deepEqual([newer.pe, newer.pb, newer.yield, newer.eps4q], [13, 1.6, 2.9, 4.36]);
+  const loss = buildFund(prev, { val: { pe: null, pb: 1.4, yield: 0, date: '2026-10-08' } }, 53.8, '2026-10-08');
+  assert.deepEqual([loss.pe, loss.eps4q], [null, null], 'P/E N/A on the same day clears eps4q');
 });
 
 test('industryPe: median of positive P/E per TW:<industry>', () => {

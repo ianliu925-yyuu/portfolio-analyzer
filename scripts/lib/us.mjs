@@ -27,7 +27,9 @@ export function cleanUsName(name) {
     .trim();
 }
 
-const NOT_COMMON = /\b(warrants?|rights|units|notes? due|debentures?|subordinated)\b|preferred|depositary shares,? each|\d%/i;
+// ADRs of ordinary shares ("American Depositary Shares, each representing ...") are common stock;
+// preferred depositary shares name the preferred stock or a coupon, and their symbols carry "^".
+const NOT_COMMON = /\b(warrants?|rights|units|notes? due|debentures?|subordinated)\b|preferred|\d%/i;
 
 export function parseNasdaqStocks(json) {
   const rows = json?.data?.rows ?? json?.data?.table?.rows;

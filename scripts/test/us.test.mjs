@@ -32,6 +32,18 @@ test('universe: market cap >= $2B and common stock only', () => {
   assert.deepEqual(kept, ['AAPL', 'ABNB', 'AMD', 'BRK.B', 'MSFT', 'NVDA', 'TSM', 'V', 'VZ']);
 });
 
+test('universe keeps ADRs of ordinary shares and drops preferred depositary shares', () => {
+  const kept = (rawName) => isUsUniverseStock({ marketCap: 1e11, rawName });
+  assert.ok(kept('Alibaba Group Holding Limited American Depositary Shares each representing eight Ordinary share'));
+  assert.ok(kept('Sea Limited American Depositary Shares, each representing one Class A Ordinary Share'));
+  assert.ok(kept('NIO Inc. American depositary shares, each representing one Class A ordinary share'));
+  assert.ok(kept('Taiwan Semiconductor Manufacturing Company Ltd.'));
+  assert.ok(!kept('Wells Fargo & Company Depositary Shares, each representing a 1/1000th interest in a share of Non-Cumulative Perpetual Class A Preferred Stock, Series Z'));
+  assert.ok(!kept('Capital One Financial Corporation Depositary Shares, Each Representing a 1/40th Interest in a Share of 4.800% Fixed Rate Non-Cumulative Perpetual'));
+  assert.ok(!kept('Example Corp Warrants'));
+  assert.equal(cleanUsName('Sea Limited American Depositary Shares, each representing one Class A Ordinary Share'), 'Sea Limited');
+});
+
 test('ETF screener (data.data.rows) and the flatter paged shape', () => {
   const map = parseNasdaqEtfs(fixtureJson('us/nasdaq_etf.json'));
   assert.deepEqual(map.VOO, { code: 'VOO', name: 'Vanguard S&P 500 ETF', close: 612.35, change: -1.2, changePct: -0.2 });

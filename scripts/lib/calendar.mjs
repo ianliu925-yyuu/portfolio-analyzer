@@ -71,10 +71,10 @@ export function zoned(now, timeZone) {
 export const taipeiToday = (now) => zoned(now, 'Asia/Taipei').date;
 export const isUsDst = (now) => zoned(now, 'America/New_York').tzName === 'EDT';
 
-// closed: { 'YYYY-MM-DD': name }; weekends are always closed.
-export function createCalendar(closed = {}, early = {}) {
-  const closedName = (iso) => closed[iso] ?? null;
-  const isTradingDay = (iso) => !isWeekend(iso) && !closed[iso];
+// closed: { 'YYYY-MM-DD': name }, then fallback(iso) for dates the table does not know; weekends are always closed.
+export function createCalendar(closed = {}, early = {}, fallback = () => null) {
+  const closedName = (iso) => closed[iso] ?? fallback(iso);
+  const isTradingDay = (iso) => !isWeekend(iso) && !closedName(iso);
   const step = (iso, dir) => {
     let d = iso;
     for (let i = 0; i < 40; i++) {
@@ -95,10 +95,24 @@ export function createCalendar(closed = {}, early = {}) {
 export const usCalendar = createCalendar(NYSE_CLOSED, NYSE_EARLY_CLOSE);
 
 // Holidays from the TWSE schedule rows ({date, name}); rows named "...交易日" are trading-day markers.
+// TWSE publishes the current year only, so for a year with no rows yet assume 元旦 is closed, with its
+// 補假 (Saturday -> the Friday before, Sunday -> the Monday after); the year's own rows replace this.
 export function twCalendar(holidays = []) {
   const closed = {};
-  for (const h of holidays) if (h.date && !String(h.name).includes('交易日')) closed[h.date] ??= h.name;
-  return createCalendar(closed);
+  const years = new Set();
+  for (const h of holidays) {
+    if (!h.date) continue;
+    years.add(h.date.slice(0, 4));
+    if (!String(h.name).includes('交易日')) closed[h.date] ??= h.name;
+  }
+  return createCalendar(closed, {}, (iso) => (years.has(iso.slice(0, 4)) ? null : newYearClosure(iso)));
+}
+
+function newYearClosure(iso) {
+  const md = iso.slice(5);
+  if (md === '01-01') return '中華民國開國紀念日';
+  if ((md === '01-02' && weekday(iso) === 1) || (md === '12-31' && weekday(iso) === 5)) return '中華民國開國紀念日補假';
+  return null;
 }
 
 // Latest US session whose close (+30 min settle time) has passed, in America/New_York.

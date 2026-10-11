@@ -1,4 +1,4 @@
-// USD/TWD: Bank of Taiwan CSV (spot mid) with open.er-api.com as fallback.
+// USD/TWD: Bank of Taiwan CSV (the pipeline uses 即期賣出) with open.er-api.com as fallback.
 import { num, round } from './util.mjs';
 
 export const BOT_CSV = 'https://rate.bot.com.tw/xrt/flcsv/0/day';
@@ -17,7 +17,7 @@ export function parseBotCsv(text) {
     const sell = num(cols[13]) || null;
     rates[code] = { spotBuy: buy, spotSell: sell, mid: buy && sell ? round((buy + sell) / 2, 4) : null };
   }
-  if (!rates.USD?.mid) throw new Error('BOT csv: USD spot rate missing');
+  if (!rates.USD?.spotSell) throw new Error('BOT csv: USD spot rate missing');
   return rates;
 }
 

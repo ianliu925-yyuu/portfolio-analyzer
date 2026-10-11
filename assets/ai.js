@@ -21,6 +21,9 @@ const PRICES = {
 
 export const AI_ACTIONS = ['加碼', '續抱', '分批停利', '減碼', '停損', '停損觀察'];
 
+// 輸出上限（含思考）。estimateCost 以每檔約 1,100 tokens 估，高估值（× 1.6）約到 35 檔都在上限內。
+export const MAX_OUTPUT_TOKENS = 64000;
+
 const strList = { type: 'array', items: { type: 'string' } };
 export const AI_SCHEMA = {
   type: 'object',
@@ -99,6 +102,14 @@ const strip = (o) => {
   return out;
 };
 
+// 每日資料的月營收單位是千元；另附億元，避免 AI 把千元當成元。
+function fundForAi(fund) {
+  const f = strip(fund);
+  if (!f || typeof f !== 'object') return f;
+  const rev = Number(f.rev);
+  return Number.isFinite(rev) ? { ...f, revNTD100M: r(rev / 1e5, 2) } : f;
+}
+
 // 給 AI 的資料（compact JSON）。所有比例都轉成百分數，避免 0.4 和 40% 混淆。
 export function buildPayload({ meta, summary, records = {}, analyses = {}, portfolioRules, stockNews = null, today }) {
   const rows = summary?.rows ?? [];
@@ -131,7 +142,7 @@ export function buildPayload({ meta, summary, records = {}, analyses = {}, portf
         stopSource: lv.stopSource, hi52: lv.hi52, lo52: lv.lo52, pos52Pct: pct(lv.pos52, 1), ma60: lv.ma60 }),
       hist: strip(rec?.hist),
       chips: row.market === 'TW' ? strip(rec?.chips) : undefined,
-      fund: strip(rec?.fund),
+      fund: fundForAi(rec?.fund),
       industryPe: row.market === 'TW' && row.industry ? meta?.industryPe?.[`TW:${row.industry}`] ?? null : null,
       rule: a ? { action: a.action, reasons: a.reasons, triggers: a.triggers, bull: a.bull, bear: a.bear, watch: a.watch } : null,
       news: stockNews ? (stockNews[key] ?? []).map((n) => strip({ title: n.title, source: n.source, date: n.pubDate?.slice(0, 10) })) : undefined,
@@ -141,7 +152,8 @@ export function buildPayload({ meta, summary, records = {}, analyses = {}, portf
   return {
     today,
     dataDates: strip({ twClose: meta?.tw?.asOf, usClose: meta?.us?.asOf, usdTwd: meta?.fx?.USDTWD, fxDate: meta?.fx?.date }),
-    units: '台股金額新台幣、美股金額美元；組合金額一律新台幣。*Pct 為百分數。法人買賣超單位股，融資融券單位張。',
+    units: '台股金額新台幣、美股金額美元；組合金額一律新台幣。*Pct 為百分數。月營收 fund.rev 單位是千元（新台幣），' +
+      'fund.revNTD100M 是換算成億元的月營收；EPS 單位元。volume、hist.avgVol20 單位股。法人買賣超單位股，融資融券單位張。',
     newsAvailable: stockNews != null && Object.values(stockNews).some((l) => l?.length),
     holdings,
     portfolio: summary ? strip({
@@ -188,6 +200,7 @@ export function estimateCost(modelId, payload, { newsPerStock = 5 } = {}) {
     usd: usd(inputTokens, outputTokens),
     low: usd(inputTokens, outputTokens * 0.6),
     high: usd(inputTokens, outputTokens * 1.6),
+    overLimit: outputTokens * 1.6 > MAX_OUTPUT_TOKENS, // 輸出可能超過上限而被截斷
   };
 }
 
@@ -268,6 +281,20 @@ export function normalizeResult(data) {
   };
 }
 
+// 串流中途改由備援模型接手時，content 是「前段文字、fallback 區塊、後段文字」：先試整段接起來，再試最後一段。
+export function parseJsonText(content) {
+  const blocks = Array.isArray(content) ? content : [];
+  const texts = (list) => list.filter((b) => b?.type === 'text' && typeof b.text === 'string').map((b) => b.text).join('');
+  const lastFallback = blocks.map((b) => b?.type).lastIndexOf('fallback');
+  for (const text of [texts(blocks), lastFallback >= 0 ? texts(blocks.slice(lastFallback + 1)) : null]) {
+    if (!text) continue;
+    try {
+      return JSON.parse(text);
+    } catch { /* 試下一種 */ }
+  }
+  return undefined;
+}
+
 let sdkPromise = null;
 function loadSdk() {
   if (!sdkPromise) {
@@ -293,17 +320,19 @@ export async function runAnalysis({ apiKey, model, payload, signal }) {
   const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
   const body = {
     model: info.id,
-    max_tokens: 16000,
+    max_tokens: MAX_OUTPUT_TOKENS,
     output_config: { effort: 'medium', format: { type: 'json_schema', schema: AI_SCHEMA } },
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userMessage(payload) }],
   };
 
+  // 輸出上限比非串流請求允許的大，所以用串流，只取最後的完整訊息。
   let response;
   try {
-    response = info.fallback
-      ? await client.beta.messages.create({ ...body, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' }, { signal })
-      : await client.messages.create(body, { signal });
+    const stream = info.fallback
+      ? client.beta.messages.stream({ ...body, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' }, { signal })
+      : client.messages.stream(body, { signal });
+    response = await stream.finalMessage();
   } catch (err) {
     throw mapError(err, Anthropic);
   }
@@ -316,11 +345,8 @@ export async function runAnalysis({ apiKey, model, payload, signal }) {
   if (response?.stop_reason === 'max_tokens') {
     throw new AiError('max_tokens', '回答太長，超過輸出上限被截斷，結果無法使用。請減少持股檔數或換一個模型再試。', { cost, served });
   }
-  const text = (response?.content ?? []).find((b) => b?.type === 'text')?.text;
-  let data;
-  try {
-    data = JSON.parse(text);
-  } catch {
+  const data = parseJsonText(response?.content);
+  if (data === undefined) {
     throw new AiError('invalid_json', 'AI 回傳的內容不是有效的 JSON，無法顯示。請再按一次「分析」。', { cost, served });
   }
   return { result: normalizeResult(data), cost, served, stopReason: response.stop_reason };

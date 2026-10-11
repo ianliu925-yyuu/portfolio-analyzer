@@ -44,7 +44,7 @@
 ```js
 {
   id: 'tw_generic_06',          // 唯一
-  name: '一般電子下單（6 折）',  // 顯示名稱
+  name: '一般電子下單',         // 顯示名稱（不含折數；使用者自訂折數時由介面另外標示）
   market: 'TW' | 'US',
   model: 'discount' | 'zero' | 'per_share' | 'percent',
   minFee: number,               // 每筆最低手續費（TW：整股；US：美元）
@@ -229,6 +229,19 @@ tradeCosts({
 - 賣超過持股：加一筆 error（「…但當時只持有 N 股，已以 N 股計算」），以持有股數計算，費用按比例打折。
 - 沒有持股就賣出、欄位不合法（股數 ≤ 0、日期格式錯、市場或買賣別錯、缺代號）：加一筆 error 並略過該筆。
 
+### `sessionPosition(transactions, market, code, date) → Session | null`
+
+資料日（`record.date`）那一盤的部位，給 `valueHolding` 算今日損益。`date` 不是 `YYYY-MM-DD` 時回傳 `null`。
+
+```js
+{
+  date,           // 資料日
+  prevShares,     // 資料日之前（不含當天）的交易算出的持股
+  dayBuyShares,   // 資料日當天買進的股數（不扣當天賣出）
+  dayBuyAmount,   // 資料日當天買進的 price × shares（不含手續費）
+}
+```
+
 ### `valueHolding(holding, record, ctx) → Row`
 
 ```js
@@ -237,7 +250,8 @@ valueHolding(holding, record /* 每日資料 record，可為 null */, {
   broker?: string | Broker,    // 估賣出費用的券商；沒給用 holding.broker，再沒有用市場預設
   brokerOverrides?: object,
   date?: 'YYYY-MM-DD',         // 估賣出費用的日期（今天或資料日期）
-  manualPrice?: number,        // 使用者手動輸入的現價，優先於 record.close
+  manualPrice?: number,        // 使用者手動輸入的現價；只在 record 沒有收盤價時使用
+  session?: Session,           // sessionPosition 的結果；沒給時今日損益 = 漲跌 × 全部股數
 })
 ```
 
@@ -249,7 +263,7 @@ valueHolding(holding, record /* 每日資料 record，可為 null */, {
 | `type` | `record.type`；沒有時 TW 用 `inferTwType`、US 用 `'stock'` |
 | `industry` | TW：`record.industry`；US：`record.sector`（沒有再用 `record.industry`）；ETF 沒產業時為 `'ETF'`；都沒有為 `null` |
 | `currency` | `'TWD'` / `'USD'` |
-| `price` | 現價（`manualPrice` 或 `record.close`），沒有為 `null` |
+| `price` | 現價：`record.close`；沒有收盤價時用 `manualPrice`；都沒有為 `null` |
 | `priceSource` | `'manual'` / `'data'` / `null` |
 | `marketValue` | `price × shares`（原幣） |
 | `grossPL`, `grossPLPct` | 帳面損益 = `marketValue − costTotal`；% 以 `costTotal` 為分母 |
@@ -257,9 +271,10 @@ valueHolding(holding, record /* 每日資料 record，可為 null */, {
 | `sellFee`, `sellTax`, `sellRegFee` | 明細（`estimateSellCosts`） |
 | `netPL`, `netPLPct` | **未實現淨損益** = `marketValue − sellCosts − costTotal`；介面以這個為主 |
 | `dayChange`, `dayChangePct` | `record.change`、`record.changePct`（只有 `priceSource === 'data'` 時有值） |
-| `dayPL` | `dayChange × shares` |
+| `dayPL` | 有 `session`：`dayChange × 資料日前已持有的股數 + (price − 當天買進均價) × 當天買進且還持有的股數`；資料日之後才買的股數不算。沒有 `session`：`dayChange × shares` |
 | `fx` | 換算率：TW 為 1；US 為 `ctx.fx`（缺則 `null`） |
 | `costTWD`, `valueTWD`, `grossPLTWD`, `sellCostsTWD`, `netPLTWD`, `dayPLTWD`, `realizedTWD` | 換成台幣的值 |
+| `dayBaseTWD` | 今日損益% 的分母（台幣）：上面那些股數的前一日收盤市值＋當天買進金額；沒有 `dayPL` 時為 `null` |
 | `sellBroker` | 估賣出費用用的券商 id |
 | `missing` | 缺的東西：`'price'`、`'fx'` |
 
@@ -281,26 +296,28 @@ summarize(rows /* valueHolding 的結果陣列 */, {
 {
   currency: 'TWD', fx,
   holdingCount,                 // rows.length
-  marketValue,                  // Σ valueTWD（缺價或缺匯率的列不計）
-  costTotal,                    // Σ costTWD（含沒有價格的列）
+  pricedCount,                  // 有台幣市值的列數（有價格、美股也有匯率）
+  marketValue,                  // Σ valueTWD（缺價或缺匯率的列不計）；有持股但 pricedCount 為 0 時 null
+  costTotal,                    // Σ costTWD（含沒有價格的列）；有持股但每列都缺台幣成本（美股缺匯率）時 null
   pricedCost,                   // 有價格那些列的成本（報酬率的分母）
-  grossPL, grossPLPct,
+  grossPL, grossPLPct,          // pricedCount 為 0 時 grossPL 為 null（sellCosts、netPL 同）
   sellCosts,
   netPL, netPLPct,              // netPLPct = netPL / pricedCost × 100
-  dayPL, dayPLPct,              // dayPLPct = dayPL / (昨日市值) × 100
+  dayPL, dayPLPct,              // 有持股但沒有任何一列有 dayPL 時 null；dayPLPct = dayPL / Σ dayBaseTWD × 100
   realized,                     // 已實現損益（TW + US × fx）
   cashTWD, cashUSD, cashTotalTWD,
-  totalAssets,                  // marketValue + cashTotalTWD
-  cashRatio,                    // cashTotalTWD / totalAssets；兩者都 0 時為 null；沒輸入現金 → 0（全倉）
+  totalAssets,                  // 已計價的 marketValue（缺值當 0）+ cashTotalTWD
+  cashRatio,                    // 有持股且沒輸入任何現金 → 0（全倉）；有持股沒計價或美元現金缺匯率 → null；
+                                // 否則 cashTotalTWD / totalAssets（totalAssets 為 0 時 null）
   rows: Row[],                  // 輸入的 rows 複本，多了 weight 與 assetWeight
-  weights: { 'TW:2330': 0.6, … },      // 占股票市值（不含現金），明細表「占比」與圓環圖用
-  assetWeights: { 'TW:2330': 0.54, … },// 占總資產（含現金），規則判斷用
+  weights: { 'TW:2330': 0.6, … },      // 占股票市值（不含現金）
+  assetWeights: { 'TW:2330': 0.54, … },// 占總資產（含現金）：規則判斷、明細表「占總資產」與圓環圖都用這個
   maxWeight: { key, label, weight, assetWeight } | null,
   topIndustry: { label, weight, assetWeight } | null,
   allocation: {
     byStock:    [{ key: 'TW:2330', label: '台積電（2330）', market, code, valueTWD, weight, assetWeight, codes }],
     byIndustry: [{ key, label, valueTWD, weight, assetWeight, codes: ['TW:2330', …] }], // 產業缺值歸「未分類」
-  },                            // 兩者都依金額大到小；不含現金（圓環圖要顯示現金請自己加一塊）
+  },                            // 兩者都依金額大到小；不含現金（介面的圓環圖以 assetWeight 畫，另加一塊現金）
   missingPrice: ['TW:9999', …], // 沒有價格的持股
   missingFx: boolean,           // 有美股或美元現金但沒有匯率
 }
@@ -354,8 +371,11 @@ summarize(rows /* valueHolding 的結果陣列 */, {
   hi52, lo52,
   pos52,        // (price − lo52) / (hi52 − lo52)，夾在 0～1；缺資料 null
   ma60,
+  supportBroken,// 現價 < hist.low20：跌破前 20 個交易日的收盤低點
 }
 ```
+
+每日資料的 `hist.low20`、`hist.high20`、`hist.avgVol20` 都**不含最新一根**：取資料日之前的 20 個交易日（需要至少 21 根）。所以今天收盤可以跌破支撐、觸發 `support × 0.97` 的停損，成交量倍數 `volume / avgVol20` 也是跟前 20 日均量比。
 
 ### `analyzeHolding(row, record, ctx) → Analysis`
 
@@ -367,7 +387,7 @@ analyzeHolding(row /* summarize().rows 的一列（或 valueHolding 結果）*/,
   today?: 'YYYY-MM-DD',      // 今天（月營收、財報期限、事件、休市提醒用；沒給就不出這些提醒）
   events?: [{ date, title }],// meta.events；顯示今天起 14 天內的；標題含「美股」的不給台股、含「台股」的不給美股
   holidayNote?: string,      // meta.tw.holidayNote 或 meta.us.holidayNote（依該股市場）
-  upcomingHolidays?: [{ date, name }], // 沒有 holidayNote 時，顯示 7 天內的休市日
+  upcomingHolidays?: [{ date, name, earlyClose? }], // 沒有 holidayNote 時，顯示 7 天內的休市日；earlyClose 為 true 是提早收盤（不是休市）
   stopPct?: number,          // 使用者設定的預設停損%（0～1）
   userStop?: number,         // 這檔的自訂停損價
 })
@@ -403,9 +423,9 @@ analyzeHolding(row /* summarize().rows 的一列（或 valueHolding 結果）*/,
 
 缺資料的條件一律不算符合（三態 `null`），並在 `reasons` 加「缺少…資料，相關條件不算符合」。美股沒有營收、本益比、籌碼時改寫一句「美股沒有月營收、本益比與法人籌碼資料…」；台股 ETF 同理。沒有現價時動作是「續抱」、`reasons[0]` 要使用者手動輸入現價、`triggers` 為空。
 
-多空訊號依序檢查：月營收年增 ≥ 10%（多）／< 0（空）→ 創 52 週新高（多）／距 52 週低點 5% 內（空）→ 外資、投信連買／連賣 ≥ 3 天 → 融資單日增加 ≥ 5%（空）→ 本益比 ≤ 同業 × 0.8（多）／≥ 同業 × 1.5（空）→ 成交量 ≥ 20 日均量 2 倍（依漲跌歸多或空）→ 站上／跌破季線。
+多空訊號依序檢查：月營收年增 ≥ 10%（多）／< 0（空）→ 創 52 週新高（多）／距 52 週低點 5% 內（空）／跌破近 20 日低點（空，`supportBroken`）→ 外資、投信連買／連賣 ≥ 3 天 → 融資單日增加 ≥ 5%（空）→ 本益比 ≤ 同業 × 0.8（多）／≥ 同業 × 1.5（空）→ 成交量 ≥ 20 日均量 2 倍（依漲跌歸多或空）→ 站上／跌破季線。
 
-今天該注意：成交量異常（去找新聞）、已跌破或距停損 5% 內、距壓力 3% 內、月營收公布（台股個股，每月 1～10 日且資料還沒有上個月營收）、下一個財報期限在 30 天內（台股個股）、`events`、休市。
+今天該注意：成交量異常（去找新聞）、已跌破或距停損 5% 內、距壓力 3% 內、月營收公布（台股個股，每月 1～10 日且資料還沒有上個月營收）、下一個財報期限在 30 天內（台股個股；`events` 已有同一天或標題含「財報」的事件時不重複）、`events`（`holidayNote` 寫到的日期或區間內的休市、提早收盤事件不重複）、休市（`upcomingHolidays` 中和 `events` 同一天的不重複；`earlyClose` 顯示「（提早收盤）」而不是「休市」）。
 
 ### `analyzePortfolio(rows, summary, ctx) → { risks: string[], advice: string[] }`
 
@@ -417,7 +437,7 @@ analyzePortfolio(summary.rows, summary, {
 
 - 優先用 `summary.rows`（有 `assetWeight`）；`summary` 必須是 `summarize()` 的結果。
 - 規則：持股檔數 < 3；單檔占總資產 > 40%（建議會算出要賣幾股）；同產業占總資產 > 60%（「未分類」與「ETF」不算）；現金比例 0%（全倉警示）；現金比例 < 10%（算出還差多少台幣）；沒有收盤價的持股；缺匯率。
-- 沒有觸發任何風險時，`advice` 是「組合目前沒有觸發集中度與現金規則，維持定期檢視即可」。沒有持股時 `risks` 為空、`advice` 只有一句提示。
+- 沒有觸發任何風險時，`advice` 是「組合目前沒有觸發集中度與現金規則（單檔與產業占比以含現金的總資產計），維持定期檢視即可」。沒有持股時 `risks` 為空、`advice` 只有一句提示。
 
 ---
 
@@ -425,7 +445,7 @@ analyzePortfolio(summary.rows, summary, {
 
 ```js
 import { tradeCosts, getBroker, brokersFor } from './fees.js';
-import { buildHoldings, valueHolding, summarize, holdingKey } from './portfolio.js';
+import { buildHoldings, valueHolding, summarize, holdingKey, sessionPosition } from './portfolio.js';
 import { analyzeHolding, analyzePortfolio } from './rules.js';
 
 // 新增交易時即時試算
@@ -436,6 +456,7 @@ const { holdings, realizedTotal, errors } = buildHoldings(transactions);
 const today = meta.tw.asOf; // 或使用者的今天
 const rows = holdings.map((h) => valueHolding(h, recordOf(h), {
   fx: meta.fx.USDTWD, date: today, brokerOverrides, manualPrice: manualPrices[holdingKey(h.market, h.code)],
+  session: recordOf(h) ? sessionPosition(transactions, h.market, h.code, recordOf(h).date) : null,
 }));
 const summary = summarize(rows, { cashTWD, cashUSD, fx: meta.fx.USDTWD, realizedTotal });
 const analyses = {};

@@ -36,10 +36,19 @@ test('computeHist on 25 bars (closes 101..125, volumes 1000..25000)', () => {
     lo52: 101,
     ma20: 115.5, // mean(106..125)
     ma60: null,
-    avgVol20: 15500, // mean(6000..25000)
-    low20: 106,
-    high20: 125,
+    avgVol20: 14500, // mean(5000..24000): the 20 sessions before the latest
+    low20: 105, // min(105..124)
+    high20: 124,
   });
+});
+
+test('computeHist: a close below the prior 20-day low is not hidden by its own bar', () => {
+  const bars = series(25, (i) => (i === 25 ? 90 : 100 + i), () => 1000);
+  bars[24][2] = 5000;
+  const h = computeHist(bars);
+  assert.equal(h.low20, 105);
+  assert.ok(90 < h.low20, 'the latest close sits below the support');
+  assert.equal(h.avgVol20, 1000, 'the spike day is not in its own average');
 });
 
 test('computeHist on 65 bars (closes 1..65): 60-day average and 52-week range', () => {
@@ -50,8 +59,8 @@ test('computeHist on 65 bars (closes 1..65): 60-day average and 52-week range', 
   assert.equal(h.d20Pct, 44.44); // 65 / 45 - 1
   assert.equal(h.hi52, 65);
   assert.equal(h.lo52, 1);
-  assert.equal(h.low20, 46);
-  assert.equal(h.high20, 65);
+  assert.equal(h.low20, 45); // 20 sessions before the latest: 45..64
+  assert.equal(h.high20, 64);
 });
 
 test('computeHist: 52-week window is the last 250 bars; short or volume-poor histories give nulls', () => {
@@ -64,9 +73,13 @@ test('computeHist: 52-week window is the last 250 bars; short or volume-poor his
   assert.equal(short.d5Pct, round2((19 / 14 - 1) * 100));
   for (const k of ['d20Pct', 'hi52', 'lo52', 'ma20', 'ma60', 'avgVol20', 'low20', 'high20']) assert.equal(short[k], null, k);
 
-  const sparse = series(20, (i) => i, (i) => (i <= 11 ? null : 10)); // 9 volumes in the window
+  const at20 = computeHist(series(20));
+  assert.equal(at20.ma20, 10.5);
+  for (const k of ['avgVol20', 'low20', 'high20']) assert.equal(at20[k], null, `${k} needs 20 sessions before the latest`);
+
+  const sparse = series(21, (i) => i, (i) => (i <= 11 ? null : 10)); // 9 volumes in the prior window
   assert.equal(computeHist(sparse).avgVol20, null);
-  const enough = series(20, (i) => i, (i) => (i <= 10 ? null : i)); // 10 volumes: mean(11..20)
+  const enough = series(21, (i) => i, (i) => (i <= 10 ? null : i)); // 10 volumes: mean(11..20)
   assert.equal(computeHist(enough).avgVol20, 16);
 
   assert.deepEqual(computeHist([]), {

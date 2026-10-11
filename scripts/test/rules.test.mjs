@@ -35,7 +35,7 @@ test('levels: support, resistance, stop, 52-week position', () => {
   // 季線 550 低於現價 560 且高於 20 日低點 540 → 支撐取季線
   const a = levels({ avgCost: 500 }, { close: 560, hist: { low20: 540, high20: 600, ma60: 550, hi52: 650, lo52: 400 } });
   assert.deepEqual(a, { cost: 500, price: 560, support: 550, resistance: 600, stop: 533.5, stopSource: 'support',
-    stopPct: 0.1, hi52: 650, lo52: 400, pos52: 0.64, ma60: 550 });
+    stopPct: 0.1, hi52: 650, lo52: 400, pos52: 0.64, ma60: 550, supportBroken: false });
   // 現價距 20 日高點 < 1% → 壓力改用 52 週高點
   const b = levels({ avgCost: 500 }, { close: 597, hist: { low20: 540, high20: 600, ma60: 550, hi52: 650, lo52: 400 } });
   assert.equal(b.resistance, 650);
@@ -178,6 +178,31 @@ test('TW ETF: no revenue/PE is explained once, no revenue or report reminders', 
   assert.ok(!r.watch.some((s) => s.includes('營收') || s.includes('財報')));
 });
 
+test('收盤跌破前 20 日低點：支撐停損價照常觸發', () => {
+  // low20 不含當天：上一盤顯示「收盤跌破 2,311.95 → 停損」，今天收 2290 就該停損
+  const base = { close: 2455, hist: { low20: 2383.45, high20: 2455, ma60: 2333.71, hi52: 2904.32, lo52: 2169.84 } };
+  const before = analyzeHolding(row({ avgCost: 2002.85, price: 2455, netPLPct: 22 }), rec(base), ctx());
+  assert.ok(before.triggers.includes('收盤跌破 2,311.95 → 停損'));
+  assert.equal(before.levels.supportBroken, false);
+  const broke = { close: 2290, hist: { ...base.hist } };
+  const r = analyzeHolding(row({ avgCost: 2002.85, price: 2290, netPLPct: 14 }), rec(broke), ctx());
+  assert.equal(r.levels.supportBroken, true);
+  assert.equal(r.levels.stop, 2311.95);
+  assert.equal(r.action, '停損');
+  assert.ok(r.bear.includes('收盤 2,290 跌破近 20 日低點 2,383.45'));
+  assert.equal(r.watch[0], '已跌破停損價 2,311.95');
+  // 跌破支撐但還在停損價之上 → 停損觀察
+  const near = analyzeHolding(row({ avgCost: 2002.85, price: 2350, netPLPct: 17 }),
+    rec({ close: 2350, hist: { ...base.hist } }), ctx());
+  assert.equal(near.levels.supportBroken, true);
+  assert.equal(near.action, '停損觀察');
+  assert.ok(near.triggers.includes('收盤跌破 2,311.95 → 停損'));
+  // 收盤剛好等於前 20 日低點不算跌破
+  const touch = analyzeHolding(row({ avgCost: 2002.85, price: 2383.45, netPLPct: 19 }),
+    rec({ close: 2383.45, hist: { ...base.hist } }), ctx());
+  assert.equal(touch.levels.supportBroken, false);
+});
+
 test('priority order: 停損 beats 分批停利 / 減碼', () => {
   const r = analyzeHolding(row({ avgCost: 400, price: 500, netPLPct: 25 }),
     rec({ close: 500, hist: { hi52: 520, lo52: 300 } }), ctx({ userStop: 510, weight: 0.6 }));
@@ -234,6 +259,33 @@ test('watch: volume spike, revenue date, report deadline, events, holidays', () 
   assert.ok(res.watch.includes('距壓力 610 只剩 2.5%，看能不能帶量突破'));
 });
 
+test('watch: no duplicates between meta.events, built-in deadlines and holidays; early close is not 休市', () => {
+  // meta.events 已有財報期限 → 不再加內建的那一句
+  const tw = analyzeHolding(row(), rec(), ctx({ today: '2026-11-05', events: [
+    { date: '2026-11-10', title: '10 月營收公布期限（台股）' },
+    { date: '2026-11-14', title: '第 3 季財報公布期限（台股）' },
+  ] }));
+  assert.deepEqual(tw.watch, ['11/10 10 月營收公布期限（台股）', '11/14 第 3 季財報公布期限（台股）']);
+  // 美股：events 已列的休市日不再從 upcomingHolidays 重複；提早收盤不寫成休市
+  const usRec = { code: 'AAPL', name: 'Apple Inc.', market: 'US', type: 'stock', close: 245, hist: { low20: 230, high20: 260 } };
+  const usRow = row({ market: 'US', code: 'AAPL', name: 'Apple Inc.', price: 245, avgCost: 200 });
+  const holidays = [{ date: '2026-11-26', name: '感恩節' }, { date: '2026-11-27', name: '感恩節翌日（提早收盤）', earlyClose: true }];
+  const events = [{ date: '2026-11-26', title: '感恩節休市（美股）' }, { date: '2026-11-27', title: '感恩節翌日（提早收盤）（美股）' }];
+  const us = analyzeHolding(usRow, usRec, ctx({ market: 'US', today: '2026-11-21', events, upcomingHolidays: holidays, holidayNote: '' }));
+  assert.deepEqual(us.watch, ['11/26 感恩節休市（美股）', '11/27 感恩節翌日（提早收盤）（美股）']);
+  const noEv = analyzeHolding(usRow, usRec, ctx({ market: 'US', today: '2026-11-21', upcomingHolidays: holidays }));
+  assert.deepEqual(noEv.watch, ['11/26（感恩節）休市', '11/27 感恩節翌日（提早收盤）']);
+  assert.ok(!noEv.watch.some((s) => s.includes('提早收盤）休市')));
+  // holidayNote 已涵蓋的休市事件不重複
+  const note = analyzeHolding(row(), rec({ fund: { revYm: '2026-09' } }), ctx({ today: '2026-10-08', holidayNote: '10/09–10/11 國慶連假休市',
+    events: [{ date: '2026-10-09', title: '國慶日補假休市（台股）' }, { date: '2026-10-20', title: '某公司法說會' }] }));
+  assert.deepEqual(note.watch, ['10/20 某公司法說會', '10/09–10/11 國慶連假休市']);
+  // holidayNote 同時有休市與提早收盤（以「；」分開）：兩者都不重複列
+  const both = analyzeHolding(usRow, usRec, ctx({ market: 'US', today: '2026-11-25', events, upcomingHolidays: holidays,
+    holidayNote: '11/26 感恩節休市；11/27 感恩節翌日提早收盤' }));
+  assert.deepEqual(both.watch, ['11/26 感恩節休市；11/27 感恩節翌日提早收盤']);
+});
+
 function twoHoldingPortfolio(cashTWD = 0) {
   const a = valueHolding({ market: 'TW', code: '2330', shares: 1000, costTotal: 500000, avgCost: 500, realized: 0 },
     { code: '2330', name: '台積電', industry: '半導體業', type: 'stock', close: 600 }, { date: TODAY });
@@ -266,6 +318,19 @@ test('portfolio: low cash, stop-loss summary, and no-risk case', () => {
   assert.ok(advice.includes('台積電（2330）已跌破停損價，依紀律處理'));
   assert.ok(advice.includes('聯電（2303）符合分批停利條件，可先賣出一部分鎖住獲利'));
 
+  // 有現金時，占股票市值高但占總資產不高 → 不觸發（規則以總資產計，和明細表、圓環圖一致）
+  const probe = summarize([
+    valueHolding({ market: 'TW', code: '2330', shares: 1000, costTotal: 500000, avgCost: 500, realized: 0 },
+      { code: '2330', name: '台積電', industry: '半導體業', type: 'stock', close: 500 }, { date: TODAY }),
+    valueHolding({ market: 'TW', code: '2317', shares: 1000, costTotal: 200000, avgCost: 200, realized: 0 },
+      { code: '2317', name: '鴻海', industry: '其他電子業', type: 'stock', close: 200 }, { date: TODAY }),
+    valueHolding({ market: 'TW', code: '2454', shares: 100, costTotal: 100000, avgCost: 1000, realized: 0 },
+      { code: '2454', name: '聯發科', industry: '半導體業', type: 'stock', close: 1000 }, { date: TODAY }),
+  ], { cashTWD: 500000 });
+  assert.equal(probe.weights['TW:2330'], 0.625);
+  assert.ok(Math.abs(probe.assetWeights['TW:2330'] - 500000 / 1300000) < 1e-9);
+  assert.deepEqual(analyzePortfolio(probe.rows, probe, {}).risks, []);
+
   const inds = ['半導體業', '金融保險業', '航運業', '食品工業'];
   const rows4 = inds.map((industry, i) => valueHolding(
     { market: 'TW', code: String(1101 + i), shares: 1000, costTotal: 100000, avgCost: 100, realized: 0 },
@@ -273,7 +338,7 @@ test('portfolio: low cash, stop-loss summary, and no-risk case', () => {
   const s4 = summarize(rows4, { cashTWD: 100000 });
   const ok = analyzePortfolio(s4.rows, s4, {});
   assert.deepEqual(ok.risks, []);
-  assert.deepEqual(ok.advice, ['組合目前沒有觸發集中度與現金規則，維持定期檢視即可']);
+  assert.deepEqual(ok.advice, ['組合目前沒有觸發集中度與現金規則（單檔與產業占比以含現金的總資產計），維持定期檢視即可']);
 
   assert.deepEqual(analyzePortfolio([], {}, {}).risks, []);
 });

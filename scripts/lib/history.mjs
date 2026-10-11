@@ -31,11 +31,13 @@ export function computeHist(bars = []) {
   const back = (k) => (n > k && closes[n - 1 - k] > 0 ? round((last / closes[n - 1 - k] - 1) * 100, 2) : null);
   const last20 = closes.slice(-20);
   const year = closes.slice(-250);
-  const vols = bars
-    .slice(-20)
-    .map((b) => b[2])
-    .filter((v) => Number.isFinite(v));
+  // low20 / high20 / avgVol20 use the 20 sessions before the latest bar, so today's close can break
+  // below the support (and today's volume be compared with the average) instead of being part of it.
+  const prior = bars.slice(-21, -1);
+  const prior20 = prior.map((b) => b[1]);
+  const vols = prior.map((b) => b[2]).filter((v) => Number.isFinite(v));
   const full20 = n >= 20;
+  const prior20Full = n >= 21;
   return {
     days: n,
     d5Pct: back(5),
@@ -44,9 +46,9 @@ export function computeHist(bars = []) {
     lo52: full20 ? Math.min(...year) : null,
     ma20: full20 ? roundPx(mean(last20)) : null,
     ma60: n >= 60 ? roundPx(mean(closes.slice(-60))) : null,
-    avgVol20: full20 && vols.length >= 10 ? Math.round(mean(vols)) : null,
-    low20: full20 ? Math.min(...last20) : null,
-    high20: full20 ? Math.max(...last20) : null,
+    avgVol20: prior20Full && vols.length >= 10 ? Math.round(mean(vols)) : null,
+    low20: prior20Full ? Math.min(...prior20) : null,
+    high20: prior20Full ? Math.max(...prior20) : null,
   };
 }
 

@@ -3,7 +3,7 @@
 //   node scripts/fetch-data.mjs --store <data-branch checkout> --out <dir for latest/>
 // Reads <store>/history and <out>/latest from the previous run, fetches every source, and writes
 // a fresh <out>/latest plus updated <store>/history. A failed source keeps its previous values and is
-// marked "stale" (or "error" when nothing is left to keep). Exits 1 only when every price source failed.
+// marked "stale" (or "error" when nothing is left to keep). Exits 1 only when every source failed.
 import { readFile, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -65,8 +65,9 @@ export async function run({
   log('fetching sources');
   const S = await fetchSources(http, today);
 
-  if (!S.twseQuotes.ok && !S.tpexQuotes.ok && !S.usStocks.ok && !S.usEtfs.ok) {
-    log('every price source failed; keeping the previous data');
+  // Failed price sources keep the previous quotes below; only a run where nothing answered fails.
+  if (Object.values(S).every((r) => !r.ok)) {
+    log('every source failed; keeping the previous data');
     return { exitCode: 1, status: {} };
   }
 
@@ -121,7 +122,13 @@ export async function run({
   const pick = (...rs) => Object.assign({}, ...rs.filter((r) => r.ok).map((r) => r.value.map));
   const rev = pick(S.twseRev, S.tpexRev);
   const eps = pick(S.twseEps, S.tpexEps);
-  const val = pick(S.twseVal, S.tpexVal);
+  // P/E-P/B-yield carry their dataset date; buildFund ignores values older than the record's close.
+  const val = {};
+  for (const r of [S.twseVal, S.tpexVal]) {
+    if (!r.ok) continue;
+    const date = r.value.date ?? '';
+    for (const [code, v] of Object.entries(r.value.map)) if (!val[code] || date > val[code].date) val[code] = { ...v, date };
+  }
   status.revenue = worst(part(S.twseRev), part(S.tpexRev));
   status.eps = worst(part(S.twseEps), part(S.tpexEps));
   status.pe = worst(part(S.twseVal, twseDate), part(S.tpexVal, tpexDate));
@@ -141,7 +148,7 @@ export async function run({
   // ---- Yahoo: US index closes, ETF volume, history bootstrap ----
   log('yahoo charts');
   const y = await runYahoo({ http, hist, tw, us, twAsOf, usDate, today, env, log });
-  status.history = y.aborted ? 'stale' : 'ok';
+  status.history = historyStatus(y, hadPrevious);
 
   // ---- Records ----
   const twOut = {};
@@ -149,7 +156,7 @@ export async function run({
     if (fresh.has(q.code)) fillFromHistory(q, hist.tw[q.code]);
     const p = prev.tw[q.code];
     const industry = q.type === 'stock' ? rev[q.code]?.industry ?? eps[q.code]?.industry ?? p?.industry : null;
-    const fund = buildFund(p?.fund, { rev: rev[q.code], eps: eps[q.code], val: val[q.code] }, q.close);
+    const fund = buildFund(p?.fund, { rev: rev[q.code], eps: eps[q.code], val: val[q.code] }, q.close, q.date);
     twOut[q.code] = twRecord(q, { industry, bars: hist.tw[q.code], chips: hist.chips[q.code], fund });
   }
   const usOut = {};
@@ -286,7 +293,7 @@ function fetchSources(http, today) {
       fx: async () => {
         try {
           const rates = parseBotCsv(await http.text(BOT_CSV));
-          return { USDTWD: rates.USD.mid, date: today, source: '臺灣銀行即期買賣中價' };
+          return { USDTWD: rates.USD.spotSell, date: today, source: '臺灣銀行即期賣出匯率' };
         } catch (err) {
           http.base.log(`  BOT csv failed (${err.message}); trying open.er-api.com`);
           const r = parseErApi(await http.json(ER_API));
@@ -512,7 +519,15 @@ async function runYahoo({ http, hist, tw, us, twAsOf, usDate, today, env, log })
   }
   await Promise.all(jobs);
   log(`  yahoo ok ${counts.ok}, failed ${counts.fail}, skipped ${counts.skipped}`);
-  return { usIndex, aborted: aborted || counts.skipped > 0 };
+  return { usIndex, counts, aborted: aborted || counts.skipped > 0 };
+}
+
+// Stale when the run was cut short or at least half the chart requests failed; error when none
+// succeeded and there is no earlier history to fall back on.
+function historyStatus({ counts, aborted }, hadPrevious) {
+  const failedMost = counts.fail > 0 && counts.fail >= counts.ok;
+  if (failedMost && counts.ok === 0 && !hadPrevious) return 'error';
+  return aborted || failedMost ? 'stale' : 'ok';
 }
 
 function mergeHolidays(stored = [], fresh = [], today) {

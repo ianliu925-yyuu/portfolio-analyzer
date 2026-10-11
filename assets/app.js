@@ -3,7 +3,7 @@ import {
   BROKERS, DEFAULT_BROKER_ID, FEE_SOURCES, FEES_AS_OF, BOND_ETF_EXEMPT_UNTIL,
   brokersFor, getBroker, inferTwType, tradeCosts,
 } from './fees.js';
-import { buildHoldings, valueHolding, summarize, holdingKey, normalizeCode } from './portfolio.js';
+import { buildHoldings, valueHolding, summarize, holdingKey, normalizeCode, sessionPosition } from './portfolio.js';
 import { RULES, ACTIONS, analyzeHolding, analyzePortfolio, industryPeFor, levels } from './rules.js';
 import { loadMeta, loadIndex, loadRecords, searchIndex, findInIndex, hasFailedBuckets } from './data.js';
 import { MODELS, DEFAULT_MODEL, modelInfo, buildPayload, estimateCost, runAnalysis } from './ai.js';
@@ -149,9 +149,14 @@ const save = (key, value) => saveRaw(key, value == null ? null : JSON.stringify(
 const CODE_RE = /^[0-9A-Z][0-9A-Z.-]{0,11}$/;
 const CODE_PATTERN = { TW: /^\d{4,6}[A-Z]?$/, US: /^[A-Z][A-Z0-9]{0,5}([.-][A-Z0-9]{1,2})?$/ };
 const KEY_RE = /^(TW|US):[0-9A-Z][0-9A-Z.-]{0,11}$/;
-const OVERRIDE_FIELDS = ['discount', 'minFee', 'oddLotMinFee', 'rate', 'perShare', 'maxPct', 'etfFlat'];
+// 券商自訂值的合理範圍（和「設定」對話框一致）：discount 0.01～1 = 0.1～10 折。
+const OVERRIDE_RANGES = {
+  TW: { discount: [0.01, 1], minFee: [0, 1000], oddLotMinFee: [0, 1000] },
+  US: { rate: [0, 0.05], perShare: [0, 1], minFee: [0, 100], maxPct: [0, 1], etfFlat: [0, 100] },
+};
 
-function sanitizeTx(t) {
+// strict（匯入用）：再套用新增交易表單的規則：代號格式、台股整數股、股數上限、日期不晚於今天。
+function sanitizeTx(t, { strict = false } = {}) {
   if (!t || typeof t !== 'object') return null;
   const market = t.market === 'TW' || t.market === 'US' ? t.market : null;
   const code = normalizeCode(t.code);
@@ -161,6 +166,8 @@ function sanitizeTx(t) {
   const date = String(t.date ?? '');
   if (!market || !CODE_RE.test(code) || !side || !(shares > 0) || !Number.isFinite(shares) ||
     !(price >= 0) || !Number.isFinite(price) || !validDate(date)) return null;
+  if (strict && (!CODE_PATTERN[market].test(code) || (market === 'TW' && !Number.isInteger(shares)) || shares > 1e9 ||
+    date > todayLocal())) return null;
   const nonNeg = (v) => (Number.isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : 0);
   const feeIncluded = t.feeIncluded === true;
   const broker = brokersFor(market).some((b) => b.id === t.broker) ? t.broker : DEFAULT_BROKER_ID[market];
@@ -173,12 +180,12 @@ function sanitizeTx(t) {
     broker,
   };
 }
-function sanitizeTxList(list) {
+function sanitizeTxList(list, opts) {
   const seen = new Set();
   const txs = [];
   const bad = [];
   (Array.isArray(list) ? list : []).slice(0, 10000).forEach((t, i) => {
-    const v = sanitizeTx(t);
+    const v = sanitizeTx(t, opts);
     if (!v) { bad.push(i + 1); return; }
     if (seen.has(v.id)) v.id = newId();
     seen.add(v.id);
@@ -197,9 +204,13 @@ function sanitizeOverrides(o) {
   const res = {};
   if (!o || typeof o !== 'object') return res;
   for (const [id, v] of Object.entries(o)) {
-    if (!BROKERS.some((b) => b.id === id) || !v || typeof v !== 'object') continue;
+    const b = BROKERS.find((x) => x.id === id);
+    if (!b || !v || typeof v !== 'object') continue;
     const clean = {};
-    for (const f of OVERRIDE_FIELDS) if (v[f] != null && Number.isFinite(Number(v[f])) && Number(v[f]) >= 0) clean[f] = Number(v[f]);
+    for (const [f, [lo, hi]] of Object.entries(OVERRIDE_RANGES[b.market] ?? {})) {
+      const n = typeof v[f] === 'number' || (typeof v[f] === 'string' && v[f].trim() !== '') ? Number(v[f]) : NaN;
+      if (Number.isFinite(n) && n >= lo && n <= hi) clean[f] = n;
+    }
     if (Object.keys(clean).length) res[id] = clean;
   }
   return res;
@@ -291,7 +302,10 @@ function compute() {
   const overrides = state.settings.brokerOverrides;
   const rows = built.holdings.map((h) => {
     const key = holdingKey(h.market, h.code);
-    return valueHolding(h, state.records[key] ?? null, { fx, date: today, brokerOverrides: overrides, manualPrice: state.manual[key] });
+    const rec = state.records[key] ?? null;
+    const asOf = rec?.date ?? (h.market === 'US' ? state.meta?.us?.asOf : state.meta?.tw?.asOf);
+    return valueHolding(h, rec, { fx, date: today, brokerOverrides: overrides, manualPrice: state.manual[key],
+      session: rec ? sessionPosition(state.tx, h.market, h.code, asOf) : null });
   });
   const summary = summarize(rows, { cashTWD: state.cash.twd, cashUSD: state.cash.usd, fx, realizedTotal: built.realizedTotal });
   const analyses = {};
@@ -318,7 +332,7 @@ const COLS = [
   { key: 'value', label: '市值', val: (r) => r.valueTWD },
   { key: 'netPL', label: '未實現淨損益', val: (r) => r.netPLTWD },
   { key: 'ret', label: '報酬率', val: (r) => r.netPLPct },
-  { key: 'weight', label: '占比', val: (r) => r.weight },
+  { key: 'weight', label: '占總資產', val: (r) => r.assetWeight },
   { key: 'action', label: '建議', cls: 'c', val: (r, m) => ACTIONS.indexOf(m.analyses[holdingKey(r.market, r.code)]?.action) },
 ];
 
@@ -397,24 +411,32 @@ function toast(msg) {
 function renderOverview(model) {
   const s = model.summary;
   const has = s.holdingCount > 0;
-  const twValue = s.rows.filter((r) => r.market === 'TW').reduce((a, r) => a + (r.valueTWD ?? 0), 0);
+  const unpriced = s.holdingCount - s.pricedCount;
+  const sumOf = (rows, f) => (rows.some((r) => isNum(r[f])) ? rows.reduce((a, r) => a + (r[f] ?? 0), 0) : null);
+  const twValue = sumOf(s.rows.filter((r) => r.market === 'TW'), 'valueTWD');
   const usRows = s.rows.filter((r) => r.market === 'US');
-  const usValue = usRows.reduce((a, r) => a + (r.marketValue ?? 0), 0);
+  const usValue = sumOf(usRows, 'marketValue');
+  const usNoFx = usRows.length > 0 && s.missingFx;
   const valueSub = !has ? '新增交易後顯示'
-    : usRows.length && s.missingFx ? html`台股 <b>${twd(twValue)}</b>・美股缺匯率未計入`
-      : usRows.length ? html`台股 <b>${twd(twValue)}</b>・美股 <b>${usd(usValue)}</b>` : html`全部為台股`;
+    : s.marketValue == null ? '持股都還沒有價格，可在持股明細輸入手動價格'
+      : usNoFx ? html`台股 <b>${twd(twValue)}</b>・美股缺匯率未計入`
+        : usRows.length ? html`台股 <b>${twd(twValue)}</b>・美股 <b>${usd(usValue)}</b>` : html`全部為台股`;
   const cashWarn = !has ? '' : s.cashRatio === 0 ? '全倉：沒有保留現金' : isNum(s.cashRatio) && s.cashRatio < RULES.portfolio.minCash ? '現金低於 10%' : '';
+  const cashWhy = !has || s.cashRatio != null ? ''
+    : unpriced ? `・有 ${unpriced} 檔沒有價格，無法計算` : '・缺美元匯率，無法計算';
   const cards = [
     { id: 'marketValue', label: '總市值', value: has ? twd(s.marketValue) : '—', sub: valueSub },
-    { id: 'cost', label: '總成本（含買進手續費）', value: has ? twd(s.costTotal) : '—', sub: has ? `${s.holdingCount} 檔持股` : '—' },
+    { id: 'cost', label: '總成本（含買進手續費）', value: has ? twd(s.costTotal) : '—',
+      sub: has ? `${s.holdingCount} 檔持股${usNoFx ? '・美股缺匯率未計入' : ''}` : '—' },
     {
       id: 'netPL', label: '未實現淨損益',
-      value: has ? html`<span class="${dir(s.netPL)}">${twd(s.netPL, { sign: true })}</span> <span class="${dir(s.netPLPct)} small">${fmtPct(s.netPLPct)}</span>` : '—',
-      sub: has ? html`帳面損益 <b class="${dir(s.grossPL)}">${twd(s.grossPL, { sign: true })}</b>・預估賣出成本 <b>${twd(s.sellCosts)}</b>` : '已扣預估賣出手續費與交易稅',
+      value: has && s.netPL != null ? html`<span class="${dir(s.netPL)}">${twd(s.netPL, { sign: true })}</span> <span class="${dir(s.netPLPct)} small">${fmtPct(s.netPLPct)}</span>` : '—',
+      sub: !has ? '已扣預估賣出手續費與交易稅' : s.netPL == null ? '持股都還沒有價格'
+        : html`帳面損益 <b class="${dir(s.grossPL)}">${twd(s.grossPL, { sign: true })}</b>・預估賣出成本 <b>${twd(s.sellCosts)}</b>`,
     },
     {
       id: 'cashRatio', label: '現金比例', value: has || s.cashTotalTWD > 0 ? fmtFrac(s.cashRatio, 1) : '—',
-      sub: html`現金 <b>${twd(s.cashTotalTWD)}</b>${s.cashUSD > 0 && usdTwd() ? html`（含 ${usd(s.cashUSD)}）` : ''}`,
+      sub: html`現金 <b>${twd(s.cashTotalTWD)}</b>${s.cashUSD > 0 && usdTwd() ? html`（含 ${usd(s.cashUSD)}）` : ''}${cashWhy}`,
       warn: cashWarn,
     },
   ];
@@ -427,7 +449,7 @@ function renderOverview(model) {
 
   const parts = [];
   if (has) {
-    parts.push(html`<span data-stat="dayPL">今日損益 <b class="${dir(s.dayPL)}">${twd(s.dayPL, { sign: true })}</b> <span class="${dir(s.dayPLPct)}">${fmtPct(s.dayPLPct)}</span></span>`);
+    parts.push(html`<span data-stat="dayPL">今日損益 <b class="${dir(s.dayPL)}">${twd(s.dayPL, { sign: true })}</b>${isNum(s.dayPLPct) ? html` <span class="${dir(s.dayPLPct)}">${fmtPct(s.dayPLPct)}</span>` : ''}</span>`);
   }
   if (has || s.realized) parts.push(html`<span data-stat="realized">已實現損益 <b class="${dir(s.realized)}">${twd(s.realized, { sign: true })}</b></span>`);
   const fx = state.meta?.fx;
@@ -438,6 +460,7 @@ function renderOverview(model) {
 
 // ---------- 資產配置（圓環圖） ----------
 
+// 圓環圖與明細表的百分比都以「總資產（股票市值＋現金）」為分母，和集中度規則一致。
 function renderAllocation(model) {
   const s = model.summary;
   document.querySelectorAll('[data-alloc]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.alloc === state.alloc)));
@@ -447,15 +470,17 @@ function renderAllocation(model) {
     return;
   }
   const slices = groups.slice(0, 5).map((g, i) => ({
-    label: state.alloc === 'industry' ? industryLabel(g.label) : g.label, weight: g.weight, value: g.valueTWD, cls: `s${i + 1}`,
+    label: state.alloc === 'industry' ? industryLabel(g.label) : g.label, weight: g.assetWeight, value: g.valueTWD, cls: `s${i + 1}`,
   }));
   if (groups.length > 5) {
     const rest = groups.slice(5);
     slices.push({
       label: `其他 ${rest.length} ${state.alloc === 'industry' ? '類' : '檔'}`, cls: 's0',
-      weight: rest.reduce((a, g) => a + g.weight, 0), value: rest.reduce((a, g) => a + g.valueTWD, 0),
+      weight: rest.reduce((a, g) => a + g.assetWeight, 0), value: rest.reduce((a, g) => a + g.valueTWD, 0),
     });
   }
+  const withCash = s.cashTotalTWD > 0 && s.totalAssets > 0;
+  if (withCash) slices.push({ label: '現金', weight: s.cashTotalTWD / s.totalAssets, value: s.cashTotalTWD, cls: 'sc' });
   const R = 70, C = 2 * Math.PI * R, gap = slices.length > 1 ? 2.5 : 0;
   let start = 0;
   const arcs = slices.map((sl) => {
@@ -466,18 +491,18 @@ function renderAllocation(model) {
     return a;
   });
   const notes = [];
-  if (s.maxWeight) notes.push(html`<li>最大單檔：${s.maxWeight.label} 占股票市值 ${fmtFrac(s.maxWeight.weight, 1)}（占總資產 ${fmtFrac(s.maxWeight.assetWeight, 1)}）</li>`);
-  if (s.topIndustry) notes.push(html`<li>最大產業：${industryLabel(s.topIndustry.label)} 占股票市值 ${fmtFrac(s.topIndustry.weight, 1)}（占總資產 ${fmtFrac(s.topIndustry.assetWeight, 1)}）</li>`);
-  if (s.cashTotalTWD > 0) notes.push(html`<li>現金 ${twd(s.cashTotalTWD)} 不在圖中，占總資產 ${fmtFrac(s.cashRatio, 1)}</li>`);
+  if (s.maxWeight) notes.push(html`<li>最大單檔：${s.maxWeight.label} 占總資產 ${fmtFrac(s.maxWeight.assetWeight, 1)}（占股票市值 ${fmtFrac(s.maxWeight.weight, 1)}）</li>`);
+  if (s.topIndustry) notes.push(html`<li>最大產業：${industryLabel(s.topIndustry.label)} 占總資產 ${fmtFrac(s.topIndustry.assetWeight, 1)}（占股票市值 ${fmtFrac(s.topIndustry.weight, 1)}）</li>`);
+  notes.push(html`<li class="muted">集中度規則：單檔占總資產超過 40%、同產業超過 60% 會提示（總資產含現金）。</li>`);
   for (const r of model.portfolio.risks.filter((x) => /占總資產|只持有|產業/.test(x))) notes.push(html`<li class="risk">⚠ ${r}</li>`);
   if (s.missingPrice.length) notes.push(html`<li>${s.missingPrice.length} 檔沒有價格，不在圖中</li>`);
 
   setHtml($('allocBody'), html`<div class="alloc">
-    <svg class="donut" viewBox="0 0 190 190" role="img" aria-label="${state.alloc === 'industry' ? '依產業' : '依個股'}的股票市值配置圓環圖">
+    <svg class="donut" viewBox="0 0 190 190" role="img" aria-label="${state.alloc === 'industry' ? '依產業' : '依個股'}的資產配置圓環圖（占總資產${withCash ? '，含現金' : ''}）">
       <circle class="track" cx="95" cy="95" r="${R}"></circle>
       ${arcs}
-      <text class="c-label" x="95" y="88" text-anchor="middle">股票市值</text>
-      <text class="c-value" x="95" y="110" text-anchor="middle">${shortTwd(s.marketValue)}</text>
+      <text class="c-label" x="95" y="88" text-anchor="middle">總資產</text>
+      <text class="c-value" x="95" y="110" text-anchor="middle">${shortTwd(s.totalAssets)}</text>
     </svg>
     <ul class="legend">${slices.map((sl) => html`<li><i class="sw ${sl.cls}"></i><span class="lg-name" title="${sl.label}">${sl.label}</span><span class="lg-pct">${fmtFrac(sl.weight, 1)}</span><span class="lg-val">${twd(sl.value)}</span></li>`)}</ul>
   </div>
@@ -521,7 +546,7 @@ function renderTable(model, rows) {
       <td>${fmtMoney(r.marketValue, r.currency)}</td>
       <td class="${dir(r.netPL)}">${fmtMoney(r.netPL, r.currency, { sign: true })}</td>
       <td class="${dir(r.netPLPct)}">${fmtPct(r.netPLPct)}</td>
-      <td>${fmtFrac(r.weight, 1)}</td>
+      <td>${fmtFrac(r.assetWeight, 1)}</td>
       <td class="c">${tag(a?.action)}</td>
     </tr>`;
   });
@@ -534,7 +559,7 @@ function renderTable(model, rows) {
         <td>${twd(s.marketValue)}</td>
         <td class="${dir(s.netPL)}">${twd(s.netPL, { sign: true })}</td>
         <td class="${dir(s.netPLPct)}">${fmtPct(s.netPLPct)}</td>
-        <td>${s.marketValue > 0 ? '100%' : '—'}</td><td></td>
+        <td>${isNum(s.marketValue) && s.totalAssets > 0 ? fmtFrac(s.marketValue / s.totalAssets, 1) : '—'}</td><td></td>
       </tr></tfoot>
     </table>
   </div>`);
@@ -721,7 +746,9 @@ function blockStop(r, a, key) {
       <button type="button" class="btn btn-sm" data-stop-save="${key}">儲存</button>
       ${user ? html`<button type="button" class="btn btn-sm" data-stop-clear="${key}">改回自動</button>` : ''}
     </div>
-    <p class="hint" style="margin-top:4px">留空＝自動：成本 × (1 − ${fmtNum(state.settings.stopPct * 100, 0, 1)}%) 與支撐 × 0.97 取較高者（可在「設定」改預設 %）。</p>`);
+    <p class="hint" style="margin-top:4px">留空＝自動：成本 × (1 − ${fmtNum(state.settings.stopPct * 100, 0, 1)}%) 與支撐 × 0.97 取較高者（可在「設定」改預設 %）。</p>
+    ${lv.stopSource === 'support' ? html`<p class="hint warn" style="margin-top:4px">支撐停損價每天依前 20 個交易日的收盤低點重算，跌破後隔天會跟著往下移。想守住這個價位，請把它存成自訂停損價。
+      <button type="button" class="btn btn-sm" data-stop-pin="${key}" data-value="${lv.stop}">固定為 ${fmtNum(lv.stop, 2, 2)}</button></p>` : ''}`);
 }
 
 function blockSources(r, rec) {
@@ -888,7 +915,7 @@ function renderAiPanel(model) {
   } else {
     const est = estimateCost(m.id, aiPayload(model));
     const fx = fxForCost();
-    setHtml($('aiEstimate'), html`預估每次約 <b>NT$${ntd(est.low * fx)}～${ntd(est.high * fx)}</b>（US$${fmtNum(est.low, 3, 3)}～${fmtNum(est.high, 3, 3)}；輸入約 ${fmtNum(est.inputTokens, 0)} tokens、輸出約 ${fmtNum(est.outputTokens, 0)} tokens，含思考）。<span class="muted">這只是估計，實際依 AI 回答長度而定${usdTwd() ? '' : '；以 1 美元約 32 台幣估'}。</span>`);
+    setHtml($('aiEstimate'), html`預估每次約 <b>NT$${ntd(est.low * fx)}～${ntd(est.high * fx)}</b>（US$${fmtNum(est.low, 3, 3)}～${fmtNum(est.high, 3, 3)}；輸入約 ${fmtNum(est.inputTokens, 0)} tokens、輸出約 ${fmtNum(est.outputTokens, 0)} tokens，含思考）。<span class="muted">這只是估計，實際依 AI 回答長度而定${usdTwd() ? '' : '；以 1 美元約 32 台幣估'}。</span>${est.overLimit ? html` <span class="holiday">持股檔數多，AI 的回答可能超過輸出上限而被截斷，可以先減少檔數。</span>` : ''}`);
   }
   const a = state.ai;
   if (!a) {
@@ -1020,6 +1047,13 @@ function renderAll() {
   layoutScales();
 }
 
+// 手動價格只在沒有每日收盤價時使用；收盤價回來了就刪掉，免得之後資料又失敗時用到舊價。
+function pruneManual() {
+  const stale = Object.keys(state.manual).filter((k) => Number(state.records[k]?.close) > 0);
+  for (const k of stale) delete state.manual[k];
+  if (stale.length) save(KEYS.manual, state.manual);
+}
+
 function holdingItems() {
   const map = new Map();
   for (const t of state.tx) map.set(holdingKey(t.market, t.code), { market: t.market, code: t.code });
@@ -1030,12 +1064,21 @@ async function refreshRecords() {
   if (state.meta) {
     const recs = await loadRecords(holdingItems());
     Object.assign(state.records, recs);
+    pruneManual();
   }
   renderBanner();
   renderAll();
 }
 
 async function loadData({ retry = false } = {}) {
+  if (retry) {
+    for (const m of ['TW', 'US']) {
+      if (state.index[m] === null) {
+        delete state.index[m];
+        delete indexFailedAt[m];
+      }
+    }
+  }
   try {
     state.meta = await loadMeta({ retry });
     state.metaError = null;
@@ -1054,9 +1097,20 @@ const form = { results: [], active: -1, row: null };
 const marketNow = () => document.querySelector('input[name="market"]:checked')?.value === 'US' ? 'US' : 'TW';
 const sideNow = () => (document.querySelector('input[name="side"]:checked')?.value === 'sell' ? 'sell' : 'buy');
 
+// 代號清單：成功才快取；失敗記下時間，5 秒後（或按「重試」）再載。
+const indexFailedAt = {};
 async function ensureIndex(market) {
-  if (!(market in state.index)) state.index[market] = await loadIndex(market);
-  return state.index[market];
+  if (state.index[market] == null && !(Date.now() - (indexFailedAt[market] ?? 0) < 5000)) {
+    const rows = await loadIndex(market);
+    if (rows) {
+      state.index[market] = rows;
+      delete indexFailedAt[market];
+    } else if (!state.index[market]) {
+      state.index[market] = null;
+      indexFailedAt[market] = Date.now();
+    }
+  }
+  return state.index[market] ?? null;
 }
 
 function brokerSummary(b) {
@@ -1069,8 +1123,15 @@ function brokerSummary(b) {
   return `成交金額 ${fmtNum(b.rate * 100, 2, 3)}%${b.minFee ? `、最低 US$${b.minFee}` : ''}${b.etfFlat != null ? `；ETF 每筆 US$${b.etfFlat}` : ''}；賣出另收規費`;
 }
 
+// 下拉選單的券商名稱：有自訂值時標出實際折數，避免和預設名稱矛盾。
+function brokerLabel(b) {
+  const o = state.settings.brokerOverrides[b.id];
+  const custom = !o ? '' : b.market === 'TW' && isNum(o.discount) ? `・自訂 ${round6(o.discount * 10)} 折` : '・自訂費率';
+  return `${b.name}${custom}${b.confidence === 'low' ? '（僅供參考）' : ''}`;
+}
+
 function fillBrokerSelect(select, market, selected) {
-  setHtml(select, brokersFor(market).map((b) => html`<option value="${b.id}"${b.id === selected ? html` selected` : ''}>${b.name}${b.confidence === 'low' ? '（僅供參考）' : ''}</option>`));
+  setHtml(select, brokersFor(market).map((b) => html`<option value="${b.id}"${b.id === selected ? html` selected` : ''}>${brokerLabel(b)}</option>`));
 }
 
 function updateBrokerHint() {
@@ -1192,6 +1253,7 @@ async function updateSuggestions() {
     $('codeInfo').className = 'hint warn';
     return;
   }
+  if ($('codeInfo').textContent.startsWith('代號清單載入失敗')) $('codeInfo').textContent = '';
   form.results = searchIndex(rows, text);
   form.active = form.results.length ? 0 : -1;
   paintList();
@@ -1257,10 +1319,24 @@ function formError(el, msg) {
   m.className = 'form-msg error';
 }
 
-function heldShares(market, code, excludeId) {
-  const { holdings } = buildHoldings(state.tx.filter((t) => t.id !== excludeId));
-  return holdings.find((h) => h.market === market && h.code === code)?.shares ?? 0;
+// 某天（含當天先輸入的交易）持有的股數
+function sharesOn(list, market, code, date) {
+  const { holdings } = buildHoldings(list.filter((t) => t.market === market && t.code === code && t.date <= date));
+  return holdings[0]?.shares ?? 0;
 }
+
+// 套用這次新增、修改或刪除後重算，回傳原本沒有的錯誤（例如後面的賣出變成持股不足）。
+function newTradeErrors(candidate) {
+  const left = buildHoldings(state.tx).errors.map((e) => e.message);
+  return buildHoldings(candidate).errors.filter((e) => {
+    if (/^第 \d+ 筆交易/.test(e.message)) return false;
+    const i = left.indexOf(e.message);
+    if (i < 0) return true;
+    left.splice(i, 1);
+    return false;
+  });
+}
+const errText = (e) => e.message.replace(/，已(略過|以 .+ 股計算)$/, '');
 
 async function submitTrade(e) {
   e.preventDefault();
@@ -1278,35 +1354,46 @@ async function submitTrade(e) {
   if ($('fPrice').validity.badInput || !Number.isFinite(v.price) || v.price < 0) return formError($('fPrice'), '請輸入價位（0 以上的數字）。');
   if (!validDate(v.date)) return formError($('fDate'), '請選擇日期。');
   if (v.date > today) return formError($('fDate'), '日期不能晚於今天。');
+  const editing = state.editingId;
   if (v.side === 'sell') {
-    const held = heldShares(v.market, v.code, state.editingId);
+    // 依賣出日期當時的持股判斷（交易依日期重算，賣在買進之前會被略過）
+    const others = state.tx.filter((t) => t.id !== editing);
+    const held = sharesOn(others, v.market, v.code, v.date);
     if (v.shares > held + 1e-9) {
-      return formError($('fShares'), held > 0 ? `目前只持有 ${fmtShares(held)} 股 ${v.code}，不能賣出 ${fmtShares(v.shares)} 股。` : `目前沒有持有 ${v.code}，不能賣出。`);
+      const when = v.date === today ? '目前' : `${v.date} 當時`;
+      const later = sharesOn(others, v.market, v.code, today) >= v.shares;
+      return formError(later ? $('fDate') : $('fShares'), held > 0
+        ? `${when}只持有 ${fmtShares(held)} 股 ${v.code}，不能賣出 ${fmtShares(v.shares)} 股。${later ? '賣出日期要在買進之後。' : ''}`
+        : `${when}沒有持有 ${v.code}，不能賣出。${later ? '賣出日期要在買進之後。' : ''}`);
     }
   }
   const c = tradeCosts({ market: v.market, side: v.side, price: v.price, shares: v.shares, type: v.type, code: v.code, date: v.date,
     broker: v.broker, brokerOverrides: state.settings.brokerOverrides });
   const tx = sanitizeTx({
-    id: state.editingId ?? newId(), market: v.market, code: v.code, side: v.side, shares: v.shares, price: v.price, date: v.date,
+    id: editing ?? newId(), market: v.market, code: v.code, side: v.side, shares: v.shares, price: v.price, date: v.date,
     feeIncluded: v.feeIncluded, fee: c.fee, tax: c.tax, regFee: c.regFee, broker: c.broker,
   });
-  const editing = state.editingId;
-  if (editing) {
-    const i = state.tx.findIndex((t) => t.id === editing);
-    if (i >= 0) state.tx[i] = tx; else state.tx.push(tx);
-  } else state.tx.push(tx);
+  const i = editing ? state.tx.findIndex((t) => t.id === editing) : -1;
+  const candidate = i >= 0 ? state.tx.map((t, j) => (j === i ? tx : t)) : [...state.tx, tx];
+  const broken = newTradeErrors(candidate);
+  if (broken.length) {
+    return formError(null, `這筆${editing ? '修改' : '交易'}會讓其他交易對不上：${errText(broken[0])}。請確認日期與股數，或先修改那筆賣出。`);
+  }
+  state.tx = candidate;
   saveTx();
   const name = nameOf(v.market, v.code);
   const known = Boolean(form.row) || Boolean(state.records[holdingKey(v.market, v.code)]);
   const msg = `${editing ? '已修改' : '已加入'}：${v.side === 'buy' ? '買進' : '賣出'} ${v.code}${name ? ` ${name}` : ''} ${fmtShares(v.shares)} 股 @ ${fmtPrice(v.price, v.market)}${v.price === 0 ? '（價位 0，例如配股）' : ''}${known ? '' : '。這檔沒有每日資料，請在持股明細輸入手動價格'}`;
-  stopEditing();
-  $('fCode').value = '';
-  $('fShares').value = '';
-  $('fPrice').value = '';
-  $('codeInfo').textContent = '';
-  $('priceHint').textContent = '';
-  form.row = null;
-  renderPreview();
+  if (editing) resetForm();
+  else {
+    $('fCode').value = '';
+    $('fShares').value = '';
+    $('fPrice').value = '';
+    $('codeInfo').textContent = '';
+    $('priceHint').textContent = '';
+    form.row = null;
+    renderPreview();
+  }
   const m = $('formMsg');
   m.textContent = msg;
   m.className = 'form-msg ok';
@@ -1343,12 +1430,29 @@ function stopEditing() {
   $('editBadge').hidden = true;
 }
 
+// 離開修改模式時清空表單（日期回到今天、買進、預設券商），避免按「加入」又新增一筆一樣的交易。
+function resetForm() {
+  stopEditing();
+  document.querySelectorAll('#tradeForm [aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
+  document.querySelectorAll('input[name="side"]').forEach((i) => { i.checked = i.value === 'buy'; });
+  $('fShares').value = '';
+  $('fPrice').value = '';
+  $('fDate').value = todayLocal();
+  $('fFeeIncluded').checked = false;
+  setFormMarket(marketNow());
+  renderPreview();
+}
+
 function deleteTx(id) {
   const t = state.tx.find((x) => x.id === id);
   if (!t) return;
-  if (!window.confirm(`確定刪除 ${t.date} ${t.side === 'buy' ? '買進' : '賣出'} ${t.code} ${fmtShares(t.shares)} 股？`)) return;
-  state.tx = state.tx.filter((x) => x.id !== id);
-  if (state.editingId === id) stopEditing();
+  const rest = state.tx.filter((x) => x.id !== id);
+  const broken = newTradeErrors(rest);
+  const warn = broken.length
+    ? `\n\n注意：刪除後其他交易會對不上：${errText(broken[0])}${broken.length > 1 ? `（共 ${broken.length} 筆）` : ''}。` : '';
+  if (!window.confirm(`確定刪除 ${t.date} ${t.side === 'buy' ? '買進' : '賣出'} ${t.code} ${fmtShares(t.shares)} 股？${warn}`)) return;
+  state.tx = rest;
+  if (state.editingId === id) resetForm();
   saveTx();
   renderAll();
   toast('已刪除一筆交易');
@@ -1404,9 +1508,9 @@ async function importJson(file) {
     }
     const list = Array.isArray(data) ? data : data?.transactions;
     if (!Array.isArray(list)) throw new Error('檔案裡找不到交易紀錄（transactions）。');
-    const { txs, bad } = sanitizeTxList(list);
+    const { txs, bad } = sanitizeTxList(list, { strict: true });
     if (!txs.length && list.length) throw new Error(`${list.length} 筆交易都格式不正確，沒有匯入。`);
-    const msg = `匯入 ${txs.length} 筆交易${bad.length ? `（略過 ${bad.length} 筆格式不正確：第 ${bad.slice(0, 5).join('、')}${bad.length > 5 ? '…' : ''} 筆）` : ''}，會取代目前的 ${state.tx.length} 筆交易與現金、設定。確定嗎？`;
+    const msg = `匯入 ${txs.length} 筆交易${bad.length ? `（略過 ${bad.length} 筆格式不正確或不合理，例如台股非整數股、未來日期：第 ${bad.slice(0, 5).join('、')}${bad.length > 5 ? '…' : ''} 筆）` : ''}，會取代目前的 ${state.tx.length} 筆交易與現金、設定。確定嗎？`;
     if (!window.confirm(msg)) return;
     state.tx = txs;
     if (!Array.isArray(data)) {
@@ -1600,6 +1704,7 @@ function bind() {
   });
   $('fCode').addEventListener('focus', () => ensureIndex(marketNow()));
   $('fCode').addEventListener('keydown', (e) => {
+    if (e.isComposing || e.keyCode === 229) return; // 注音、拼音選字中的 Enter 不是選建議
     const open = !$('codeList').hidden && form.results.length;
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       if (!open) { updateSuggestions(); return; }
@@ -1621,15 +1726,17 @@ function bind() {
       resolveCode();
     }
   }, 150));
+  // pointerdown 只用來保住輸入框焦點；等 click 才選，觸控滑動捲動清單時不會誤選。
   $('codeList').addEventListener('pointerdown', (e) => {
+    if (e.target.closest('li[data-i]')) e.preventDefault();
+  });
+  $('codeList').addEventListener('click', (e) => {
     const item = e.target.closest('li[data-i]');
-    if (!item) return;
-    e.preventDefault();
-    pickSuggestion(Number(item.dataset.i));
+    if (item) pickSuggestion(Number(item.dataset.i));
   });
   $('tradeForm').addEventListener('submit', submitTrade);
   $('cancelEdit').addEventListener('click', () => {
-    stopEditing();
+    resetForm();
     $('formMsg').textContent = '已取消修改。';
     $('formMsg').className = 'form-msg ok';
   });
@@ -1688,6 +1795,7 @@ function bind() {
     } else if (d.goto) {
       gotoCard(d.goto);
     } else if (d.clearManual) {
+      if (!window.confirm(`清除 ${d.clearManual.split(':')[1]} 的手動價格？`)) return;
       delete state.manual[d.clearManual];
       save(KEYS.manual, state.manual);
       renderAll();
@@ -1696,6 +1804,8 @@ function bind() {
       setStop(d.stopSave, input?.value ?? '');
     } else if (d.stopClear) {
       setStop(d.stopClear, '');
+    } else if (d.stopPin) {
+      setStop(d.stopPin, d.value ?? '');
     } else if (d.edit) {
       startEdit(d.edit);
     } else if (d.del) {

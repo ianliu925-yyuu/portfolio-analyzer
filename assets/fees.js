@@ -37,7 +37,7 @@ const tw = (id, name, discount, minFee, oddLotMinFee, rebate, confidence, note, 
 });
 
 export const TW_BROKERS = [
-  tw('tw_generic_06', '一般電子下單（6 折）', 0.6, 20, 1, '月退', 'medium',
+  tw('tw_generic_06', '一般電子下單', 0.6, 20, 1, '月退', 'medium',
     '多數券商電子下單常見 6 折、整股每筆最低 20 元、零股最低 1 元；實際折數依個人議定，請改成自己的折數。',
     'https://grenade.tw/blog/taiwan-stock-broker-comparison/'),
   tw('tw_yuanta', '元大證券', 0.6, 20, 1, '日退', 'medium',

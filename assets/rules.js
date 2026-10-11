@@ -67,6 +67,21 @@ const spacing = (s) => s
   .replace(/([\u3400-\u9fff])([A-Za-z0-9])/g, '$1 $2')
   .replace(/([A-Za-z0-9%])([\u3400-\u9fff])/g, '$1 $2');
 
+// holidayNote（例：「10/09–10/11 國慶連假休市；11/27 感恩節提早收盤」）提到的日期區間
+// → [['2026-10-09', '2026-10-11'], ['2026-11-27', '2026-11-27']]
+function holidayRanges(note, today) {
+  if (!DATE_RE.test(today ?? '')) return [];
+  const iso = (y, mo, d) => `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  const ty = +today.slice(0, 4), tm = +today.slice(5, 7);
+  const out = [];
+  for (const m of String(note ?? '').matchAll(/(\d{1,2})\/(\d{1,2})(?:\s*[–~-]\s*(\d{1,2})\/(\d{1,2}))?/g)) {
+    const y = +m[1] < tm - 6 ? ty + 1 : ty;            // 12 月看到 1 月的休市
+    const start = iso(y, m[1], m[2]);
+    out.push([start, m[3] ? iso(+m[3] < +m[1] ? y + 1 : y, m[3], m[4]) : start]);
+  }
+  return out;
+}
+
 const labelOf = (row, record) => {
   const code = row?.code ?? record?.code ?? '';
   const name = row?.name && row.name !== code ? row.name : record?.name;
@@ -112,9 +127,12 @@ export function levels(holding, record, { stopPct = RULES.stopPct, userStop } = 
   const pos52 = price != null && hi52 != null && lo52 != null && hi52 > lo52
     ? round(Math.min(Math.max((price - lo52) / (hi52 - lo52), 0), 1), 4) : null;
 
+  // hist.low20 是最新一根之前 20 個交易日的收盤低點；現價低於它＝跌破近 20 日支撐。
+  const supportBroken = low20 != null && price != null && price < low20;
+
   return {
     cost: round(cost), price, support: round(support), resistance: round(resistance),
-    stop: round(stop), stopSource, stopPct: pct, hi52, lo52, pos52, ma60,
+    stop: round(stop), stopSource, stopPct: pct, hi52, lo52, pos52, ma60, supportBroken,
   };
 }
 
@@ -292,6 +310,7 @@ export function analyzeHolding(row, record, ctx = {}) {
   }
   if (price != null && hi52 != null && price >= hi52) bull.push(`收盤 ${fp(price)} 創 52 週新高`);
   else if (price != null && lo52 != null && price <= lo52 * (1 + S.nearLow52)) bear.push(`收盤 ${fp(price)} 接近 52 週低點 ${fp(lo52)}`);
+  else if (lv.supportBroken) bear.push(`收盤 ${fp(price)} 跌破近 20 日低點 ${fp(low20)}`);
   if (fStreak != null && fStreak >= S.streakDays) bull.push(`外資連買 ${fStreak} 天`);
   if (fStreak != null && fStreak <= -S.streakDays) bear.push(`外資連賣 ${-fStreak} 天`);
   if (tStreak != null && tStreak >= S.streakDays) bull.push(`投信連買 ${tStreak} 天`);
@@ -341,16 +360,27 @@ export function analyzeHolding(row, record, ctx = {}) {
       const due = `${y}-${r.md}`;
       if (due < today) continue;
       const d = daysFrom(today, due);
-      if (d <= W.reportDaysAhead) watch.push(`${r.label}公布期限 ${md(due)}（還有 ${d} 天）`);
+      // meta.events 已經有這個期限時不重複
+      const listed = events.some((e) => e.date === due || /財報/.test(e.title));
+      if (d <= W.reportDaysAhead && !listed) watch.push(`${r.label}公布期限 ${md(due)}（還有 ${d} 天）`);
       break;
     }
   }
-  for (const e of events) watch.push(`${md(e.date)} ${e.title}`);
+  const noteRanges = holidayRanges(ctx.holidayNote, today);
+  for (const e of events) {
+    // holidayNote 已經寫到的休市、提早收盤不重複列
+    if (/休市|提早收盤/.test(e.title) && noteRanges.some(([a, b]) => e.date >= a && e.date <= b)) continue;
+    watch.push(`${md(e.date)} ${e.title}`);
+  }
   if (ctx.holidayNote) watch.push(ctx.holidayNote);
   else if (today && Array.isArray(ctx.upcomingHolidays)) {
+    const eventDates = new Set(events.map((e) => e.date));
     for (const h of ctx.upcomingHolidays) {
       const d = daysFrom(today, h?.date);
-      if (d != null && d >= 0 && d <= W.holidayDaysAhead) watch.push(`${md(h.date)}${h.name ? `（${h.name}）` : ''}休市`);
+      if (d == null || d < 0 || d > W.holidayDaysAhead || eventDates.has(h.date)) continue;
+      const name = String(h.name ?? '');
+      if (h.earlyClose) watch.push(`${md(h.date)} ${/提早收盤/.test(name) ? name : name ? `${name}（提早收盤）` : '提早收盤'}`);
+      else watch.push(`${md(h.date)}${name ? `（${name}）` : ''}休市`);
     }
   }
 
@@ -438,6 +468,6 @@ export function analyzePortfolio(rows = [], summary = {}, ctx = {}) {
   if (watches.length) advice.push(`${watches.join('、')}接近停損價，盯緊收盤價`);
   if (profits.length) advice.push(`${profits.join('、')}符合分批停利條件，可先賣出一部分鎖住獲利`);
 
-  if (!risks.length) advice.push('組合目前沒有觸發集中度與現金規則，維持定期檢視即可');
+  if (!risks.length) advice.push('組合目前沒有觸發集中度與現金規則（單檔與產業占比以含現金的總資產計），維持定期檢視即可');
   return { risks: risks.map(spacing), advice: advice.map(spacing) };
 }

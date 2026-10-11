@@ -33,13 +33,16 @@ export function bucketOf(market, code) {
   return market === 'US' ? c.slice(0, 1) : c.slice(0, 2);
 }
 
-// [[code, name, type], …]；載入失敗時為 null（重新整理頁面才會再試）。
+// [[code, name, type], …]；載入失敗時為 null，且不快取失敗結果（下次呼叫會再試）。
 export function loadIndex(market) {
   if (!indexCache.has(market)) {
     const file = market === 'US' ? 'index-us.json' : 'index-tw.json';
     const p = getJson(file)
       .then((rows) => (Array.isArray(rows) ? rows.filter((r) => Array.isArray(r) && r[0]) : []))
-      .catch(() => null);
+      .catch(() => {
+        indexCache.delete(market);
+        return null;
+      });
     indexCache.set(market, p);
   }
   return indexCache.get(market);

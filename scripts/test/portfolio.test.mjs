@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildHoldings, valueHolding, summarize, holdingKey } from '../../assets/portfolio.js';
+import { buildHoldings, valueHolding, summarize, holdingKey, sessionPosition } from '../../assets/portfolio.js';
 
 const near = (actual, expected, eps = 1e-6) =>
   assert.ok(Math.abs(actual - expected) < eps, `expected ${expected}, got ${actual}`);
@@ -152,10 +152,17 @@ test('valueHolding US: converts to TWD with fx and includes SEC fee', () => {
 });
 
 test('valueHolding: manual price, missing record, missing fx', () => {
-  const manual = valueHolding(twHolding(), TW_REC, { date: '2026-10-10', manualPrice: 610 });
+  // 手動價格只是後備：有每日收盤價時用收盤價
+  const withClose = valueHolding(twHolding(), TW_REC, { date: '2026-10-10', manualPrice: 610 });
+  assert.equal(withClose.price, 600);
+  assert.equal(withClose.priceSource, 'data');
+  assert.equal(withClose.dayPL, 7500);
+  const manual = valueHolding(twHolding(), { ...TW_REC, close: null }, { date: '2026-10-10', manualPrice: 610 });
   assert.equal(manual.price, 610);
   assert.equal(manual.priceSource, 'manual');
+  assert.equal(manual.marketValue, 915000);
   assert.equal(manual.dayPL, null);
+  assert.equal(valueHolding(twHolding(), null, { manualPrice: 610 }).priceSource, 'manual');
   const none = valueHolding(twHolding(), undefined, { date: '2026-10-10' });
   assert.equal(none.price, null);
   assert.equal(none.marketValue, null);
@@ -171,6 +178,40 @@ test('valueHolding: manual price, missing record, missing fx', () => {
     { code: '00679B', close: 31, type: 'bond_etf' }, { date: '2026-10-10' });
   assert.equal(etf.sellTax, 0);
   assert.equal(etf.industry, 'ETF');
+});
+
+test('sessionPosition + valueHolding: 今日損益只算資料日開盤前就持有的股數', () => {
+  const rec = { close: 1025, change: 15, changePct: 1.49, date: '2026-10-08' };
+  // 資料日之後才買：不算漲跌
+  const late = [tx({ id: 'a', shares: 1000, price: 1000, date: '2026-10-10' })];
+  const s1 = sessionPosition(late, 'TW', '2330', rec.date);
+  assert.deepEqual(s1, { date: '2026-10-08', prevShares: 0, dayBuyShares: 0, dayBuyAmount: 0 });
+  assert.equal(valueHolding(buildHoldings(late).holdings[0], rec, { session: s1 }).dayPL, 0);
+  // 前一天就有 1000 股；資料日當天買 500 @1020（賺 1025 − 1020）；之後又買 200（不算）
+  const mixed = [
+    tx({ id: 'a', shares: 1000, price: 1000, date: '2026-10-01' }),
+    tx({ id: 'b', shares: 500, price: 1020, date: '2026-10-08' }),
+    tx({ id: 'c', shares: 200, price: 1030, date: '2026-10-09' }),
+    tx({ id: 'x', code: '2317', shares: 9000, price: 100, date: '2026-10-01' }),
+  ];
+  const s2 = sessionPosition(mixed, 'TW', '2330', rec.date);
+  assert.deepEqual([s2.prevShares, s2.dayBuyShares, s2.dayBuyAmount], [1000, 500, 510000]);
+  const h = buildHoldings(mixed).holdings.find((x) => x.code === '2330');
+  const v2 = valueHolding(h, rec, { session: s2 });
+  assert.equal(v2.dayPL, 15 * 1000 + 5 * 500);
+  // 今日損益% 的分母：前一日收盤市值 1000 × 1010 + 當天買進 510000（之後買的 200 股不算）
+  assert.equal(v2.dayBaseTWD, 1010000 + 510000);
+  assert.ok(Math.abs(summarize([v2]).dayPLPct - (17500 / 1520000) * 100) < 1e-9);
+  // 資料日當天賣掉一部分：只算還留著的股數
+  const sold = [
+    tx({ id: 'a', shares: 1000, price: 1000, date: '2026-10-01' }),
+    tx({ id: 's', side: 'sell', shares: 400, price: 1020, date: '2026-10-08' }),
+  ];
+  const h2 = buildHoldings(sold).holdings[0];
+  assert.equal(valueHolding(h2, rec, { session: sessionPosition(sold, 'TW', '2330', rec.date) }).dayPL, 15 * 600);
+  // 沒有 session（不知道資料日）→ 沿用 漲跌 × 股數
+  assert.equal(valueHolding(h2, rec, {}).dayPL, 15 * 600);
+  assert.equal(sessionPosition(sold, 'TW', '2330', null), null);
 });
 
 test('summarize: totals in TWD, weights, cash ratio, allocation', () => {
@@ -223,4 +264,26 @@ test('summarize: no cash → cashRatio 0; missing price and fx flagged', () => {
   assert.equal(empty.marketValue, 0);
   assert.equal(empty.cashRatio, null);
   assert.equal(empty.netPLPct, null);
+  // 只有現金
+  assert.equal(summarize([], { cashTWD: 1000 }).cashRatio, 1);
+});
+
+test('summarize: nothing priced → totals are null, not 0; cash ratio needs every holding priced', () => {
+  const noPrice = valueHolding(twHolding(), null, { date: '2026-10-10' });
+  const none = summarize([noPrice], { cashTWD: 100000 });
+  assert.equal(none.pricedCount, 0);
+  for (const k of ['marketValue', 'grossPL', 'netPL', 'sellCosts', 'dayPL', 'cashRatio']) assert.equal(none[k], null, k);
+  assert.equal(none.costTotal, 885756);
+  // 沒有現金時仍可判斷全倉
+  assert.equal(summarize([noPrice], {}).cashRatio, 0);
+  // 美股缺匯率：成本、市值都算不出台幣
+  const us = valueHolding(usHolding(), US_REC, { date: '2026-10-10' });
+  const usOnly = summarize([us], { cashTWD: 1000 });
+  assert.deepEqual([usOnly.marketValue, usOnly.costTotal, usOnly.netPL, usOnly.cashRatio], [null, null, null, null]);
+  // 部分有價格：市值是有價格的部分，現金比例算不出來
+  const tw = valueHolding(twHolding(), TW_REC, { date: '2026-10-10' });
+  const part = summarize([tw, noPrice], { cashTWD: 100000 });
+  assert.equal(part.marketValue, 900000);
+  assert.equal(part.pricedCount, 1);
+  assert.equal(part.cashRatio, null);
 });

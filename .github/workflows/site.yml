@@ -42,13 +42,21 @@ jobs:
 
       - name: Check out the data branch into ./store
         run: |
+          set -o pipefail
           mkdir -p store
-          if git ls-remote --exit-code --heads origin data >/dev/null; then
+          # ls-remote exits 2 only when the exact ref is missing. Any other failure (network, auth) must
+          # stop here: starting from an empty store would force-push over the whole history.
+          rc=0
+          git ls-remote --exit-code origin refs/heads/data >/dev/null || rc=$?
+          if [ "$rc" -eq 0 ]; then
             git fetch --no-tags --depth 1 origin +refs/heads/data:refs/remotes/origin/data
             git archive refs/remotes/origin/data | tar -x -C store
             echo "data branch loaded"
-          else
+          elif [ "$rc" -eq 2 ]; then
             echo "data branch does not exist yet; it will be created"
+          else
+            echo "::error::git ls-remote failed (exit $rc); not starting from an empty store"
+            exit 1
           fi
 
       - name: Decide whether to fetch

@@ -109,13 +109,29 @@ export function buildHoldings(transactions = []) {
   };
 }
 
-export function valueHolding(holding, record, { fx, broker, brokerOverrides, date, manualPrice } = {}) {
+// 資料日（record.date）那一盤開盤前已持有的股數，與當天的買進（股數、金額）。今日損益只算這些股數。
+export function sessionPosition(transactions, market, code, date) {
+  if (!DATE_RE.test(String(date ?? ''))) return null;
+  const c = normalizeCode(code);
+  const mine = (transactions ?? []).filter((t) => t && t.market === market && normalizeCode(t.code) === c);
+  const before = buildHoldings(mine.filter((t) => String(t.date ?? '') < date)).holdings[0];
+  let dayBuyShares = 0, dayBuyAmount = 0;
+  for (const t of mine) {
+    if (t.date !== date || t.side !== 'buy' || checkTx(t)) continue;
+    dayBuyShares += num(t.shares);
+    dayBuyAmount += num(t.price) * num(t.shares);
+  }
+  return { date, prevShares: before?.shares ?? 0, dayBuyShares: clean(dayBuyShares), dayBuyAmount: clean(dayBuyAmount) };
+}
+
+export function valueHolding(holding, record, { fx, broker, brokerOverrides, date, manualPrice, session } = {}) {
   const market = holding.market;
   const currency = currencyOf(market);
-  const manual = positive(manualPrice);
+  // 手動價格只是後備：每日資料有收盤價時一律用收盤價。
   const close = positive(record?.close);
-  const price = manual ?? close;
-  const priceSource = manual != null ? 'manual' : close != null ? 'data' : null;
+  const manual = close == null ? positive(manualPrice) : null;
+  const price = close ?? manual;
+  const priceSource = close != null ? 'data' : manual != null ? 'manual' : null;
   const type = record?.type ?? (market === 'TW' ? inferTwType(holding.code) : 'stock');
   const industry = (market === 'US' ? record?.sector || record?.industry : record?.industry) ||
     (type === 'etf' || type === 'bond_etf' ? 'ETF' : null);
@@ -148,7 +164,20 @@ export function valueHolding(holding, record, { fx, broker, brokerOverrides, dat
   const fromData = priceSource === 'data';
   const dayChange = fromData ? change : null;
   const dayChangePct = fromData ? num(record?.changePct) : null;
-  const dayPL = dayChange != null ? clean(dayChange * holding.shares) : null;
+  // dayBase：今日損益的分母（前一日收盤市值＋資料日當天買進的金額）
+  let dayPL = null, dayBase = null;
+  if (dayChange != null && session) {
+    // 前一天收盤就持有的股數賺漲跌；資料日當天買的賺（收盤 − 買價）；資料日之後才買的不算。
+    const held = Math.min(Math.max(num(session.prevShares) ?? 0, 0), holding.shares);
+    const bought = num(session.dayBuyShares) ?? 0;
+    const fresh = Math.min(holding.shares - held, bought);
+    const buyPrice = fresh > 0 ? (num(session.dayBuyAmount) ?? 0) / bought : 0;
+    dayPL = clean(dayChange * held + (price - buyPrice) * fresh);
+    dayBase = clean((price - dayChange) * held + buyPrice * fresh);
+  } else if (dayChange != null) {
+    dayPL = clean(dayChange * holding.shares);
+    dayBase = clean((price - dayChange) * holding.shares);
+  }
 
   return {
     ...holding,
@@ -177,6 +206,7 @@ export function valueHolding(holding, record, { fx, broker, brokerOverrides, dat
     sellCostsTWD: toTWD(sellCosts),
     netPLTWD: toTWD(netPL),
     dayPLTWD: toTWD(dayPL),
+    dayBaseTWD: toTWD(dayBase),
     realizedTWD: toTWD(holding.realized),
     sellBroker: brokerObj.id,
     missing,
@@ -207,23 +237,36 @@ export function summarize(rows = [], { cashTWD = 0, cashUSD = 0, fx, realizedTot
   const cashTotalTWD = clean(cashT + (rate != null ? cashU * rate : 0));
 
   let marketValue = 0, costTotal = 0, pricedCost = 0, netPL = 0, grossPL = 0, sellCosts = 0, dayPL = 0, prevValue = 0;
+  let priced = 0, costRows = 0, dayRows = 0;
   const missingPrice = [];
   for (const r of rows) {
-    if (r.costTWD != null) costTotal += r.costTWD;
+    if (r.costTWD != null) {
+      costTotal += r.costTWD;
+      costRows += 1;
+    }
     if (r.price == null) missingPrice.push(holdingKey(r.market, r.code));
     if (r.valueTWD == null) continue;
+    priced += 1;
     marketValue += r.valueTWD;
     pricedCost += r.costTWD;
     netPL += r.netPLTWD;
     grossPL += r.grossPLTWD;
     sellCosts += r.sellCostsTWD;
     if (r.dayPLTWD != null) {
+      dayRows += 1;
       dayPL += r.dayPLTWD;
-      prevValue += r.valueTWD - r.dayPLTWD;
+      prevValue += r.dayBaseTWD ?? r.valueTWD - r.dayPLTWD;
     }
   }
   marketValue = clean(marketValue);
   const assets = clean(marketValue + cashTotalTWD);
+  // 有持股但一檔都沒有台幣市值（缺價或缺匯率）時，總市值與損益算不出來 → null，不是 0。
+  const none = rows.length > 0 && priced === 0;
+  const orNull = (v) => (none ? null : clean(v));
+  let cashRatio;
+  if (rows.length && cashT === 0 && cashU === 0) cashRatio = 0;                       // 沒有現金：全倉
+  else if (priced < rows.length || (cashU > 0 && rate == null)) cashRatio = null;  // 有持股沒計價：算不出來
+  else cashRatio = assets > 0 ? clean(cashTotalTWD / assets) : null;
 
   let realized;
   if (realizedTotal) realized = clean((num(realizedTotal.TW) ?? 0) + (rate != null ? (num(realizedTotal.US) ?? 0) * rate : 0));
@@ -252,22 +295,23 @@ export function summarize(rows = [], { cashTWD = 0, cashUSD = 0, fx, realizedTot
     currency: 'TWD',
     fx: rate,
     holdingCount: rows.length,
-    marketValue,
-    costTotal: clean(costTotal),
+    pricedCount: priced,
+    marketValue: orNull(marketValue),
+    costTotal: rows.length && !costRows ? null : clean(costTotal),
     pricedCost: clean(pricedCost),
-    grossPL: clean(grossPL),
+    grossPL: orNull(grossPL),
     grossPLPct: pricedCost > 0 ? clean((grossPL / pricedCost) * 100) : null,
-    sellCosts: clean(sellCosts),
-    netPL: clean(netPL),
+    sellCosts: orNull(sellCosts),
+    netPL: orNull(netPL),
     netPLPct: pricedCost > 0 ? clean((netPL / pricedCost) * 100) : null,
-    dayPL: clean(dayPL),
+    dayPL: rows.length && !dayRows ? null : clean(dayPL),
     dayPLPct: prevValue > 0 ? clean((dayPL / prevValue) * 100) : null,
     realized,
     cashTWD: cashT,
     cashUSD: cashU,
     cashTotalTWD,
     totalAssets: assets,
-    cashRatio: assets > 0 ? clean(cashTotalTWD / assets) : null,
+    cashRatio,
     rows: weighted,
     weights,
     assetWeights,

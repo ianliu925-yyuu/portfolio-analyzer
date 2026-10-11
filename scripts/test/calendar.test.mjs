@@ -32,7 +32,24 @@ test('TW next trading day skips holidays; "交易日" rows are not closures', ()
   assert.ok(twCal.isTradingDay('2026-01-02'), '國曆新年開始交易日 is a trading day');
   assert.ok(twCal.isTradingDay('2026-02-11'), '農曆春節前最後交易日 is a trading day');
   assert.ok(!twCal.isTradingDay('2026-02-12'), '市場無交易 is closed');
-  assert.equal(twCal.next('2026-12-31'), '2027-01-01', 'unknown next-year holidays fall back to weekends only');
+});
+
+test('TW 元旦 of a year TWSE has not published yet is still closed', () => {
+  // the schedule covers 2026 only: 2027-01-01 (Fri) must not become the next trading day
+  assert.equal(twCal.next('2026-12-31'), '2027-01-04');
+  assert.equal(holidayNote(twCal, '2026-12-31', '2027-01-04'), '01/01–01/03 中華民國開國紀念日連假休市');
+  assert.deepEqual(upcomingHolidays(twCal, '2026-12-20'), [
+    { date: '2026-12-25', name: '行憲紀念日' },
+    { date: '2027-01-01', name: '中華民國開國紀念日' },
+  ]);
+  assert.ok(twCal.isTradingDay('2027-01-05'), 'other days of an unpublished year are weekdays as usual');
+  // 補假: 2023-01-01 was a Sunday (closed Mon 01-02); 2022-01-01 a Saturday (closed Fri 2021-12-31)
+  const bare = twCalendar([]);
+  assert.equal(bare.next('2022-12-30'), '2023-01-03');
+  assert.equal(bare.prev('2022-01-03'), '2021-12-30');
+  assert.ok(bare.isTradingDay('2026-01-02') && bare.isTradingDay('2026-12-31'));
+  // once a year's rows arrive they decide on their own
+  assert.ok(twCalendar([{ date: '2023-02-27', name: '和平紀念日補假' }]).isTradingDay('2023-01-02'), 'covered year: rows win');
 });
 
 test('TW holiday note and upcoming holidays', () => {

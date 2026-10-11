@@ -20,7 +20,8 @@ const require = createRequire(import.meta.url);
 const { chromium } = require(path.join(execSync('npm root -g').toString().trim(), 'playwright'));
 
 const { tradeCosts } = await import(pathToFileURL(path.join(ROOT, 'assets/fees.js')));
-const { buildHoldings, valueHolding, summarize, holdingKey } = await import(pathToFileURL(path.join(ROOT, 'assets/portfolio.js')));
+const { buildHoldings, valueHolding, summarize, sessionPosition } = await import(pathToFileURL(path.join(ROOT, 'assets/portfolio.js')));
+const { MAX_OUTPUT_TOKENS, parseJsonText, estimateCost } = await import(pathToFileURL(path.join(ROOT, 'assets/ai.js')));
 
 // ---------- 靜態伺服器 ----------
 
@@ -50,38 +51,45 @@ function startServer() {
 // ---------- 假的外部服務 ----------
 
 const XSS = '<img src=x onerror="window.__xss=1">';
+const LONG_URL = `https://example.com/reports/${'a1b2c3d4e5'.repeat(14)}`;
+const LONG_WORD = 'ABCDEFGHIJ'.repeat(12);
 const CANNED = {
   stocks: [
     { code: '2330', action: '分批停利', summary: `報酬率超過 70% 且占總資產過半，${XSS} 建議先分批停利。`,
       reasons: ['收盤 1,025 比平均成本 580.50 高 76%', '外資連買 3 天、5 日買超 4,500 張'],
       trigger: '收盤跌破 960 → 再賣一批；站穩 1,060 → 剩餘續抱', bull: ['9 月營收年增 11.37%'], bear: ['單檔占總資產超過 40%'],
-      watch: ['10/12 開盤能否守住 1,000'] },
+      watch: ['10/12 開盤能否守住 1,000', `法說會簡報 ${LONG_URL}`] },
     { code: '0050', action: '續抱', summary: '成本 150 附近、站上季線 147.9，續抱。', reasons: ['收盤 152.35 高於季線 147.9'],
       trigger: '收盤跌破 146.1 → 減碼', bull: ['外資買超 2,100 張'], bear: [], watch: ['留意 158.4 壓力'] },
     { code: 'AAPL', action: '分批停利', summary: '報酬率 22%、52 週位置 94%，可先賣一部分。', reasons: ['收盤 245.3、52 週高 250'],
       trigger: '收盤跌破 228.4 → 再減碼', bull: ['站上季線 229.1'], bear: ['接近 52 週高點 250'], watch: ['250 壓力'] },
   ],
-  portfolio: { risks: ['台積電占總資產超過 40%'], advice: ['新資金優先買半導體以外的產業'] },
+  portfolio: { risks: ['台積電占總資產超過 40%', `參考 ${LONG_URL}`], advice: ['新資金優先買半導體以外的產業', LONG_WORD] },
 };
 
 const STUB_SDK = `
 const canned = ${JSON.stringify(CANNED)};
 export default class Anthropic {
   constructor(opts) {
-    const create = async (body) => {
-      (globalThis.__aiCalls ||= []).push({ body: JSON.parse(JSON.stringify(body)), apiKey: opts.apiKey, browser: opts.dangerouslyAllowBrowser });
+    const reply = async (method, body) => {
+      (globalThis.__aiCalls ||= []).push({ method, body: JSON.parse(JSON.stringify(body)), apiKey: opts.apiKey, browser: opts.dangerouslyAllowBrowser });
       await new Promise((r) => setTimeout(r, 300));
       return { id: 'msg_test', type: 'message', role: 'assistant', model: body.model, stop_reason: 'end_turn',
         content: [{ type: 'text', text: JSON.stringify(canned) }], usage: { input_tokens: 5234, output_tokens: 4321 } };
     };
-    this.messages = { create };
-    this.beta = { messages: { create } };
+    const create = (body) => reply('create', body);
+    const stream = (body) => {
+      const done = reply('stream', body);
+      return { finalMessage: () => done };
+    };
+    this.messages = { create, stream };
+    this.beta = { messages: { create, stream } };
   }
 }
 `;
 
 const RSS = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Google News</title>
-<item><title>法說會前夕 外資連三買 - 範例新聞</title><link>https://news.example.com/a1</link><pubDate>Fri, 09 Oct 2026 08:00:00 GMT</pubDate><source url="https://news.example.com">範例新聞</source></item>
+<item><title>法說會前夕 外資連三買 ${'ABCDEFGHIJ'.repeat(12)} - 範例新聞</title><link>https://news.example.com/a1</link><pubDate>Fri, 09 Oct 2026 08:00:00 GMT</pubDate><source url="https://news.example.com">範例新聞</source></item>
 <item><title>&lt;img src=x onerror="window.__xss=2"&gt; 測試標題 - 惡意來源</title><link>https://news.example.com/a2</link><pubDate>Thu, 08 Oct 2026 08:00:00 GMT</pubDate></item>
 <item><title>壞連結不應出現 - 惡意來源</title><link>javascript:alert(1)</link><pubDate>Thu, 08 Oct 2026 07:00:00 GMT</pubDate></item>
 </channel></rss>`;
@@ -126,7 +134,11 @@ async function expectedSummary({ cashTWD = 0 } = {}) {
   });
   const built = buildHoldings(txs);
   const rows = [];
-  for (const h of built.holdings) rows.push(valueHolding(h, await readRecord(h.market, h.code), { fx: meta.fx?.USDTWD, date }));
+  for (const h of built.holdings) {
+    const rec = await readRecord(h.market, h.code);
+    const asOf = rec?.date ?? (h.market === 'US' ? meta.us.asOf : meta.tw.asOf);
+    rows.push(valueHolding(h, rec, { fx: meta.fx?.USDTWD, date, session: rec ? sessionPosition(txs, h.market, h.code, asOf) : null }));
+  }
   return summarize(rows, { cashTWD, fx: meta.fx?.USDTWD, realizedTotal: built.realizedTotal });
 }
 
@@ -162,6 +174,20 @@ async function scaleLabelsDontOverlap(page, label) {
   assert.deepEqual(overlaps, [], `${label}: 價位刻度標籤重疊`);
 }
 
+// 手指點得到：按鈕至少 24×24 px
+async function tapTargets(page, selector, label) {
+  const boxes = await page.$$eval(selector, (els) => els.filter((e) => e.offsetParent).map((e) => {
+    const r = e.getBoundingClientRect();
+    return { t: e.textContent.trim(), w: r.width, h: r.height };
+  }));
+  assert.ok(boxes.length, `${label}：找不到 ${selector}`);
+  for (const b of boxes) assert.ok(b.w >= 24 && b.h >= 24, `${label}：${selector}「${b.t}」只有 ${b.w.toFixed(1)}×${b.h.toFixed(1)} px`);
+}
+
+const rowOf = (page, code, side) => page.locator('.log-table tbody tr')
+  .filter({ has: page.locator('td.l', { hasText: new RegExp(`^${code}$`) }) })
+  .filter({ has: page.locator(side === 'buy' ? '.side-buy' : '.side-sell') });
+
 function watchConsole(page, { allow = [] } = {}) {
   const errors = [];
   page.on('console', (m) => {
@@ -177,9 +203,14 @@ async function newPage(browser, viewport, opts = {}) {
   await installRoutes(context, blocked);
   if (opts.routes) await opts.routes(context);
   const page = await context.newPage();
-  page.on('dialog', (d) => d.accept());
+  // 對話框預設按確定；answers 放 false 代表下一個按取消
+  const dialogs = { seen: [], answers: [] };
+  page.on('dialog', (d) => {
+    dialogs.seen.push(d.message());
+    return dialogs.answers.shift() === false ? d.dismiss() : d.accept();
+  });
   const errors = watchConsole(page, opts);
-  return { context, page, errors, blocked };
+  return { context, page, errors, blocked, dialogs };
 }
 
 async function addTrade(page, { market, code, pick, shares, price, viaKeyboard = false }) {
@@ -201,7 +232,7 @@ async function addTrade(page, { market, code, pick, shares, price, viaKeyboard =
 // ---------- 情境 ----------
 
 async function mainFlow(browser, baseURL, name, viewport) {
-  const { context, page, errors, blocked } = await newPage(browser, viewport);
+  const { context, page, errors, blocked, dialogs } = await newPage(browser, viewport);
   await page.goto(baseURL);
   await page.waitForSelector('#dataDates b');
   const meta = JSON.parse(await readFile(path.join(DATA, 'meta.json'), 'utf8'));
@@ -217,8 +248,16 @@ async function mainFlow(browser, baseURL, name, viewport) {
   await page.fill('#fCode', '台積');
   await page.waitForSelector('#codeList li[data-i]');
   assert.ok((await page.textContent('#codeList')).includes('2330'), '名稱搜尋找得到 2330');
+  // 注音選字時的 Enter、手指按下開始滑動清單，都不能選走建議
+  await page.dispatchEvent('#fCode', 'keydown', { key: 'Enter', code: 'Enter', isComposing: true, bubbles: true, cancelable: true });
+  await page.dispatchEvent('#codeList li[data-i]', 'pointerdown', { pointerType: 'touch', isPrimary: true, bubbles: true, cancelable: true });
+  await page.waitForTimeout(100);
+  assert.equal(await page.inputValue('#fCode'), '台積', '選字中的 Enter／pointerdown 不選建議');
+  assert.equal(await page.isVisible('#codeList'), true, '建議清單還開著');
   await page.locator('#codeList li[data-i]', { hasText: '2330' }).first().click();
   await page.waitForFunction(() => document.getElementById('codeInfo').textContent.includes('台積電'));
+  await page.waitForSelector('#priceHint .fill-price');
+  await tapTargets(page, '#priceHint .fill-price', `${name} 帶入按鈕`);
   await page.fill('#fShares', '1000');
   await page.fill('#fPrice', '580');
   const preview = await page.textContent('#feePreview');
@@ -238,6 +277,9 @@ async function mainFlow(browser, baseURL, name, viewport) {
   assert.equal(parseMoney(await statText('netPL', '.stat-value span')), Math.round(exp.netPL), '未實現淨損益');
   assert.ok((await statText('cashRatio', '')).includes('全倉'), '沒有現金時顯示全倉警示');
   assert.ok((await page.textContent('#statsLine')).includes('今日損益'));
+  assert.equal(parseMoney(await page.textContent('[data-stat="dayPL"] b')), Math.round(exp.dayPL), '今日損益（資料日之後買進的股數不算漲跌）');
+  assert.ok((await page.textContent('#holdingsWrap thead')).includes('占總資產'), '占比欄以總資產為分母');
+  await tapTargets(page, '#holdingsWrap .linklike', `${name} 代號連結`);
   assert.ok((await page.textContent('#statsLine')).includes(String(meta.fx.USDTWD)), '顯示使用的匯率');
 
   // 現金
@@ -247,8 +289,10 @@ async function mainFlow(browser, baseURL, name, viewport) {
   const ratio = await statText('cashRatio');
   assert.equal(ratio.trim(), `${(expCash.cashRatio * 100).toFixed(1)}%`, '現金比例');
 
-  // 配置圖、建議標籤、詳細卡
-  assert.equal(await page.locator('#allocBody svg.donut circle.seg-arc').count(), 3);
+  // 配置圖（含現金）、建議標籤、詳細卡
+  assert.equal(await page.locator('#allocBody svg.donut circle.seg-arc').count(), 4);
+  assert.equal(await page.locator('#allocBody svg.donut circle.seg-arc.sc').count(), 1, '圓環圖有現金一塊');
+  assert.ok((await page.textContent('#allocBody .legend')).includes('現金'));
   await page.click('[data-alloc="industry"]');
   assert.ok((await page.textContent('#allocBody .legend')).includes('半導體業'));
   assert.equal(await page.locator('#holdingsWrap .tag').count(), 3);
@@ -274,11 +318,13 @@ async function mainFlow(browser, baseURL, name, viewport) {
   await page.waitForFunction(() => document.getElementById('aiStatus').textContent.includes('分析完成'));
   const calls = await page.evaluate(() => globalThis.__aiCalls);
   assert.equal(calls.length, 1, '只呼叫一次 API');
-  const { body, apiKey, browser: allowBrowser } = calls[0];
+  const { method, body, apiKey, browser: allowBrowser } = calls[0];
+  assert.equal(method, 'stream', '輸出上限大，要用串流');
   assert.equal(apiKey, 'sk-ant-test-0000');
   assert.equal(allowBrowser, true);
   assert.equal(body.model, 'claude-opus-5-5');
-  assert.equal(body.max_tokens, 16000);
+  assert.equal(body.max_tokens, MAX_OUTPUT_TOKENS);
+  assert.equal(MAX_OUTPUT_TOKENS, 64000);
   assert.deepEqual(body.betas, ['server-side-fallback-2026-07-01']);
   assert.equal(body.fallbacks, 'default');
   assert.equal(body.output_config.effort, 'medium');
@@ -292,11 +338,16 @@ async function mainFlow(browser, baseURL, name, viewport) {
   assert.equal(sent.newsAvailable, true);
   assert.ok(sent.holdings[0].news.some((n) => n.title.includes('法說會前夕')), '個股新聞有送給 AI');
   assert.ok(!JSON.stringify(sent).includes('javascript:'), '非 http 連結的新聞要丟掉');
+  assert.ok(sent.units.includes('fund.rev 單位是千元'), '月營收單位要寫清楚');
+  for (const h of sent.holdings) {
+    if (h.fund?.rev != null) assert.ok(Math.abs(h.fund.revNTD100M - h.fund.rev / 1e5) < 0.006, `${h.code} 月營收換算億元`);
+  }
 
   const aiHead = await page.textContent('#card-TW-2330 .ai-box .ai-head');
   assert.ok(aiHead.includes(`AI 分析・${todayTaipei()}・Opus 5.5`), `AI 標題：${aiHead}`);
   assert.ok((await page.textContent('#card-TW-2330 .bb-bull')).includes('9 月營收年增 11.37%'));
   assert.ok((await page.textContent('#adviceBody')).includes('新資金優先買半導體以外的產業'));
+  assert.ok((await page.textContent('#adviceBody')).includes(LONG_WORD), '很長的字串也要顯示');
   assert.ok((await page.textContent('#aiResultMeta')).includes('實際花費'));
   assert.ok((await page.textContent('#card-TW-2330')).includes('<img src=x'), 'AI 文字原樣顯示');
   assert.equal(await page.evaluate(() => window.__xss), undefined, 'AI／新聞內容不能被當成 HTML 執行');
@@ -316,10 +367,10 @@ async function mainFlow(browser, baseURL, name, viewport) {
   assert.notEqual(bg, 'rgb(244, 245, 247)', '深色模式背景要換');
   await page.screenshot({ path: path.join(SHOTS, `${name}-4-dark.png`), fullPage: true });
 
-  return { context, page, errors, blocked };
+  return { context, page, errors, blocked, dialogs };
 }
 
-async function desktopExtras(page) {
+async function desktopExtras(page, dialogs) {
   // 主題記住
   await page.reload();
   await page.waitForSelector('#holdingsWrap tr[data-key="US:AAPL"]');
@@ -337,7 +388,8 @@ async function desktopExtras(page) {
   await page.selectOption('#aiModel', 'claude-haiku-5-5');
   await page.click('#aiRun');
   await page.waitForFunction(() => (globalThis.__aiCalls ?? []).length === 1 && document.getElementById('aiStatus').textContent.includes('分析完成'));
-  const haiku = (await page.evaluate(() => globalThis.__aiCalls))[0].body;
+  const [{ method: haikuMethod, body: haiku }] = await page.evaluate(() => globalThis.__aiCalls);
+  assert.equal(haikuMethod, 'stream');
   assert.equal(haiku.model, 'claude-haiku-5-5');
   assert.ok(!('betas' in haiku) && !('fallbacks' in haiku), 'Haiku 不送 betas／fallbacks');
   assert.ok((await page.textContent('#card-TW-2330 .ai-head')).includes('Haiku 5.5'));
@@ -350,6 +402,8 @@ async function desktopExtras(page) {
   await page.waitForFunction(() => !document.getElementById('settingsDialog').open);
   assert.ok((await page.textContent('#brokerHint')).includes('2.8 折'));
   await page.check('input[name="market"][value="TW"]');
+  const brokerOpt = await page.textContent('#fBroker option:checked');
+  assert.ok(brokerOpt.includes('自訂 2.8 折') && !brokerOpt.includes('6 折'), `券商選單要標出自訂折數：${brokerOpt}`);
   await page.fill('#fShares', '1000');
   await page.fill('#fPrice', '580');
   assert.ok((await page.textContent('#feePreview')).includes('手續費NT$231'), '2.8 折：580,000 × 0.1425% × 0.28 = 231');
@@ -374,6 +428,12 @@ async function desktopExtras(page) {
   await page.fill('#holdingsWrap input[data-manual="TW:2399"]', '55');
   await page.press('#holdingsWrap input[data-manual="TW:2399"]', 'Enter');
   await page.waitForSelector('#holdingsWrap button[data-clear-manual="TW:2399"]');
+  await tapTargets(page, '#holdingsWrap .manual-flag', '手動價格清除鈕');
+  dialogs.answers.push(false);
+  await page.click('#holdingsWrap button[data-clear-manual="TW:2399"]');
+  await page.waitForTimeout(100);
+  assert.ok(dialogs.seen.at(-1).includes('清除 2399 的手動價格'), '清除手動價格要先確認');
+  assert.equal(await page.locator('#holdingsWrap button[data-clear-manual="TW:2399"]').count(), 1, '按取消就不清除');
 
   // 自訂停損價
   const stopInput = '#card-TW-2330 input[data-stop="TW:2330"]';
@@ -399,14 +459,58 @@ async function desktopExtras(page) {
   await page.waitForFunction(() => document.querySelectorAll('.log-table tbody tr').length === 4);
 
   // 匯入格式錯誤的檔案 → 拒絕
-  const alerts = [];
-  page.removeAllListeners('dialog');
-  page.on('dialog', (d) => { alerts.push(d.message()); d.accept(); });
+  dialogs.seen.length = 0;
   await page.setInputFiles('#importFile', { name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{"transactions":[{"market":"XX"}]}') });
-  await page.waitForFunction(() => true);
   await page.waitForTimeout(200);
-  assert.ok(alerts.some((m) => m.includes('匯入失敗')), `錯誤檔案要被拒絕：${alerts}`);
+  assert.ok(dialogs.seen.some((m) => m.includes('匯入失敗')), `錯誤檔案要被拒絕：${dialogs.seen}`);
   assert.equal(await page.locator('.log-table tbody tr').count(), 4);
+
+  // 匯入和表單一樣嚴格：台股零點幾股、未來日期都略過
+  const tw = backup.transactions.find((t) => t.market === 'TW');
+  const odd = { transactions: [tw, { ...tw, id: 'odd', shares: 1.5 }, { ...tw, id: 'future', date: '2099-01-02' }] };
+  dialogs.seen.length = 0;
+  dialogs.answers.push(false);
+  await page.setInputFiles('#importFile', { name: 'odd.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(odd)) });
+  await page.waitForTimeout(200);
+  assert.ok(dialogs.seen.some((m) => m.includes('匯入 1 筆交易') && m.includes('略過 2 筆')), `不合理的交易要略過：${dialogs.seen}`);
+  assert.equal(await page.locator('.log-table tbody tr').count(), 4, '按取消就不匯入');
+
+  // 交易順序：賣出日期在買進之前 → 擋下
+  const today = todayTaipei();
+  await page.check('input[name="market"][value="TW"]');
+  await page.fill('#fCode', '2330');
+  await page.check('input[name="side"][value="sell"]');
+  await page.fill('#fShares', '400');
+  await page.fill('#fPrice', '1000');
+  await page.fill('#fDate', '2020-01-02');
+  await page.click('#submitBtn');
+  const early = await page.textContent('#formMsg');
+  assert.ok(early.includes('2020-01-02 當時沒有持有 2330') && early.includes('賣出日期要在買進之後'), `賣在買進之前：${early}`);
+  await page.fill('#fDate', today);
+  await page.click('#submitBtn');
+  await page.waitForFunction(() => document.getElementById('formMsg').textContent.startsWith('已加入：賣出 2330'));
+  assert.equal(await page.locator('.log-table tbody tr').count(), 5);
+
+  // 把買進改成比後面賣出少 → 擋下；取消修改 → 表單清空
+  await rowOf(page, '2330', 'buy').locator('[data-edit]').click();
+  assert.equal(await page.textContent('#submitBtn'), '儲存修改');
+  await page.fill('#fShares', '300');
+  await page.click('#submitBtn');
+  const broke = await page.textContent('#formMsg');
+  assert.ok(broke.includes('這筆修改會讓其他交易對不上'), `修改買進害賣出不足：${broke}`);
+  await page.click('#cancelEdit');
+  assert.deepEqual(await page.evaluate(() => ['fCode', 'fShares', 'fPrice', 'fDate'].map((id) => document.getElementById(id).value)), ['', '', '', today], '取消修改要清空表單');
+  assert.equal(await page.textContent('#submitBtn'), '加入');
+  assert.equal(await page.isChecked('input[name="side"][value="buy"]'), true);
+
+  // 刪除買進會讓賣出不足 → 確認視窗要提醒
+  dialogs.answers.push(false);
+  await rowOf(page, '2330', 'buy').locator('[data-del]').click();
+  await page.waitForTimeout(100);
+  assert.ok(dialogs.seen.at(-1).includes('注意：刪除後其他交易會對不上'), `刪除提醒：${dialogs.seen.at(-1)}`);
+  assert.equal(await page.locator('.log-table tbody tr').count(), 5, '按取消就不刪除');
+  await rowOf(page, '2330', 'sell').locator('[data-del]').click();
+  await page.waitForFunction(() => document.querySelectorAll('.log-table tbody tr').length === 4);
 
   // 清除金鑰
   await page.click('#aiKeyClear');
@@ -421,16 +525,40 @@ async function dataFailureFlow(browser, baseURL) {
   });
   await page.goto(baseURL);
   await page.waitForFunction(() => document.getElementById('banner').textContent.includes('無法載入每日行情資料'));
+  await page.fill('#cashTWD', '100000');
   await page.fill('#fCode', '2330');
   await page.fill('#fShares', '1000');
   await page.fill('#fPrice', '580');
   await page.click('#submitBtn');
   await page.waitForSelector('#holdingsWrap input[data-manual="TW:2330"]');
+  await page.waitForFunction(() => document.querySelector('[data-stat="cashRatio"] .stat-sub').textContent.includes('100,000'));
+
+  // 全部沒有價格：市值、損益、現金比例顯示「—」，不是 0 或 100%
+  const stat = (id, sel = '.stat-value') => page.textContent(`[data-stat="${id}"] ${sel}`);
+  assert.equal((await stat('marketValue')).trim(), '—', '沒有價格時總市值');
+  assert.equal((await stat('netPL')).trim(), '—', '沒有價格時未實現損益');
+  assert.equal((await stat('cashRatio')).trim(), '—', '沒有價格時現金比例');
+  assert.ok((await stat('cashRatio', '.stat-sub')).includes('1 檔沒有價格'));
+  assert.equal((await page.textContent('[data-stat="dayPL"] b')).trim(), '—', '沒有價格時今日損益');
+
   await page.fill('#holdingsWrap input[data-manual="TW:2330"]', '600');
   await page.press('#holdingsWrap input[data-manual="TW:2330"]', 'Enter');
   await page.waitForFunction(() => document.querySelector('[data-stat="marketValue"] .stat-value').textContent.includes('600,000'));
+  assert.equal((await stat('cashRatio')).trim(), '14.3%', '100,000 ÷ 700,000');
+  await tapTargets(page, '#holdingsWrap .manual-flag', '手機 手動價格清除鈕');
   await noHScroll(page, '資料載入失敗');
   await page.screenshot({ path: path.join(SHOTS, 'phone-5-data-failure.png'), fullPage: true });
+
+  // 重試：資料回來後用每日收盤價（手動價格作廢），代號清單也重新載入
+  await context.unroute('**/data/latest/**');
+  await page.click('[data-action="retry-data"]');
+  await page.waitForFunction(() => !document.getElementById('banner').textContent.includes('無法載入每日行情資料'));
+  await page.waitForFunction(() => !document.querySelector('#holdingsWrap [data-clear-manual="TW:2330"]'));
+  const rec = await readRecord('TW', '2330');
+  assert.equal(parseMoney(await stat('marketValue')), Math.round(rec.close * 1000), '有收盤價就不用手動價格');
+  await page.fill('#fCode', '台積');
+  await page.waitForSelector('#codeList li[data-i]');
+  assert.ok((await page.textContent('#codeList')).includes('2330'), '代號清單載入失敗後可以重試');
   await context.close();
   return { errors, blocked };
 }
@@ -445,11 +573,21 @@ const problems = [];
 const shots = [];
 try {
   console.log(`資料：${path.relative(ROOT, DATA) || DATA}`);
+  // AI 回應解析（不需瀏覽器）：串流途中改由備援模型接手時，文字被 fallback 區塊切開
+  const full = JSON.stringify(CANNED);
+  const cut = full.indexOf('"portfolio"');
+  const fb = { type: 'fallback', from: { model: 'claude-opus-5-5' }, to: { model: 'claude-opus-5' } };
+  assert.deepEqual(parseJsonText([{ type: 'text', text: full.slice(0, cut) }, fb, { type: 'text', text: full.slice(cut) }]), CANNED);
+  assert.deepEqual(parseJsonText([{ type: 'text', text: '{"stocks":[' }, fb, { type: 'text', text: full }]), CANNED);
+  assert.equal(parseJsonText([{ type: 'text', text: '{"stocks":' }]), undefined);
+  const holdingsOf = (n) => ({ holdings: Array.from({ length: n }, (_, i) => ({ code: String(1100 + i) })) });
+  assert.equal(estimateCost('claude-opus-5-5', holdingsOf(3)).overLimit, false);
+  assert.equal(estimateCost('claude-opus-5-5', holdingsOf(40)).overLimit, true, '檔數多時提醒可能超過輸出上限');
   for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['desktop', { width: 1280, height: 900 }]]) {
     const run = await mainFlow(browser, baseURL, name, viewport);
     if (name === 'desktop') {
       await run.page.evaluate(() => { globalThis.__aiCalls = []; });
-      await desktopExtras(run.page);
+      await desktopExtras(run.page, run.dialogs);
       await noHScroll(run.page, 'desktop 額外流程');
       await run.page.screenshot({ path: path.join(SHOTS, 'desktop-5-extras.png'), fullPage: true });
     } else {

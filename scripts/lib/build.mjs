@@ -5,15 +5,19 @@ import { median, round } from './util.mjs';
 export const FUND_KEYS = ['revYm', 'rev', 'mom', 'yoy', 'ytdYoy', 'eps', 'epsPeriod', 'eps4q', 'pe', 'pb', 'yield'];
 
 // Start from the previous fund (so a failed or lagging source keeps its last values) and overlay fresh data.
-export function buildFund(prevFund, { rev, eps, val } = {}, close) {
+// val = { pe, pb, yield, date }: used only when it is at least as new as the close (closeDate); the P/E
+// feeds have frozen on old dates before. eps4q is re-derived only when P/E and close share a date.
+export function buildFund(prevFund, { rev, eps, val } = {}, close, closeDate) {
   const f = Object.fromEntries(FUND_KEYS.map((k) => [k, prevFund?.[k] ?? null]));
   if (rev && (!f.revYm || rev.revYm >= f.revYm)) {
     Object.assign(f, { revYm: rev.revYm, rev: rev.rev, mom: rev.mom, yoy: rev.yoy, ytdYoy: rev.ytdYoy });
   }
   if (eps && (!f.epsPeriod || eps.epsPeriod >= f.epsPeriod)) Object.assign(f, { eps: eps.eps, epsPeriod: eps.epsPeriod });
-  if (val) Object.assign(f, { pe: val.pe, pb: val.pb, yield: val.yield });
-  // TWSE/TPEx P/E = close / trailing four-quarter EPS, so this recovers 近四季 EPS.
-  f.eps4q = f.pe > 0 && close > 0 ? round(close / f.pe, 2) : null;
+  if (val?.date && (!closeDate || val.date >= closeDate)) {
+    Object.assign(f, { pe: val.pe, pb: val.pb, yield: val.yield });
+    // TWSE/TPEx P/E = close / trailing four-quarter EPS, so this recovers 近四季 EPS.
+    if (val.date === closeDate) f.eps4q = val.pe > 0 && close > 0 ? round(close / val.pe, 2) : null;
+  }
   return Object.values(f).some((v) => v != null) ? f : null;
 }
 
