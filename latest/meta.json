@@ -1,0 +1,275 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-10-16T16:37:40Z",
+  "tw": {
+    "asOf": "2026-10-16",
+    "nextTradingDay": "2026-10-19",
+    "holidayNote": "",
+    "upcomingHolidays": [
+      {
+        "date": "2026-10-26",
+        "name": "臺灣光復暨金門古寧頭大捷紀念日"
+      }
+    ],
+    "index": {
+      "taiex": {
+        "date": "2026-10-15",
+        "close": 46969.87,
+        "change": -1655.96,
+        "changePct": -3.41
+      },
+      "tpex": {
+        "date": "2026-10-16",
+        "close": 400.26,
+        "change": 3.36,
+        "changePct": 0.85
+      }
+    }
+  },
+  "us": {
+    "asOf": "2026-10-15",
+    "nextTradingDay": "2026-10-16",
+    "holidayNote": "",
+    "upcomingHolidays": [],
+    "index": {
+      "spx": {
+        "date": "2026-10-15",
+        "close": 7744.06,
+        "change": 25.12,
+        "changePct": 0.33
+      },
+      "ndx": {
+        "date": "2026-10-15",
+        "close": 29935.6,
+        "change": -15.22,
+        "changePct": -0.05
+      },
+      "sox": {
+        "date": "2026-10-15",
+        "close": 11581.21,
+        "change": -103.17,
+        "changePct": -0.88
+      }
+    }
+  },
+  "fx": {
+    "USDTWD": 32.3603,
+    "date": "2026-10-16",
+    "source": "ExchangeRate-API（open.er-api.com）"
+  },
+  "news": {
+    "tw": [
+      {
+        "title": "台股暴跌1655點後反彈263點！分析師示警「2件事」千萬別做",
+        "link": "https://news.google.com/rss/articles/CBMi2gJBVV95cUxOU1podVdQR2htcTBqdUFWS1E4YUhfYmpxbUNHclZsSkpFQmZWSjlDZGZLZGRsWURpdkpqVEpRN3lpUVJSbmRRSFdURXJNalRQYk15dkE0WWlOd3B4bndYdUd4T0ppNUxia1Q2ZF95ZkN0UXc2X1FxYlVXWWtOMkE3bGliUXJGQVFqZDhIQXMzVXFabGttc2E1ODBRU1hpYUExWExHWnV4TkdyQmhsOWRudmpmWTN3dGQyS1d6Z0xvX0xnN0JtU004SHpCcVFydDZRVFJEZndfbFdzTFB1VnRjWm15VEZFTTcwZzVYVlhQWWJlUExJMnlSZmFrSVBCWjNQcWV3VjgwQV9nZGhZNEJwdmZxUXpTQzduc3NocUtUMWlMSjZ4c3h5RlJBRVpsUGFmSFU4QjF6S1FKclJrSW9QdzdWNlJrSVhNMUlzYkd1NjZ2ckR4REJ2N0R3?oc=5",
+        "source": "Yahoo股市",
+        "pubDate": "2026-10-16T05:20:00Z"
+      },
+      {
+        "title": "台股重新站回47000點 外資賣超台幣走弱收32.3元",
+        "link": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE5OUUVOUTMxdWNzMGRzamptYldaQUZEZkppek1iZTBCNWhWeUVqbmlvYWtGeWFFQXFWRDFhdk9zeEVqM0Y4NFZXZVM5dUN0LWM?oc=5",
+        "source": "你的公共電視",
+        "pubDate": "2026-10-16T12:30:07Z"
+      },
+      {
+        "title": "台股下週小心？台積電ADR又跌了 台指期夜盤一度狂殺逾500點",
+        "link": "https://news.google.com/rss/articles/CBMiX0FVX3lxTE1Uek9lU2laS2FhVlFQeUg0dV8wY2FSRTNOTkhEaEhvaDdIYWZTR2lYb1RxUF9CYjluY0t6NXJUYUJGMXA0SUp0c2dyVWIyNURUdEZRMXhwYXFMWG5ORlFn0gFkQVVfeXFMT1JGUlM4RXhJZjlrUUV1SjBNdnY5Q0JoOVExUVpJellYYnZPQTFMbHZWRFlFamFfNm9yN2VLb192OHZiWDlhVTNMMENyenN6Mmk4VlVoQVN5OG4wOHpLY1ZYT01mSA?oc=5",
+        "source": "自由財經",
+        "pubDate": "2026-10-16T14:46:16Z"
+      },
+      {
+        "title": "「別擔心沒發生的事！」分析師看好台股中短期爆發力 不必杞人憂天",
+        "link": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE9LLVRFWUtDaG8tUENxTGZITU1uZUUtNkV5akg2MElkaGF4cXpVX09kZDlZbi1aUVYwOUhOU0N5QUJ3TTZYWTY2QlpMNnJYU2JlYlZJQ2pFVkowYWRY0gFiQVVfeXFMUEVtUkJNTV85R2VFZlpwczM1MkNTQzJKWnVoRjBLNWVybHlzZVlpQS13VGJXYVpnNmxqMkpDUjBsRU15a3gzamdWclZYXy1mSmlLeXdrcng5R1NucmR5M2xyaWc?oc=5",
+        "source": "經濟日報",
+        "pubDate": "2026-10-16T11:43:47Z"
+      },
+      {
+        "title": "台股跌破關鍵支撐！第四季誰能逆勢飆？",
+        "link": "https://news.google.com/rss/articles/CBMiS0FVX3lxTE1qLUtHSm1fZVRCOVdnZFByWEJzOFFTemxIWXNxQWNIQkVGNHU3WUl0a2ZiRHpZQ1dkVnRDVE90N1ZIZVpPTmhBT191NA?oc=5",
+        "source": "鉅亨網",
+        "pubDate": "2026-10-16T09:39:33Z"
+      },
+      {
+        "title": "AI基本面支撐 台股震盪後重返信心指數關卡",
+        "link": "https://news.google.com/rss/articles/CBMirAFBVV95cUxNSzZ2NC1hODM2T1ZlNXlFUk5WSEEyaV9aeGs3clU5T1dnUDF0U1ZDTlBHcG9nWEdGYTh2amNLdVhROGRtVVR1djBsV3M3VTJoSnYwcGU5UHY1STFIdXpqanNHTUdzSGFOQlpzRUhTRkN5a0ZRLVFZcXB4d3lJaTQyTTNZOFFRMWxWUFhxNHgzV2szLUxEOUZaYW1LSmFHVF9lemdmZnB1UnRDbGlZ?oc=5",
+        "source": "tw.allianzgi.com",
+        "pubDate": "2026-10-16T11:19:24Z"
+      },
+      {
+        "title": "彭博：基金經理人怕錯過台股熱潮離職轉往私人投資公司操盤| 產經",
+        "link": "https://news.google.com/rss/articles/CBMiXkFVX3lxTE9faThCaUNSclFtd01OZFdVYkF5ZnRqUkppbWRFSDg5TkIweS1KcnhUeWx1ejBBYWk4LUFJaGZWeURreEh3RVUzeEVRTTdVSGJTS2MwdTdtOHV1Y3NoUkE?oc=5",
+        "source": "中央社 CNA",
+        "pubDate": "2026-10-16T13:36:00Z"
+      },
+      {
+        "title": "台股重挫後反彈！5大金控獲利全出爐 「這檔」年增逾1倍卻遭冷落",
+        "link": "https://news.google.com/rss/articles/CBMijgNBVV95cUxPeFZ4Mm5HSzE4c1hjNEJmVWJhRTRNeEdxTU1XNW5sTVc2S20yenlHYS1qeUVuWUdhVEpyVGZkN0dvZm1ZMkFIaXdSekZDdkhpRDd4dWFWN0cwR0thakJxSElEN2VBdWdRTzU0OWFSRlR0bHE1b2hzSkFJa1otTmRsU1FwNnZnVkx6akJDbnRHUUM2MGw4aDI3VGhxV1pqeDZOUmJTZEktdkhRU3JfQ1lkMklJUGdnWlVzU2VHZFkwdDJqRTRGVUlaalM5Q2VwU3I1bU1SQ3pNX0JRUFE4NzlEVF9vQ1h3aGFMQ2FjWTZXMTNkeVNsN0pXTkt2LVZTcWlaZ0ljbFRnMEhULW9mUzEtWGQxd19lWUZlYjlFak1hemFySXdUSTRyWjNFTzZNb21WbDI5Z1BNeFJhYTNIcHhfcHQ4ZUZHX3h2NVdXUHMxZHZTMUg3VnhjSFktVUt5dGw5ZXE3OXlBX3NVNVlpN2FUU2gzWTNFSVhPTjlYYVY3MlNKb3l2UUJVZnRadGFZZw?oc=5",
+        "source": "Yahoo股市",
+        "pubDate": "2026-10-16T04:47:31Z"
+      },
+      {
+        "title": "台股淪提款機…外資連8日賣超今調節台積電2.2萬張| 股市要聞| 股市",
+        "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE5La3ZjRW1BX0lLU3hZRTItV1EtVGNreTgxemN3R3cxMzJHSFZFcjRzTFVMMWR3ZDBVMmNjSXlTRFJnNjBFNGZGLVNpWXdzU0VS?oc=5",
+        "source": "UDN",
+        "pubDate": "2026-10-16T11:09:45Z"
+      },
+      {
+        "title": "台股6天狂殺3000點！ 杜金龍喊買「這5檔」絕佳買點曝光",
+        "link": "https://news.google.com/rss/articles/CBMiywJBVV95cUxQZWN0Y093RTN6TlV6ZkJHQXQyRDBfSDRuVWQ1TWpFTnBzMTM0MW5PeHYtVjRsSllIYm53WmVVZGM5SGlwUFJyUnVJN1Z4MTExRklBZndzYjMzTDdFbUE4LXJEc1A2bHYtdzlmcmZKb2pDWDNWc3otVGFvSWVHOUo3RkFDTVNmQ1Uyb0o2bWtZYnN6eFo3b2kxRGdRVGJDQ2hsLTBwY1hNaFJtcS1fQjF5RjNLWm0zbDNwVFlvX0pSODl0U0FrRUVtZVdlOUwxVXc4QVhQdFYtb3ptRVNKb05XaDBMNWszb05mQm5rOGNJelk5cWZhQmdaQVNNNUZsazY3d1hsTDZ5M1RENjdjcmU5djlOeTNMR05nV1V0MnFvSkdrQjFQaEt6NGM4YTRzYkFJSkRFelVCNmJQMWVNcTVVcXdWNFA1T2RoQThv?oc=5",
+        "source": "Yahoo股市",
+        "pubDate": "2026-10-16T05:01:00Z"
+      },
+      {
+        "title": "【Hot台股】台股絕地反彈500點後消風...網歎「又套一批新鮮韭菜」 分析師：別輕易追高",
+        "link": "https://news.google.com/rss/articles/CBMiiARBVV95cUxOQ3hXMmxsbjZ1Wk5zcklNUkVvMEhVQlpqTl8tRmRoa3FPbFYydGtlR296a2s0anVZR09WR1dvRHVjYzlVSWJDSWFnZFh1LUNYSU1UbXRyZTczcEhNWHF0RWkxNEFla2hVbm9qNVNLZHJvZksweC11amhsVXptOFBIbGFCN1phbkg1UHFDWFRkRlFDV2FuUTVlbUFYNlpMSFpES1NMUWRPRUtwQ25vbzh0bXQ3M3ZYdG1KX2dLSjliX1dXR2lsQURNMUR5UG5DNUNSc3Y5YjlVRVZKSmtJMG8xQUhTdFVEOGZKdXBJd0d2RUx3c3NiSFNySHdqay0xXzdyT0kybllIWVljQ244OXhJZk52Ymoyd2JqMVRBTEpCalZGcVd3dW44SVBxdHBBRmU3a3dURFpwTExXMzdpcWFlWFU4d1VKQlgwd3ZFa1dXdHE4cnFjeDlqcVRoV2pTVnpiOE5nTGVhbkJfMnhYQ21rQmdUWGZRYUQ3V1pMa0R5NjVHX1J1WXJwcnVtelhOandDOFNWcVVJbDJ5ekxTdXgtSHg0RnplYnVEajZ4eEVvT0h5MXVJeEpDd2E3TFBaMkRWR0I1SlBWdDJyVWZ4TXJlSXMzUW82WWk0ZldEUVdBMXZuNjBSQVZmRTBMNzRDblBXaHctcHM3eVZJWExjM29NOEtwbFZDa2tj?oc=5",
+        "source": "Yahoo股市",
+        "pubDate": "2026-10-16T03:51:03Z"
+      },
+      {
+        "title": "台股崩跌1655點摔破47K！杜金龍逆勢加碼「這2檔」 下一波進場時間曝光",
+        "link": "https://news.google.com/rss/articles/CBMiiwNBVV95cUxQSHJFS1l2dWNESERKVTViMDNJT2w1ZkQ0bEhkY1p6YXFpS3NyZVNOR1JvaS1jSG5xbFNacnRGYkJEREpCV0NTN05sUmRTZDFpMjlBX3FtWUV1YkVueGxlTjN0dDd6cC1JY29iZjIwMjlrbXM2M2ktdnpPcGI0RVR1elptMmsxdnozc1EwNUhXeU9kQ1FBcWczdGxwSmhISE4yMGpNRmozYVhsOUlhSzEyVHhvOF8xMkcxRjc2UjJIUDZLZDBRcVZfSGs4MHEwZHZ3dFd2UVB2bUpxdk1aQUZCTTIxRFdFQ0N6M0Zvajd0UUd2V0xRUUVjUmd5UW9yMFRZZ2FHRE10d1RIZ3JPUVZWQ3JUNW9tS2tZWTlHbE9UZmlUdUNYaEhaejhiOUNSZWNlRVFHS0V5Y2dGQnVwa1E3R1Z5VGcwZGdEN184SXB6TDFoTlFwcTVMcDRTLWFnTlpCQUtOVWMwemlZTTNaUDU1cmxQQ2pyMW90Mzg0WF90ZkJyXzRSVWkxVGdEMA?oc=5",
+        "source": "Yahoo股市",
+        "pubDate": "2026-10-16T03:58:50Z"
+      }
+    ],
+    "us": [
+      {
+        "title": "Wall St Week Ahead As AI rally wobbles, stock market's spotlight turns to earnings",
+        "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxNR0cyVkR4czJqcmtMVHU0c21pVnRHR1h1Q3VFRUdyX1FtSzg1alVJSFRqSmI0al95bGpvRkJpRG1EUy14djN1Y2xWXzlfVC04X2xIcUt4QkROSTR6V01la3plVWVhX202alJTYmhJSXIxQTJrM3VyTVZOVXhmWExqYVFWMVJQWUt3X3VUb0loWEp1SmphZ3E4MDVXS0ZZX3dkSThsTFAtMmEzRHpHMzFxTWhrblZQZFRoT1lFdXN5X3M5Y0dUQ0I5bzBR?oc=5",
+        "source": "Reuters",
+        "pubDate": "2026-10-16T10:03:39Z"
+      },
+      {
+        "title": "Indonesian Stocks Plunge as MSCI Threatens to Drop Market from Indexes",
+        "link": "https://news.google.com/rss/articles/CBMifkFVX3lxTE80RVBxa1dIdzVrRHhvanBmT1hMMnlkU2phYUtlV09sM1RUNzEwWHRhYVhjMV95dEJBS3pUSlo1a09mMzk3emxuM2lWLXpfSFQxbFJQRVFGbmxZTl8wRWFtLW5NdEl0QkZva2xzc0JzSk92bFRVLXBCMjQ3aU1BZw?oc=5",
+        "source": "The New York Times",
+        "pubDate": "2026-10-16T13:03:05Z"
+      },
+      {
+        "title": "The stock market has already crashed: Why a Wall Street veteran says Nike is the ultimate turnaround trade.",
+        "link": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxOLXM3eExuTjFRbUZsQVNrS2pSem1haWFELVVaNDRhOGpSNHNYdVYyb2NRZjZ1anZ1X2JOenN2c1FRYi1RYk5SeGo5S1hUY2pYR3VqZjdTVXp0dFBSSTZsYnM3S1I3UXFoQmVkMmVBZUtWQ0ZjZnJ4cHZrWEYzRFlleC0wN3hSLVY2MDM5MUpTb1BpSmtuSEpYZG1BdDJkMVhMMERVVHc5ZXV4UDlEVlNablVEX2tCZXA4MmZoWFl2V1pCczZlLTd4aDNJWkgtN3k1VkN5bW84V2lzQjVCMjFGNzB3?oc=5",
+        "source": "MarketWatch",
+        "pubDate": "2026-10-16T14:28:00Z"
+      },
+      {
+        "title": "Circular Financing Arrangements, Mounting Risky Debt, and Increased Stock Market Exposure: The AI Bubble is Primed to Pop",
+        "link": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxObkFpZElkVFl6RzlxLWd6QkFzekE3Q2hFS3E0eGhFNGJfbVd4azJfV2RnWThZUlNTR3lnU0hZMERqVzFJU1JSWmRxWm5NR3hLanBySDBnTzdOTEFEQW95VU5vb0VQdEJBMGM5aGpVRHQ1ZTNJVVljOXByU2Q3NW1oTlNicXJ3V2h1?oc=5",
+        "source": "Open Markets Institute",
+        "pubDate": "2026-10-16T13:37:50Z"
+      },
+      {
+        "title": "China Moves to Prop Up Stocks With Selling Curbs, Buybacks",
+        "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxPLXFjTzZJR2E1cXptcmdTVkNvblRnZ0U1Q1pHdUpSMzBVWGtIbGszeHVjMGJBYWZ1MldIM0RHY3g4VUVRREIwV01qR0lvWER4bVh0OTR1QlRrb09aUjhEcF9xRllwal8zcWtjWkFIbVJMXzNSTkZjam13ZVNBeGZDOENLdWgwREhjTlRVVUQ1YzBURThCeXJzLWVIZHJEb0NydktJcldJRlZvN2xCSmRPMlF2YUE?oc=5",
+        "source": "Bloomberg.com",
+        "pubDate": "2026-10-16T07:22:02Z"
+      },
+      {
+        "title": "A hidden risk appears to be building up in the markets. No one knows exactly what it means",
+        "link": "https://news.google.com/rss/articles/CBMif0FVX3lxTE5vU2VmSTB3cGpxdUU2Z29lRnFBQkFFTU5EOFJ2bGRydVp0T2NlVjNWeS1ieUlOamt1ZXJKQ1g3RTl1aFBzQVlPcVpFM1FhN2tkUllZeHhDeGk5UF90eW5jbVd0c1FjUUdNejAzWGZCeFZXY2JNVUFvZEVLVkwxUWs?oc=5",
+        "source": "CNN",
+        "pubDate": "2026-10-16T09:00:45Z"
+      },
+      {
+        "title": "Tesla's Roadster reveal, Apple and Meta team up, Nike's India push and more in Morning Squawk",
+        "link": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxQMTBvdG94Q3JaMjlnWERTNFZUbVl3UFJRcGZ0VUE3Z21zMUJGUTZfeVlCV0hlUzd2ejZYYVAxekdfajRjMy15SmRldzdTa29jVmFaN1k2bnJsempKMElxTzR2M21yZXZpTXQzRmJwRHpCM21HYmpUVGQtYlNIYXI2VElOZlBfb1gzck040gGQAUFVX3lxTE02cktiaTMtbnd5VE1pZ0tKTEEyeDlrZVg5cGh6V28wZnFrNnJVSGRxUVozbUpOSmFBbWtzTWNQZ2k5aGRwNFpEMVpBN1BiOVc5NU44aHBJdnNsekVnQy1nYlFLMVZ5dkhGZkRDUmF1WVJPYk5Oakw5akZSRkF6N043UWhEVkJMalNtVjVwcGVaRg?oc=5",
+        "source": "CNBC",
+        "pubDate": "2026-10-16T12:38:58Z"
+      },
+      {
+        "title": "Why CoreWeave, Nebius, and other neocloud stocks are being pounded: Goldman Sachs explains",
+        "link": "https://news.google.com/rss/articles/CBMi5gFBVV95cUxOd0gxUGdTZDVwQUJOYXY2SkFLb3NIVHZUSW5wSGNocnZhS0VwZmY3d2sxaUxEb1UzLUhPYzdvMnd5b0tqVXZLTlFzN0pQWHFGX1BYRnlnMFhoQlI2d01reFh6cEZEVXdicF9FTlZTX1lMcjJMWFhyU1N3eFpJbXVPdnZUQzF5LXkzaXFpUGV5TFltTVZiRmdNeVZfUW9ic0pmcEgtU1AwZXFvVk1qLW9KRTMyY1YtTmtaU21tUEYzNW93VzZtTnUwZHRMelpqWUdSQXF1dVJyd1Z4eDVGVnZBR1lfUHFHQQ?oc=5",
+        "source": "Yahoo Finance",
+        "pubDate": "2026-10-16T12:57:30Z"
+      },
+      {
+        "title": "Indonesian stocks sink most since 1998 on MSCI downgrade warning",
+        "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxPTGZDclBEV0w3ZFJ3bE8tckwwTE1YTXBXTG1GdGNfN2Vkb1BsaXFoZVo1QUF4YUhzanBOM05HNmR6X1gyalBGR05HQk5NM1VhY0VGbUhqb0dIN2txQklscWtMaVd3MVE3QTdISTRVbDZXdEpXa25EUHpZejdrZ1ozdFlOOTBBT2VfT3VFcmh5UmpjRWFoelZTUEZKOTl5UEhrc1dpWVQ3ZUpMd1NmVE8ybA?oc=5",
+        "source": "Reuters",
+        "pubDate": "2026-10-16T02:40:00Z"
+      },
+      {
+        "title": "Futures Mixed; Tesla Flies As Anthropic Value Questioned",
+        "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxQeEU2WGRpRzlyZGptcTdpR19RN2d5WVNxWWt6MnlPWEowaTdIdVc0enNEb1ZxbDlHWXNGaVFjT2dJa3cwT1h1SHlJbEVUWXV2WGY0WXhSaW56a0hqX2NyWkJ6R0tFQnJINHlJQnRDX0EyVll3Yzl5TWV5YUZyS3p4WXhKcmZnSkRCWVRiQWlERENCcDllTU1xUjJLaDAzT01SX2lRM1hIcUdDNURsa05mTQ?oc=5",
+        "source": "Investor's Business Daily",
+        "pubDate": "2026-10-16T12:30:00Z"
+      },
+      {
+        "title": "A stock-market ‘sell’ signal has been silenced — but these Bank of America strategists say it’s too early to buy",
+        "link": "https://news.google.com/rss/articles/CBMi5AFBVV95cUxNOEJRRWIyaXdhMzVqN25zVlByUGd5ZVM2X0VVT2RpMXZZUkpQd2Q1WVlTQjQzdFAxbW1SSG56a2xTS04tSWtKaVM2ZHJaWmdvbzFLYXJuOGNEeC1iZ3M3TENVWnkyajJvWkxRRkhvVWpzSG9iZEZmMHhRM09rcTVrV0ZMR09DSVpJa0M5dWI1Si1fODYyaHhPLTh4RGdwUEFPMG1iaVdpbE85WXdSNnZhWWlCMk1pNlV5cXpDRk5VZkl3aTU2NUVZMkNzWDdVU2p0aV9seEREYlF2N3pkMEhVTWpLcEc?oc=5",
+        "source": "MarketWatch",
+        "pubDate": "2026-10-16T14:14:00Z"
+      },
+      {
+        "title": "European stocks rise, dollar set for weekly loss after yields drop",
+        "link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxPMUpLRUNwWEpRNVpNVWJPOWQyQXdKRjkzdTU5RjFiOUxpUFZGU1ZBa1VaS3ctN0xlc0lSMkptbUVMRlprcFFtZ3B6Z2ZFTG5XX2FBUHBoSk4xRTdiQm1ucERORXE4ZzNFZ09ySlpvUDlzb0tGUjFQZ3c0UmotdEstMEZCUQ?oc=5",
+        "source": "Reuters",
+        "pubDate": "2026-10-16T02:52:00Z"
+      }
+    ]
+  },
+  "industryPe": {
+    "TW:光電業": 28.03,
+    "TW:其他": 14.78,
+    "TW:其他電子業": 23.9,
+    "TW:化學工業": 20.55,
+    "TW:半導體業": 30.81,
+    "TW:塑膠工業": 17.17,
+    "TW:居家生活": 12.57,
+    "TW:建材營造": 10.36,
+    "TW:數位雲端": 19.7,
+    "TW:文化創意業": 16.59,
+    "TW:橡膠工業": 14.79,
+    "TW:水泥工業": 13.36,
+    "TW:汽車工業": 16.04,
+    "TW:油電燃氣業": 18,
+    "TW:玻璃陶瓷": 49.94,
+    "TW:生技醫療業": 15.98,
+    "TW:紡織纖維": 14.3,
+    "TW:綠能環保": 17.87,
+    "TW:航運業": 11.64,
+    "TW:觀光餐旅": 14.42,
+    "TW:貿易百貨": 16.69,
+    "TW:資訊服務業": 15.41,
+    "TW:農業科技": 18.02,
+    "TW:通信網路業": 27.75,
+    "TW:造紙工業": 17.67,
+    "TW:運動休閒": 12.79,
+    "TW:金融保險業": 13.56,
+    "TW:金融業": 5.69,
+    "TW:鋼鐵工業": 13.77,
+    "TW:電器電纜": 13.43,
+    "TW:電子通路業": 12.5,
+    "TW:電子零組件業": 31.07,
+    "TW:電機機械": 20.96,
+    "TW:電腦及週邊設備業": 18.08,
+    "TW:食品工業": 16.9
+  },
+  "events": [
+    {
+      "date": "2026-10-26",
+      "title": "臺灣光復暨金門古寧頭大捷紀念日休市（台股）"
+    },
+    {
+      "date": "2026-11-10",
+      "title": "10 月營收公布期限（台股）"
+    },
+    {
+      "date": "2026-11-14",
+      "title": "第 3 季財報公布期限（台股）"
+    }
+  ],
+  "status": {
+    "twse_quotes": "stale",
+    "tpex_quotes": "ok",
+    "t86": "ok",
+    "margin": "ok",
+    "revenue": "ok",
+    "eps": "ok",
+    "pe": "ok",
+    "us_quotes": "ok",
+    "index": "ok",
+    "history": "ok",
+    "fx": "ok",
+    "news": "ok"
+  }
+}
