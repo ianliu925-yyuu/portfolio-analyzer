@@ -1,0 +1,4 @@
+# Check out LF everywhere: tests compare fixtures byte for byte and run workflow steps through bash.
+* text=auto eol=lf
+# The Bank of Taiwan CSV fixture keeps the CRLF endings of the real download.
+scripts/test/fixtures/fx/bot_day.csv -text
