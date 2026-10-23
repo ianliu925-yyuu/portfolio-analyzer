@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { computeChips, computeHist, mergeBars, mergeChip } from '../lib/history.mjs';
+import { chartSeries, computeChips, computeHist, mergeBars, mergeChip, packCharts } from '../lib/history.mjs';
 
 const day = (i) => `2026-01-${String(i).padStart(2, '0')}`;
 const series = (n, close = (i) => i, volume = (i) => i * 1000) =>
@@ -24,6 +24,25 @@ test('mergeBars de-duplicates by date; the preferred side wins and its nulls are
   assert.deepEqual(mergeBars(existing, incoming, { prefer: 'existing' })[1], [day(2), 11, 110]);
   assert.deepEqual(mergeBars(existing, incoming, { max: 2 }).map((b) => b[0]), [day(2), day(3)]);
   assert.deepEqual(mergeBars(undefined, [[day(5), 1, undefined]]), [[day(5), 1, null]]);
+});
+
+test('chartSeries keeps [date, close] up to the record date and drops volume and empty closes', () => {
+  const bars = [[day(1), 10, 100], [day(2), null, 200], [day(3), 12, null], [day(4), 13, 300]];
+  assert.deepEqual(chartSeries(bars, day(3)), [[day(1), 10], [day(3), 12]]);
+  assert.deepEqual(chartSeries(bars), [[day(1), 10], [day(3), 12], [day(4), 13]]);
+  assert.deepEqual(chartSeries(undefined), []);
+});
+
+test('packCharts shares one date list per bucket and aligns closes to it', () => {
+  const packed = packCharts({
+    2330: [[day(1), 10], [day(3), 12]],
+    2317: [[day(2), 5], [day(3), 6]],
+  });
+  assert.deepEqual(packed, {
+    dates: [day(1), day(2), day(3)],
+    closes: { 2317: [null, 5, 6], 2330: [10, null, 12] },
+  });
+  assert.deepEqual(packCharts({}), { dates: [], closes: {} });
 });
 
 test('computeHist on 25 bars (closes 101..125, volumes 1000..25000)', () => {

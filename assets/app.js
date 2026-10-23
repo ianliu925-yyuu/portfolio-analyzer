@@ -5,7 +5,7 @@ import {
 } from './fees.js';
 import { buildHoldings, valueHolding, summarize, holdingKey, normalizeCode, sessionPosition, realizedByYear } from './portfolio.js';
 import { RULES, ACTIONS, analyzeHolding, analyzePortfolio, industryPeFor, levels } from './rules.js';
-import { loadMeta, loadIndex, loadRecords, searchIndex, findInIndex, hasFailedBuckets } from './data.js';
+import { loadMeta, loadIndex, loadRecords, loadChart, searchIndex, findInIndex, hasFailedBuckets } from './data.js';
 import { MODELS, DEFAULT_MODEL, modelInfo, buildPayload, estimateCost, runAnalysis } from './ai.js';
 import { fetchStockNews } from './news.js';
 import { dataFreshness } from './freshness.js';
@@ -285,6 +285,7 @@ const state = {
   alloc: ui.alloc === 'industry' ? 'industry' : 'stock',
   openCards: new Set(),
   knownCards: new Set(),
+  charts: {}, // 'TW:2330' → [[date, close], …]，null = 沒有走勢資料；未載入時沒有這個 key
   editingId: null,
   model: null,
   ai_running: null,          // AbortController
@@ -822,6 +823,7 @@ function renderCards(model, rows) {
         </span>
       </summary>
       <div class="sc-body">
+        ${blockChart(key)}
         ${blockQuote(r, rec)}
         ${blockScale(r, a)}
         ${r.market === 'TW' ? blockChips(rec) : ''}
@@ -876,12 +878,141 @@ function layoutScale(el) {
 }
 const layoutScales = () => document.querySelectorAll('details[open] [data-scale]').forEach(layoutScale);
 
+// ---------- 走勢圖（近一年收盤＋價位刻度虛線） ----------
+
+const CHART_LINES = [['cost', '成本', 'cost'], ['support', '支撐', 'support'], ['resist', '壓力', 'resistance'], ['stop', '停損', 'stop']];
+const CHART_H = 240;
+const CHART_PAD = { top: 32, right: 96, bottom: 22, left: 46 }; // 上方 32px 留給滑過時的提示框
+
+function blockChart(key) {
+  return block('走勢', html`<div class="pchart" data-chart="${key}"><p class="muted">載入中…</p></div>`,
+    { wide: true, note: '近一年收盤・虛線為價位刻度' });
+}
+
+// 1、2、5 × 10^k 的刻度；少於 3 條就把步距減半再算一次。
+function niceTicks(lo, hi, count) {
+  const raw = (hi - lo) / count;
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 5, 10].map((m) => m * mag).find((s) => s >= raw);
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(Number(v.toPrecision(12)));
+  return out.length < 3 && count < 16 ? niceTicks(lo, hi, count * 2) : out;
+}
+
+// 參考線標籤依 y 由上往下排，間距至少 gap；超出底部就整排往上推。
+function spreadLabels(items, gap, min, max) {
+  const s = [...items].sort((a, b) => a.ly - b.ly);
+  for (let i = 0; i < s.length; i++) s[i].ly = Math.max(s[i].ly, i ? s[i - 1].ly + gap : min);
+  for (let i = s.length - 1; i >= 0; i--) s[i].ly = Math.min(s[i].ly, i < s.length - 1 ? s[i + 1].ly - gap : max);
+  return s;
+}
+
+const drawCharts = () => document.querySelectorAll('details[open] [data-chart]').forEach(drawChart);
+
+async function drawChart(el) {
+  const key = el.dataset.chart;
+  const [market, code] = key.split(':');
+  if (!(key in state.charts)) {
+    const series = await loadChart(market, code);
+    state.charts[key] = series;
+    if (!el.isConnected) return; // 等待時畫面重畫過，新的元素會自己畫
+  }
+  const series = state.charts[key];
+  if (!series) {
+    setHtml(el, html`<p class="muted">沒有走勢資料（每日資料還沒有這檔的歷史收盤價）。</p>`);
+    return;
+  }
+  const W = el.clientWidth;
+  if (!W) return;
+  const lv = state.model?.analyses[key]?.levels ?? {};
+  const lines = CHART_LINES.map(([k, name, f]) => ({ k, name, v: lv[f] })).filter((m) => isNum(m.v) && m.v > 0);
+  const closes = series.map((s) => s[1]);
+  const vals = [...closes, ...lines.map((m) => m.v)];
+  let lo = Math.min(...vals);
+  let hi = Math.max(...vals);
+  const pad = (hi - lo) * 0.06 || hi * 0.05;
+  lo -= pad;
+  hi += pad;
+  const P = CHART_PAD;
+  const iw = Math.max(W - P.left - P.right, 40);
+  const ih = CHART_H - P.top - P.bottom;
+  const n = series.length;
+  const x = (i) => P.left + (i / (n - 1)) * iw;
+  const y = (v) => P.top + (1 - (v - lo) / (hi - lo)) * ih;
+  const path = series.map((s, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(s[1]).toFixed(1)}`).join('');
+  const ticks = niceTicks(lo, hi, 4);
+  const xLabels = [0, Math.floor((n - 1) / 2), n - 1].map((i) => ({ i, t: series[i][0].replaceAll('-', '/') }));
+  const labels = spreadLabels(lines.map((m) => ({ ...m, ly: y(m.v) })), 14, P.top + 4, P.top + ih);
+  const hiI = closes.indexOf(Math.max(...closes));
+  const loI = closes.indexOf(Math.min(...closes));
+  const desc = `${series[0][0]} 到 ${series[n - 1][0]} 收盤由 ${fmtNum(closes[0], 0, 2)} 到 ${fmtNum(closes[n - 1], 0, 2)}，`
+    + `最高 ${fmtNum(closes[hiI], 0, 2)}（${series[hiI][0]}），最低 ${fmtNum(closes[loI], 0, 2)}（${series[loI][0]}）`
+    + `${lines.length ? `；${lines.map((m) => `${m.name} ${fmtNum(m.v, 0, 2)}`).join('、')}` : ''}`;
+
+  setHtml(el, html`<svg class="pchart-svg" width="${W}" height="${CHART_H}" viewBox="0 0 ${W} ${CHART_H}" tabindex="0" role="img" aria-label="${code} 走勢：${desc}。可用左右鍵逐日查看。">
+      ${ticks.map((t) => html`<line class="pchart-grid" x1="${P.left}" x2="${P.left + iw}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}"></line>
+        <text class="pchart-axis" x="${P.left - 6}" y="${y(t).toFixed(1)}" text-anchor="end" dominant-baseline="middle">${fmtNum(t, 0, 2)}</text>`)}
+      ${xLabels.map((l, k) => html`<text class="pchart-axis" x="${x(l.i).toFixed(1)}" y="${CHART_H - 6}" text-anchor="${k === 0 ? 'start' : k === 2 ? 'end' : 'middle'}">${l.t}</text>`)}
+      ${lines.map((m) => html`<line class="pchart-ref mk-${m.k}" x1="${P.left}" x2="${P.left + iw}" y1="${y(m.v).toFixed(1)}" y2="${y(m.v).toFixed(1)}"></line>`)}
+      <path class="pchart-line" d="${path}"></path>
+      ${labels.map((m) => html`<g class="pchart-label"><rect class="mk-${m.k}" x="${P.left + iw + 6}" y="${(m.ly - 4).toFixed(1)}" width="8" height="8" rx="2"></rect>
+        <text x="${P.left + iw + 18}" y="${m.ly.toFixed(1)}" dominant-baseline="middle">${m.name} <tspan class="v">${fmtNum(m.v, 0, 2)}</tspan></text></g>`)}
+      <line class="pchart-cross" y1="${P.top}" y2="${P.top + ih}" visibility="hidden"></line>
+      <circle class="pchart-dot" r="4" visibility="hidden"></circle>
+    </svg>
+    <div class="pchart-tip" hidden></div>`);
+
+  const svg = el.querySelector('svg');
+  const tip = el.querySelector('.pchart-tip');
+  const cross = svg.querySelector('.pchart-cross');
+  const dot = svg.querySelector('.pchart-dot');
+  const cost = lv.cost;
+  let cur = null;
+  const show = (i) => {
+    cur = Math.min(Math.max(i, 0), n - 1);
+    const [d, c] = series[cur];
+    const cx = x(cur).toFixed(1);
+    cross.setAttribute('x1', cx);
+    cross.setAttribute('x2', cx);
+    dot.setAttribute('cx', cx);
+    dot.setAttribute('cy', y(c).toFixed(1));
+    cross.setAttribute('visibility', 'visible');
+    dot.setAttribute('visibility', 'visible');
+    const vsCost = isNum(cost) && cost > 0 ? (c / cost - 1) * 100 : null;
+    setHtml(tip, html`<span>${dayLabel(d)}</span><b>${fmtPrice(c, market)}</b>${isNum(vsCost) ? html`<span class="${dir(vsCost)}">比成本 ${fmtPct(vsCost)}</span>` : ''}`);
+    tip.hidden = false;
+    const left = Math.min(Math.max(x(cur) - tip.offsetWidth / 2, 0), W - tip.offsetWidth);
+    tip.style.left = `${left}px`;
+  };
+  const hide = () => {
+    cur = null;
+    cross.setAttribute('visibility', 'hidden');
+    dot.setAttribute('visibility', 'hidden');
+    tip.hidden = true;
+  };
+  svg.addEventListener('pointermove', (e) => {
+    const rect = svg.getBoundingClientRect();
+    const px = (e.clientX - rect.left) * (W / rect.width);
+    show(Math.round(((px - P.left) / iw) * (n - 1)));
+  });
+  svg.addEventListener('pointerleave', hide);
+  svg.addEventListener('blur', hide);
+  svg.addEventListener('focus', () => show(n - 1));
+  svg.addEventListener('keydown', (e) => {
+    const step = { ArrowLeft: -1, ArrowRight: 1, Home: -Infinity, End: Infinity }[e.key];
+    if (step === undefined) return;
+    e.preventDefault();
+    show((cur ?? n - 1) + (Number.isFinite(step) ? step : step < 0 ? -n : n));
+  });
+}
+
 function gotoCard(key) {
   const el = document.getElementById(cardId(key));
   if (!el) return;
   el.open = true;
   state.openCards.add(key);
   el.querySelectorAll('[data-scale]').forEach(layoutScale);
+  el.querySelectorAll('[data-chart]').forEach(drawChart);
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
   el.querySelector('summary')?.focus({ preventScroll: true });
@@ -1097,6 +1228,7 @@ function renderAll() {
   renderRealized(model);
   renderLog(model);
   layoutScales();
+  drawCharts();
 }
 
 // 手動價格只在沒有每日收盤價時使用；收盤價回來了就刪掉，免得之後資料又失敗時用到舊價。
@@ -1907,10 +2039,14 @@ function bind() {
     if (card.open) {
       state.openCards.add(card.dataset.key);
       card.querySelectorAll('[data-scale]').forEach(layoutScale);
+      card.querySelectorAll('[data-chart]').forEach(drawChart);
     } else state.openCards.delete(card.dataset.key);
   }, true);
 
-  window.addEventListener('resize', debounce(layoutScales, 150));
+  window.addEventListener('resize', debounce(() => {
+    layoutScales();
+    drawCharts();
+  }, 150));
   // 分頁可能開了一整天：回到前景時重算「幾小時前更新」與落後提示。
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return;

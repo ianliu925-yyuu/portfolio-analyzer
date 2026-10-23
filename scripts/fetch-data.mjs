@@ -20,7 +20,7 @@ import {
   usCalendar,
 } from './lib/calendar.mjs';
 import { BOT_CSV, ER_API, parseBotCsv, parseErApi } from './lib/fx.mjs';
-import { MIN_BARS, mergeBars, mergeChip } from './lib/history.mjs';
+import { MIN_BARS, chartSeries, mergeBars, mergeChip, packCharts } from './lib/history.mjs';
 import { createLimiter, getJson, getText, sleep as realSleep } from './lib/http.mjs';
 import { NEWS_QUERIES, newsUrl, parseRss } from './lib/news.mjs';
 import { loadBuckets, readJson, saveBuckets, swapDir, writeJson } from './lib/store.mjs';
@@ -214,7 +214,10 @@ export async function run({
 
   pruneHistory(hist, tw, us, twAsOf, usDate);
   await saveHistory(store, hist);
-  await writeLatest(out, meta, twOut, usOut);
+  const charts = (records, bars) => Object.fromEntries(Object.values(records)
+    .map((r) => [r.code, chartSeries(bars[r.code], r.date)])
+    .filter(([, series]) => series.length >= 2));
+  await writeLatest(out, meta, twOut, usOut, { tw: charts(twOut, hist.tw), us: charts(usOut, hist.us) });
   log(`done: ${Object.keys(twOut).length} TW, ${Object.keys(usOut).length} US; status ${JSON.stringify(meta.status)}`);
   return { exitCode: 0, status: meta.status, meta };
 }
@@ -591,7 +594,7 @@ async function saveHistory(store, hist) {
   await writeJson(join(base, 'calendar.json'), hist.calendar);
 }
 
-async function writeLatest(out, meta, twOut, usOut) {
+async function writeLatest(out, meta, twOut, usOut, charts) {
   const tmp = join(out, 'latest.tmp');
   await rm(tmp, { recursive: true, force: true });
   await writeJson(join(tmp, 'meta.json'), meta, { pretty: true });
@@ -599,6 +602,12 @@ async function writeLatest(out, meta, twOut, usOut) {
   await writeJson(join(tmp, 'index-us.json'), indexRows(Object.values(usOut)));
   await saveBuckets(join(tmp, 'tw'), twOut, twBucket);
   await saveBuckets(join(tmp, 'us'), usOut, usBucket);
+  // Closing-price series for the page's price chart, in their own buckets so the page loads them only on demand.
+  for (const [market, bucketOf] of [['tw', twBucket], ['us', usBucket]]) {
+    const groups = {};
+    for (const [code, series] of Object.entries(charts[market])) (groups[bucketOf(code)] ??= {})[code] = series;
+    for (const [bucket, group] of Object.entries(groups)) await writeJson(join(tmp, 'chart', market, `${bucket}.json`), packCharts(group));
+  }
   await swapDir(tmp, join(out, 'latest'));
 }
 

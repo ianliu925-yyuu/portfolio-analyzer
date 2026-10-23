@@ -90,6 +90,30 @@ export async function loadRecords(items) {
 
 export const hasFailedBuckets = () => failedBuckets.size > 0;
 
+const chartCache = new Map(); // 'TW/23' → Promise<{ dates: [date], closes: { code: [close|null] } }>
+
+// 個股收盤價序列 [[date, close], …]（走勢圖用，詳細卡打開時才載入）；沒有資料時為 null。
+// 分桶檔共用一份日期，各代號的收盤價依日期對齊、缺的日子是 null。
+// 404（分桶裡沒有走勢資料）會快取；其他錯誤不快取，下次再試。
+export async function loadChart(market, code) {
+  const c = String(code ?? '').trim().toUpperCase();
+  const b = bucketOf(market, c);
+  if (!b || !/^[0-9A-Z]+$/.test(b)) return null;
+  const key = `${market}/${b}`;
+  if (!chartCache.has(key)) {
+    const dir = market === 'US' ? 'us' : 'tw';
+    chartCache.set(key, getJson(`chart/${dir}/${encodeURIComponent(b)}.json`).catch((err) => {
+      if (err.status !== 404) chartCache.delete(key);
+      return {};
+    }));
+  }
+  const { dates, closes } = await chartCache.get(key);
+  const row = closes?.[c];
+  if (!Array.isArray(dates) || !Array.isArray(row)) return null;
+  const series = dates.map((d, i) => [d, row[i]]).filter((s) => typeof s[1] === 'number' && s[1] > 0);
+  return series.length >= 2 ? series : null;
+}
+
 // 代號搜尋：代號開頭相符優先，再來是名稱包含。
 export function searchIndex(rows, query, limit = 8) {
   const q = String(query ?? '').trim().toUpperCase();

@@ -22,6 +22,25 @@ export function mergeBars(existing = [], incoming = [], { prefer = 'incoming', m
   return [...map.values()].sort(byDate).slice(-max);
 }
 
+// Closing prices for the page's price chart: [[date, close]] up to the record's own date (volume dropped).
+export function chartSeries(bars = [], asOf = null) {
+  return bars.filter((b) => b[1] > 0 && (!asOf || b[0] <= asOf)).map((b) => [b[0], b[1]]);
+}
+
+// One chart bucket file: { dates, closes: { code: [close|null aligned to dates] } }. Sharing the dates
+// instead of repeating them per code makes the files about a third of the size.
+export function packCharts(seriesByCode = {}) {
+  const dates = [...new Set(Object.values(seriesByCode).flatMap((s) => s.map((b) => b[0])))].sort();
+  const at = new Map(dates.map((d, i) => [d, i]));
+  const closes = {};
+  for (const code of Object.keys(seriesByCode).sort()) {
+    const row = new Array(dates.length).fill(null);
+    for (const [d, c] of seriesByCode[code]) row[at.get(d)] = c;
+    closes[code] = row;
+  }
+  return { dates, closes };
+}
+
 const mean = (a) => a.reduce((s, x) => s + x, 0) / a.length;
 
 export function computeHist(bars = []) {
