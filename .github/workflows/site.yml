@@ -4,10 +4,10 @@ on:
   push:
     branches: [main]
   schedule:
-    # GitHub cron is UTC and often late, so avoid the top of the hour and start a little early.
-    - cron: '17 23 * * 0-4' # 07:17 Taiwan Mon–Fri: previous TW close + last night's US close
-    - cron: '17 12 * * 1-5' # 1 h before the US open in summer (EDT); skipped in winter
-    - cron: '17 13 * * 1-5' # 1 h before the US open in winter (EST); skipped in summer
+    # GitHub cron is UTC and runs hours late (measured Oct 2026: TW ~2.5 h, US ~5 h), so start early and avoid the top of the hour.
+    - cron: '47 21 * * 0-4' # 05:47 Taiwan Mon–Fri (GitHub runs this ~2.5 h late, landing ~08:15): previous TW close + last night's US close
+    - cron: '17 7 * * 1-5' # 03:17 EDT; ~5 h late lands ~1 h before the US open in summer; skipped in winter
+    - cron: '17 8 * * 1-5' # 03:17 EST; ~5 h late lands ~1 h before the US open in winter; skipped in summer
   workflow_dispatch:
     inputs:
       force_fetch:

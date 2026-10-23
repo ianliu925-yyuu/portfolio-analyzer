@@ -22,7 +22,7 @@
 
 ## 每日資料
 
-GitHub Actions（`.github/workflows/site.yml`）每天在開盤前約 1 小時抓公開市場資料：台股約 07:17（台灣時間），美股開盤前 1 小時。資料存在 `data` 分支，跟網頁一起部署到 GitHub Pages。資料裡沒有任何人的持股。
+GitHub Actions（`.github/workflows/site.yml`）每天在開盤前抓公開市場資料：台股約 08:15（台灣時間），美股開盤前約 1 小時。GitHub 排程常延遲數小時，cron 已依實測延遲提前設定。資料存在 `data` 分支，跟網頁一起部署到 GitHub Pages。資料裡沒有任何人的持股。
 
 ## 開發
 

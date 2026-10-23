@@ -7,8 +7,8 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { isUsDst } from './lib/calendar.mjs';
 
-export const SUMMER_CRON = '17 12 * * 1-5'; // 08:17 EDT, one hour before the US open in summer
-export const WINTER_CRON = '17 13 * * 1-5'; // 08:17 EST, one hour before the US open in winter
+export const SUMMER_CRON = '17 7 * * 1-5'; // 03:17 EDT; GitHub's ~5 h delay lands it about an hour before the summer open
+export const WINTER_CRON = '17 8 * * 1-5'; // 03:17 EST; GitHub's ~5 h delay lands it about an hour before the winter open
 
 export function decide({ event, schedule, forceFetch, hasData, now = new Date() }) {
   if (event === 'schedule') {
