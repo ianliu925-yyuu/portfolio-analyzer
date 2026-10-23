@@ -268,6 +268,8 @@ async function mainFlow(browser, baseURL, name, viewport) {
   await addTrade(page, { market: 'TW', code: '0050', pick: '0050', shares: 2000, price: 150 });
   await addTrade(page, { market: 'US', code: 'AAPL', pick: 'AAP', shares: 10, price: 200, viaKeyboard: true });
   assert.equal(await page.locator('#holdingsWrap tbody tr').count(), 3);
+  assert.ok((await page.textContent('#realizedBody')).includes('還沒有賣出紀錄'), '只有買進時年度已實現損益是空的');
+  assert.equal(await page.isDisabled('#exportRealizedCsv'), true);
 
   // 總覽數字和計算模組一致
   const exp = await expectedSummary();

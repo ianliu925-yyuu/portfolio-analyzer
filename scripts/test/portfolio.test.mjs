@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildHoldings, valueHolding, summarize, holdingKey, sessionPosition } from '../../assets/portfolio.js';
+import { buildHoldings, valueHolding, summarize, holdingKey, sessionPosition, realizedByYear } from '../../assets/portfolio.js';
 
 const near = (actual, expected, eps = 1e-6) =>
   assert.ok(Math.abs(actual - expected) < eps, `expected ${expected}, got ${actual}`);
@@ -31,6 +31,30 @@ test('average cost through buy / buy / sell', () => {
   assert.equal(h.feesPaid, 495 + 513 + 277 + 975);
   assert.deepEqual([h.firstDate, h.lastDate, h.openedDate, h.txCount, h.broker, h.currency],
     ['2026-01-05', '2026-03-05', '2026-01-05', 3, 'tw_generic_06', 'TWD']);
+});
+
+test('realizedByYear: 依年度、市場、代號加總，台美股各自原幣', () => {
+  const us = (o) => tx({ market: 'US', code: 'AAPL', ...o });
+  const { realizedList } = buildHoldings([
+    ...BUY_BUY_SELL,
+    tx({ code: '2317', shares: 1000, price: 100, date: '2025-05-01' }),
+    tx({ code: '2317', side: 'sell', shares: 1000, price: 110, date: '2025-06-01', fee: 10, tax: 330 }),
+    us({ shares: 10, price: 200, date: '2025-01-02' }),
+    us({ side: 'sell', shares: 4, price: 250, date: '2025-12-31', fee: 1, regFee: 0.03 }),
+    us({ side: 'sell', shares: 6, price: 150, date: '2026-01-10' }),
+  ]);
+  assert.equal(realizedList.find((r) => r.id === 't3').sellCosts, 277 + 975);
+
+  const years = realizedByYear(realizedList);
+  assert.deepEqual(years.map((y) => y.year), [2026, 2025]);
+  const pick = (m) => [m.currency, m.count, m.shares, m.proceeds, m.costBasis, m.sellCosts, m.realized];
+  const [y2026, y2025] = years;
+  assert.deepEqual(pick(y2026.markets.TW), ['TWD', 1, 500, 323748, 295252, 1252, 28496]);
+  assert.deepEqual(pick(y2026.markets.US), ['USD', 1, 6, 900, 1200, 0, -300]);
+  assert.deepEqual(pick(y2025.markets.TW), ['TWD', 1, 1000, 109660, 100000, 340, 9660]);
+  assert.deepEqual(pick(y2025.markets.US), ['USD', 1, 4, 998.97, 800, 1.03, 198.97]);
+  assert.deepEqual(y2026.markets.TW.stocks.map((s) => [s.code, s.realized]), [['2330', 28496]]);
+  assert.deepEqual(realizedByYear([]), []);
 });
 
 test('feeIncluded: price already includes buy costs, fee is ignored', () => {

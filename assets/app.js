@@ -3,11 +3,12 @@ import {
   BROKERS, DEFAULT_BROKER_ID, FEE_SOURCES, FEES_AS_OF, BOND_ETF_EXEMPT_UNTIL,
   brokersFor, getBroker, inferTwType, tradeCosts,
 } from './fees.js';
-import { buildHoldings, valueHolding, summarize, holdingKey, normalizeCode, sessionPosition } from './portfolio.js';
+import { buildHoldings, valueHolding, summarize, holdingKey, normalizeCode, sessionPosition, realizedByYear } from './portfolio.js';
 import { RULES, ACTIONS, analyzeHolding, analyzePortfolio, industryPeFor, levels } from './rules.js';
 import { loadMeta, loadIndex, loadRecords, searchIndex, findInIndex, hasFailedBuckets } from './data.js';
 import { MODELS, DEFAULT_MODEL, modelInfo, buildPayload, estimateCost, runAnalysis } from './ai.js';
 import { fetchStockNews } from './news.js';
+import { dataFreshness } from './freshness.js';
 
 // ---------- 小工具 ----------
 
@@ -362,7 +363,8 @@ function renderHeader() {
     $('dataDates').textContent = state.metaError ? '每日資料載入失敗（仍可手動輸入現價）' : '每日資料載入中…';
     return;
   }
-  setHtml($('dataDates'), html`資料日期：台股以 <b>${m.tw?.asOf ?? '—'}</b> 收盤計／美股以 <b>${m.us?.asOf ?? '—'}</b> 收盤計`);
+  const age = ageText(dataFreshness(m)?.ageHours);
+  setHtml($('dataDates'), html`資料日期：台股以 <b>${m.tw?.asOf ?? '—'}</b> 收盤計／美股以 <b>${m.us?.asOf ?? '—'}</b> 收盤計${age ? html`<span class="muted">・${age}</span>` : ''}`);
   $('nextDay').textContent = `下一個交易日：台股 ${dayLabel(m.tw?.nextTradingDay)}／美股 ${dayLabel(m.us?.nextTradingDay)}`;
   const notes = [];
   if (m.tw?.holidayNote) notes.push(`台股：${m.tw.holidayNote}`);
@@ -374,6 +376,12 @@ function renderHeader() {
   ].filter(([, v]) => isNum(v?.close));
   setHtml($('indices'), idx.map(([name, v]) =>
     html`<span class="idx">${name} <b>${fmtNum(v.close, 2, 2)}</b> <span class="${dir(v.change)}">${fmtPct(v.changePct)}</span></span>`));
+}
+
+function ageText(h) {
+  if (!isNum(h)) return '';
+  if (h < 1) return '剛更新';
+  return h < 48 ? `${Math.floor(h)} 小時前更新` : `${Math.floor(h / 24)} 天前更新`;
 }
 
 function renderFooter() {
@@ -388,6 +396,13 @@ function renderBanner() {
     msgs.push(html`<div class="msg error"><span>無法載入每日行情資料（data/latest），暫時沒有收盤價與分析資料。你仍然可以記錄交易，並在「持股明細」手動輸入現價。</span><button type="button" class="btn btn-sm" data-action="retry-data">重試</button></div>`);
   } else if (hasFailedBuckets()) {
     msgs.push(html`<div class="msg"><span>部分個股的每日資料載入失敗，這些股票可以先手動輸入現價。</span><button type="button" class="btn btn-sm" data-action="retry-data">重試</button></div>`);
+  }
+  const fresh = state.meta ? dataFreshness(state.meta) : null;
+  for (const [key, label] of [['tw', '台股'], ['us', '美股']]) {
+    const f = fresh?.[key];
+    if (f?.stale) {
+      msgs.push(html`<div class="msg" data-stale="${key}"><span>${label}資料停在 ${f.asOf ? dayLabel(f.asOf) : '—'}，${dayLabel(f.expected)} 的收盤應該已經更新，可能是排程延遲，價格不是最新。</span><button type="button" class="btn btn-sm" data-action="retry-data">重試</button></div>`);
+    }
   }
   const bad = Object.entries(state.meta?.status ?? {}).filter(([, v]) => v !== 'ok').map(([k]) => STATUS_NAMES[k] ?? k);
   if (bad.length) msgs.push(html`<div class="msg"><span>部分資料來源這次沒有更新，沿用前一次的資料：${bad.join('、')}。</span></div>`);
@@ -1031,6 +1046,42 @@ function renderLog(model) {
     </table></div>`);
 }
 
+// ---------- 年度已實現損益 ----------
+
+const MARKET_LABEL = { TW: '台股', US: '美股' };
+
+function renderRealized(model) {
+  const years = realizedByYear(model.built.realizedList);
+  $('exportRealizedCsv').disabled = !years.length;
+  if (!years.length) {
+    setHtml($('realizedBody'), html`<p class="empty">還沒有賣出紀錄。</p>`);
+    return;
+  }
+  const total = (m) => (m ? html`<b class="${dir(m.realized)}">${fmtMoney(m.realized, m.currency, { sign: true })}</b>` : html`<span class="muted">—</span>`);
+  setHtml($('realizedBody'), years.map((y, i) => {
+    const rows = ['TW', 'US'].flatMap((mk) => (y.markets[mk]?.stocks ?? []).map((s) => ({ mk, cur: y.markets[mk].currency, s })));
+    return html`<details class="realized-year" data-year="${y.year}"${i === 0 ? html` open` : ''}>
+      <summary><b>${y.year} 年</b><span>台股 ${total(y.markets.TW)}</span><span>美股 ${total(y.markets.US)}</span></summary>
+      <div class="table-scroll" role="region" aria-label="${y.year} 年已實現損益明細（可左右捲動）" tabindex="0">
+        <table class="data-table">
+          <thead><tr><th class="c" scope="col">市場</th><th class="l" scope="col">代號</th><th class="l" scope="col">名稱</th><th scope="col">賣出筆數</th><th scope="col">股數</th><th scope="col">賣出淨收入</th><th scope="col">成本</th><th scope="col">賣出費用與稅</th><th scope="col">已實現損益</th></tr></thead>
+          <tbody>${rows.map(({ mk, cur, s }) => html`<tr>
+            <td class="c">${MARKET_LABEL[mk]}</td>
+            <td class="l">${s.code}</td>
+            <td class="l nm-cell">${nameOf(mk, s.code)}</td>
+            <td>${s.count}</td>
+            <td>${fmtShares(s.shares)}</td>
+            <td>${fmtMoney(s.proceeds, cur)}</td>
+            <td>${fmtMoney(s.costBasis, cur)}</td>
+            <td>${fmtMoney(s.sellCosts, cur)}</td>
+            <td class="${dir(s.realized)}">${fmtMoney(s.realized, cur, { sign: true })}</td>
+          </tr>`)}</tbody>
+        </table>
+      </div>
+    </details>`;
+  }));
+}
+
 // ---------- 全部重畫 ----------
 
 function renderAll() {
@@ -1043,6 +1094,7 @@ function renderAll() {
   renderCards(model, rows);
   renderAdvice(model);
   renderAiPanel(model);
+  renderRealized(model);
   renderLog(model);
   layoutScales();
 }
@@ -1496,6 +1548,17 @@ function exportCsv() {
   download(`持倉分析交易紀錄-${todayLocal()}.csv`, `﻿${csv}\r\n`, 'text/csv;charset=utf-8');
 }
 
+function exportRealizedCsv() {
+  const head = ['年度', '市場', '代號', '名稱', '賣出筆數', '股數', '賣出淨收入', '成本', '賣出費用與稅', '已實現損益', '幣別'];
+  const lines = realizedByYear(buildHoldings(state.tx).realizedList).flatMap((y) => ['TW', 'US'].flatMap((mk) => {
+    const m = y.markets[mk];
+    return (m?.stocks ?? []).map((s) => [y.year, MARKET_LABEL[mk], s.code, nameOf(mk, s.code), s.count, s.shares,
+      s.proceeds, s.costBasis, s.sellCosts, s.realized, m.currency]);
+  }));
+  const csv = [head, ...lines].map((row) => row.map(csvField).join(',')).join('\r\n');
+  download(`持倉分析年度已實現損益-${todayLocal()}.csv`, `﻿${csv}\r\n`, 'text/csv;charset=utf-8');
+}
+
 async function importJson(file) {
   if (!file) return;
   try {
@@ -1769,6 +1832,7 @@ function bind() {
   // 備份
   $('exportJson').addEventListener('click', exportJson);
   $('exportCsv').addEventListener('click', exportCsv);
+  $('exportRealizedCsv').addEventListener('click', exportRealizedCsv);
   $('importFile').addEventListener('change', async (e) => {
     await importJson(e.target.files?.[0]);
     e.target.value = '';
@@ -1847,6 +1911,12 @@ function bind() {
   }, true);
 
   window.addEventListener('resize', debounce(layoutScales, 150));
+  // 分頁可能開了一整天：回到前景時重算「幾小時前更新」與落後提示。
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    renderHeader();
+    renderBanner();
+  });
   window.addEventListener('storage', (e) => {
     if (e.key === KEYS.tx) {
       state.tx = sanitizeTxList(load(KEYS.tx, [])).txs;

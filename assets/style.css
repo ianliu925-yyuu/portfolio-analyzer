@@ -477,6 +477,16 @@ th[aria-sort="descending"] .th-sort::after { content: "↓"; opacity: 1; }
 .ai-result-meta { margin-top: 10px; font-size: .88rem; color: var(--text-2); font-variant-numeric: tabular-nums; }
 .ai-result-meta:empty { display: none; }
 
+/* ---------- 年度已實現損益 ---------- */
+
+.realized-year { border-top: 1px solid var(--line); }
+.realized-year:first-child { border-top: 0; }
+.realized-year > summary { list-style: none; cursor: pointer; padding: 10px 0; display: flex; gap: 4px 16px; align-items: baseline; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.realized-year > summary::-webkit-details-marker { display: none; }
+.realized-year > summary::before { content: "▸"; color: var(--muted); transition: transform .15s; }
+.realized-year[open] > summary::before { transform: rotate(90deg); }
+.realized-year .data-table { min-width: 760px; margin-bottom: 8px; }
+
 /* ---------- 交易紀錄 ---------- */
 
 .log-tools { display: flex; gap: 6px; flex-wrap: wrap; }

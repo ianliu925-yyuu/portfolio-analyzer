@@ -16,7 +16,7 @@ test('scheduled runs: the pre-US-open slot that does not match DST is skipped', 
   assert.deepEqual(pick(decide({ event: 'schedule', schedule: WINTER_CRON, hasData: true, now: summer })), [false, false]);
   assert.deepEqual(pick(decide({ event: 'schedule', schedule: WINTER_CRON, hasData: true, now: winter })), [true, true]);
   assert.deepEqual(pick(decide({ event: 'schedule', schedule: SUMMER_CRON, hasData: true, now: winter })), [false, false]);
-  assert.deepEqual(pick(decide({ event: 'schedule', schedule: '47 21 * * 0-4', hasData: true, now: winter })), [true, true]);
+  assert.deepEqual(pick(decide({ event: 'schedule', schedule: '47 21 * * 0-5', hasData: true, now: winter })), [true, true]);
 });
 
 test('push deploys existing data and fetches only when the data branch is empty', () => {
@@ -32,7 +32,7 @@ test('workflow_dispatch fetches unless force_fetch is false', () => {
 
 test('workflow file wires the crons the decision script expects', () => {
   const yml = readFileSync(WORKFLOW, 'utf8');
-  for (const cron of ['47 21 * * 0-4', SUMMER_CRON, WINTER_CRON]) assert.ok(yml.includes(`cron: '${cron}'`), cron);
+  for (const cron of ['47 21 * * 0-5', SUMMER_CRON, WINTER_CRON]) assert.ok(yml.includes(`cron: '${cron}'`), cron);
   for (const needle of [
     'contents: write',
     'pages: write',

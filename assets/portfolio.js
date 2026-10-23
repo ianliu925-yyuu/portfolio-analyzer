@@ -87,7 +87,7 @@ export function buildHoldings(transactions = []) {
       pos.shares = clean(pos.shares - sold);
       pos.costTotal = pos.shares > 0 ? clean(pos.costTotal - costBasis) : 0;
       realizedList.push({ id: tx.id ?? null, market, code, date: tx.date, shares: sold, proceeds, costBasis, realized,
-        currency: pos.currency });
+        sellCosts: clean(sellCosts), currency: pos.currency });
     }
     pos.lastDate = tx.date;
     pos.txCount += 1;
@@ -107,6 +107,35 @@ export function buildHoldings(transactions = []) {
     realizedList,
     errors,
   };
+}
+
+// 已實現損益依年度 → 市場 → 代號加總。台股 TWD、美股 USD 各自原幣，不換算、不合計。年度由新到舊。
+export function realizedByYear(realizedList = []) {
+  const blank = () => ({ count: 0, shares: 0, proceeds: 0, costBasis: 0, sellCosts: 0, realized: 0 });
+  const add = (into, r) => {
+    into.count += 1;
+    for (const f of ['shares', 'proceeds', 'costBasis', 'sellCosts', 'realized']) into[f] = clean(into[f] + (r[f] ?? 0));
+  };
+  const years = new Map();
+  for (const r of realizedList ?? []) {
+    const year = Number(String(r.date).slice(0, 4));
+    let y = years.get(year);
+    if (!y) {
+      y = { year, markets: {} };
+      years.set(year, y);
+    }
+    const m = (y.markets[r.market] ??= { currency: currencyOf(r.market), ...blank(), stocks: new Map() });
+    add(m, r);
+    if (!m.stocks.has(r.code)) m.stocks.set(r.code, { code: r.code, ...blank() });
+    add(m.stocks.get(r.code), r);
+  }
+  return [...years.values()]
+    .sort((a, b) => b.year - a.year)
+    .map((y) => ({
+      year: y.year,
+      markets: Object.fromEntries(Object.entries(y.markets).map(([k, m]) =>
+        [k, { ...m, stocks: [...m.stocks.values()].sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0)) }])),
+    }));
 }
 
 // 資料日（record.date）那一盤開盤前已持有的股數，與當天的買進（股數、金額）。今日損益只算這些股數。

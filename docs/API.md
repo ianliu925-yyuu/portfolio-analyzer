@@ -204,7 +204,7 @@ tradeCosts({
   holdings: Holding[],      // 目前還有股數的（shares > 0），依市場（TW 先）再代號排序
   closed: Holding[],        // 曾經有、現在已全部賣掉的（shares 0、costTotal 0），保留已實現損益
   realizedTotal: { TW: number, US: number }, // 各自原幣（TWD / USD）
-  realizedList: [{ id, market, code, date, shares, proceeds, costBasis, realized, currency }], // 每筆賣出
+  realizedList: [{ id, market, code, date, shares, proceeds, costBasis, realized, sellCosts, currency }], // 每筆賣出；sellCosts = 該筆手續費＋稅＋規費（依實際賣出股數比例）
   errors: [{ id, index, market, code, date, message }], // message 是繁中句子，可直接顯示
 }
 
@@ -228,6 +228,22 @@ tradeCosts({
 - 賣出：`costBasis = avgCost × 賣出股數`，`costTotal -= costBasis`，`realized += 淨收入 − costBasis`。賣光後 `costTotal` 歸 0。
 - 賣超過持股：加一筆 error（「…但當時只持有 N 股，已以 N 股計算」），以持有股數計算，費用按比例打折。
 - 沒有持股就賣出、欄位不合法（股數 ≤ 0、日期格式錯、市場或買賣別錯、缺代號）：加一筆 error 並略過該筆。
+
+### `realizedByYear(realizedList) → YearRealized[]`
+
+把 `buildHoldings` 的 `realizedList` 依年度（賣出日）→ 市場 → 代號加總，年度由新到舊。台股 TWD、美股 USD 各自原幣，不換算也不合計。
+
+```js
+// YearRealized
+{
+  year: 2026,
+  markets: {               // 那年有賣出的市場才有
+    TW: { currency: 'TWD', count, shares, proceeds, costBasis, sellCosts, realized,
+          stocks: [{ code, count, shares, proceeds, costBasis, sellCosts, realized }] }, // 依代號排序
+    US: { currency: 'USD', … },
+  },
+}
+```
 
 ### `sessionPosition(transactions, market, code, date) → Session | null`
 
