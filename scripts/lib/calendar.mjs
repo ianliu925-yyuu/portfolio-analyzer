@@ -1,6 +1,7 @@
 // Trading calendars (TW from the TWSE holiday schedule, US from the NYSE list), notes and events.
 
-// NYSE full closures and 13:00 ET early closes (nyse.com, fetched 2026-10-10). 2028 is not published yet.
+// NYSE full closures and 13:00 ET early closes (NYSE Group calendar of 2025-12-23, checked 2026-10-25).
+// 2028-01-01 falls on a Saturday, so that year has no New Year's closure.
 export const NYSE_CLOSED = {
   '2026-01-01': '元旦',
   '2026-01-19': '馬丁路德金恩紀念日',
@@ -22,13 +23,24 @@ export const NYSE_CLOSED = {
   '2027-09-06': '勞動節',
   '2027-11-25': '感恩節',
   '2027-12-24': '聖誕節（補假）',
+  '2028-01-17': '馬丁路德金恩紀念日',
+  '2028-02-21': '總統日',
+  '2028-04-14': '耶穌受難日',
+  '2028-05-29': '陣亡將士紀念日',
+  '2028-06-19': '六月節',
+  '2028-07-04': '獨立紀念日',
+  '2028-09-04': '勞動節',
+  '2028-11-23': '感恩節',
+  '2028-12-25': '聖誕節',
 };
 export const NYSE_EARLY_CLOSE = {
   '2026-11-27': '感恩節翌日',
   '2026-12-24': '聖誕夜',
   '2027-11-26': '感恩節翌日',
+  '2028-07-03': '獨立紀念日前夕',
+  '2028-11-24': '感恩節翌日',
 };
-export const NYSE_KNOWN_YEARS = [2026, 2027];
+export const NYSE_KNOWN_YEARS = [2026, 2027, 2028];
 
 const pad = (n) => String(n).padStart(2, '0');
 

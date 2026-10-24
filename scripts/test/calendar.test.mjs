@@ -68,6 +68,10 @@ test('US next trading day around Thanksgiving and Christmas', () => {
   assert.equal(usCalendar.next('2026-12-24'), '2026-12-28');
   assert.equal(usCalendar.next('2026-07-02'), '2026-07-06');
   assert.equal(usCalendar.next('2027-12-23'), '2027-12-27');
+  // 2028：元旦是週六不補假；7/3 提早收盤、7/4 休市
+  assert.equal(usCalendar.next('2027-12-31'), '2028-01-03');
+  assert.equal(usCalendar.next('2028-07-03'), '2028-07-05');
+  assert.equal(usCalendar.earlyClose('2028-07-03'), '獨立紀念日前夕');
   assert.equal(holidayNote(usCalendar, '2026-11-25', '2026-11-27'), '11/26 感恩節休市；11/27 感恩節翌日提早收盤');
   assert.deepEqual(upcomingHolidays(usCalendar, '2026-11-20', 10), [
     { date: '2026-11-26', name: '感恩節' },
