@@ -15,8 +15,15 @@
 ```
 index.html               網頁（載入 assets/ 的 ES modules）
 assets/style.css
-assets/app.js            UI 與狀態
-assets/portfolio.js      交易 → 持股（平均成本法）、已實現損益（純函式）
+assets/app.js            進入點：計算、總覽、配置、明細表、建議、AI、交易紀錄、年度損益、事件綁定
+assets/ui/dom.js         DOM、HTML 範本（自動跳脫）、數字與日期格式、提示訊息
+assets/ui/store.js       localStorage 讀寫與資料清理（匯入檔也要過）
+assets/ui/state.js       全域狀態
+assets/ui/cards.js       個股詳細卡與走勢圖
+assets/ui/form.js        新增／修改交易表單
+assets/ui/io.js          匯出、匯入（JSON、CSV）
+assets/ui/settings.js    設定對話框與主題
+assets/portfolio.js      交易 → 持股（平均成本法）、已實現損益、股利、分割（純函式）
 assets/fees.js           手續費與交易稅（純函式）＋券商預設表
 assets/rules.js          規則分析（純函式）
 assets/data.js           讀每日資料、代號搜尋
