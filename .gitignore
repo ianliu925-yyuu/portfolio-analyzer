@@ -2,3 +2,7 @@ node_modules/
 _site/
 store/
 .DS_Store
+
+# Claude Code and trail tool settings (local only)
+.claude/
+.trail/
