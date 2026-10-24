@@ -1,4 +1,5 @@
-// 交易 → 持股（平均成本法）、已實現損益、市值與總覽（純函式）。
+// 交易 → 持股（平均成本法）、已實現損益、股利、市值與總覽（純函式）。
+// side：buy／sell；dividend＝現金股利（amount 實收金額，原幣）；split＝分割（ratio 1 股變幾股，反分割小於 1）。
 import { estimateSellCosts, getBroker, inferTwType } from './fees.js';
 
 const clean = (x) => Number(x.toPrecision(12));
@@ -25,10 +26,12 @@ function checkTx(tx) {
   if (!tx || typeof tx !== 'object') return '格式錯誤';
   if (tx.market !== 'TW' && tx.market !== 'US') return '市場必須是 TW 或 US';
   if (!normalizeCode(tx.code)) return '缺少代號';
-  if (tx.side !== 'buy' && tx.side !== 'sell') return '買賣別必須是 buy 或 sell';
+  if (!['buy', 'sell', 'dividend', 'split'].includes(tx.side)) return '買賣別必須是 buy、sell、dividend 或 split';
+  if (!DATE_RE.test(String(tx.date ?? ''))) return '日期格式必須是 YYYY-MM-DD';
+  if (tx.side === 'dividend') return num(tx.amount) > 0 ? null : '股利金額必須大於 0';
+  if (tx.side === 'split') return num(tx.ratio) > 0 && num(tx.ratio) !== 1 ? null : '分割比例必須大於 0 且不是 1';
   if (!(num(tx.shares) > 0)) return '股數必須大於 0';
   if (num(tx.price) == null || num(tx.price) < 0) return '價位不正確';
-  if (!DATE_RE.test(String(tx.date ?? ''))) return '日期格式必須是 YYYY-MM-DD';
   return null;
 }
 
@@ -47,13 +50,14 @@ export function buildHoldings(transactions = []) {
 
   const positions = new Map();
   const realizedList = [];
+  const dividendList = [];
   for (const { tx, index } of valid) {
     const market = tx.market;
     const code = normalizeCode(tx.code);
     const key = holdingKey(market, code);
     let pos = positions.get(key);
     if (!pos) {
-      pos = { market, code, currency: currencyOf(market), shares: 0, costTotal: 0, realized: 0, feesPaid: 0,
+      pos = { market, code, currency: currencyOf(market), shares: 0, costTotal: 0, realized: 0, dividends: 0, feesPaid: 0,
         firstDate: tx.date, lastDate: tx.date, openedDate: null, txCount: 0, broker: null };
       positions.set(key, pos);
     }
@@ -61,7 +65,25 @@ export function buildHoldings(transactions = []) {
     const price = num(tx.price);
     const costs = tx.feeIncluded ? 0 : (num(tx.fee) ?? 0) + (num(tx.tax) ?? 0) + (num(tx.regFee) ?? 0);
 
-    if (tx.side === 'buy') {
+    if (tx.side === 'dividend') {
+      // 賣光後才入帳的股利也算，所以只要之前有過交易就收
+      if (!pos.txCount) {
+        errors.push({ id: tx.id ?? null, index, market, code, date: tx.date,
+          message: `${code} 在 ${tx.date} 領股利，但之前沒有持股，已略過` });
+        continue;
+      }
+      const amount = num(tx.amount);
+      pos.dividends = clean(pos.dividends + amount);
+      dividendList.push({ id: tx.id ?? null, market, code, date: tx.date, amount, currency: pos.currency });
+    } else if (tx.side === 'split') {
+      if (!(pos.shares > 0)) {
+        errors.push({ id: tx.id ?? null, index, market, code, date: tx.date,
+          message: `${code} 在 ${tx.date} 分割，但當時沒有持股，已略過` });
+        continue;
+      }
+      // 總成本不變，股數乘上比例，平均成本跟著變
+      pos.shares = clean(pos.shares * num(tx.ratio));
+    } else if (tx.side === 'buy') {
       if (pos.shares === 0) pos.openedDate = tx.date;
       pos.shares = clean(pos.shares + shares);
       pos.costTotal = clean(pos.costTotal + price * shares + costs);
@@ -98,26 +120,34 @@ export function buildHoldings(transactions = []) {
     .sort((a, b) => (a.market === b.market ? (a.code < b.code ? -1 : a.code > b.code ? 1 : 0) : a.market === 'TW' ? -1 : 1))
     .map((p) => ({ ...p, avgCost: p.shares > 0 ? clean(p.costTotal / p.shares) : 0 }));
   const realizedTotal = { TW: 0, US: 0 };
-  for (const p of all) realizedTotal[p.market] = clean(realizedTotal[p.market] + p.realized);
+  const dividendTotal = { TW: 0, US: 0 };
+  for (const p of all) {
+    realizedTotal[p.market] = clean(realizedTotal[p.market] + p.realized);
+    dividendTotal[p.market] = clean(dividendTotal[p.market] + p.dividends);
+  }
 
   return {
     holdings: all.filter((p) => p.shares > 0),
     closed: all.filter((p) => !(p.shares > 0)),
     realizedTotal,
     realizedList,
+    dividendTotal,
+    dividendList,
     errors,
   };
 }
 
-// 已實現損益依年度 → 市場 → 代號加總。台股 TWD、美股 USD 各自原幣，不換算、不合計。年度由新到舊。
-export function realizedByYear(realizedList = []) {
-  const blank = () => ({ count: 0, shares: 0, proceeds: 0, costBasis: 0, sellCosts: 0, realized: 0 });
+// 已實現損益與現金股利依年度 → 市場 → 代號加總（賣出日、股利入帳日的年度）。
+// 台股 TWD、美股 USD 各自原幣，不換算、不合計。年度由新到舊。count 是賣出筆數。
+export function realizedByYear(realizedList = [], dividendList = []) {
+  const blank = () => ({ count: 0, shares: 0, proceeds: 0, costBasis: 0, sellCosts: 0, realized: 0, dividends: 0 });
   const add = (into, r) => {
     into.count += 1;
     for (const f of ['shares', 'proceeds', 'costBasis', 'sellCosts', 'realized']) into[f] = clean(into[f] + (r[f] ?? 0));
   };
+  const addDividend = (into, d) => { into.dividends = clean(into.dividends + d.amount); };
   const years = new Map();
-  for (const r of realizedList ?? []) {
+  const slot = (r) => {
     const year = Number(String(r.date).slice(0, 4));
     let y = years.get(year);
     if (!y) {
@@ -125,10 +155,11 @@ export function realizedByYear(realizedList = []) {
       years.set(year, y);
     }
     const m = (y.markets[r.market] ??= { currency: currencyOf(r.market), ...blank(), stocks: new Map() });
-    add(m, r);
     if (!m.stocks.has(r.code)) m.stocks.set(r.code, { code: r.code, ...blank() });
-    add(m.stocks.get(r.code), r);
-  }
+    return [m, m.stocks.get(r.code)];
+  };
+  for (const r of realizedList ?? []) slot(r).forEach((into) => add(into, r));
+  for (const d of dividendList ?? []) slot(d).forEach((into) => addDividend(into, d));
   return [...years.values()]
     .sort((a, b) => b.year - a.year)
     .map((y) => ({
@@ -143,7 +174,8 @@ export function sessionPosition(transactions, market, code, date) {
   if (!DATE_RE.test(String(date ?? ''))) return null;
   const c = normalizeCode(code);
   const mine = (transactions ?? []).filter((t) => t && t.market === market && normalizeCode(t.code) === c);
-  const before = buildHoldings(mine.filter((t) => String(t.date ?? '') < date)).holdings[0];
+  // 資料日當天的分割算在開盤前（收盤價與漲跌已是分割後）
+  const before = buildHoldings(mine.filter((t) => String(t.date ?? '') < date || (t.date === date && t.side === 'split'))).holdings[0];
   let dayBuyShares = 0, dayBuyAmount = 0;
   for (const t of mine) {
     if (t.date !== date || t.side !== 'buy' || checkTx(t)) continue;
@@ -237,6 +269,7 @@ export function valueHolding(holding, record, { fx, broker, brokerOverrides, dat
     dayPLTWD: toTWD(dayPL),
     dayBaseTWD: toTWD(dayBase),
     realizedTWD: toTWD(holding.realized),
+    dividendsTWD: toTWD(holding.dividends ?? 0),
     sellBroker: brokerObj.id,
     missing,
   };
@@ -258,7 +291,7 @@ function group(rows, labelOf, total, assets) {
     .sort((a, b) => b.valueTWD - a.valueTWD);
 }
 
-export function summarize(rows = [], { cashTWD = 0, cashUSD = 0, fx, realizedTotal } = {}) {
+export function summarize(rows = [], { cashTWD = 0, cashUSD = 0, fx, realizedTotal, dividendTotal } = {}) {
   const rate = positive(fx);
   const cashT = Math.max(num(cashTWD) ?? 0, 0);
   const cashU = Math.max(num(cashUSD) ?? 0, 0);
@@ -300,6 +333,9 @@ export function summarize(rows = [], { cashTWD = 0, cashUSD = 0, fx, realizedTot
   let realized;
   if (realizedTotal) realized = clean((num(realizedTotal.TW) ?? 0) + (rate != null ? (num(realizedTotal.US) ?? 0) * rate : 0));
   else realized = clean(rows.reduce((s, r) => s + (r.realizedTWD ?? 0), 0));
+  let dividends;
+  if (dividendTotal) dividends = clean((num(dividendTotal.TW) ?? 0) + (rate != null ? (num(dividendTotal.US) ?? 0) * rate : 0));
+  else dividends = clean(rows.reduce((s, r) => s + (r.dividendsTWD ?? 0), 0));
 
   const weighted = rows.map((r) => ({
     ...r,
@@ -336,6 +372,7 @@ export function summarize(rows = [], { cashTWD = 0, cashUSD = 0, fx, realizedTot
     dayPL: rows.length && !dayRows ? null : clean(dayPL),
     dayPLPct: prevValue > 0 ? clean((dayPL / prevValue) * 100) : null,
     realized,
+    dividends,
     cashTWD: cashT,
     cashUSD: cashU,
     cashTotalTWD,

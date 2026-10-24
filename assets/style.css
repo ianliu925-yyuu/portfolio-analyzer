@@ -264,6 +264,11 @@ main { display: flex; flex-direction: column; gap: 18px; padding-top: 16px; padd
 .form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 14px; align-items: start; }
 .f-code { grid-column: span 2; }
 .f-fee { grid-column: 1 / -1; }
+.f-amount, .f-ratio { grid-column: span 2; }
+/* 依買賣別只顯示要填的欄位：股利填實收金額、分割填比例 */
+#tradeForm:not([data-side="dividend"]) .f-amount,
+#tradeForm:not([data-side="split"]) .f-ratio,
+#tradeForm:is([data-side="dividend"], [data-side="split"]) :is(.f-shares, .f-price, .f-broker, .f-fee) { display: none; }
 .combo { position: relative; }
 .combo-list {
   position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px);
@@ -518,6 +523,7 @@ th[aria-sort="descending"] .th-sort::after { content: "↓"; opacity: 1; }
 .log-table td.act .btn { min-height: 32px; padding: 3px 10px; font-size: .85rem; }
 .side-buy { color: var(--up); font-weight: 600; }
 .side-sell { color: var(--down); font-weight: 600; }
+.side-dividend, .side-split { color: var(--accent); font-weight: 600; }
 .warn-list { list-style: none; padding: 0; display: grid; gap: 6px; margin: 8px 0; }
 .warn-list li { background: var(--warn-soft); border: 1px solid var(--warn-line); border-radius: var(--radius-sm); padding: 8px 10px; font-size: .88rem; }
 
@@ -543,6 +549,7 @@ dialog legend { font-weight: 700; padding: 0 4px; }
   .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .f-market { order: 1; } .f-side { order: 2; } .f-code { order: 3; grid-column: 1 / -1; }
   .f-shares { order: 4; } .f-price { order: 5; } .f-date { order: 6; } .f-broker { order: 7; } .f-fee { order: 8; }
+  .f-amount, .f-ratio { order: 4; grid-column: 1 / -1; }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .stat { padding: 12px; }
   .stat-value { font-size: 1.2rem; }

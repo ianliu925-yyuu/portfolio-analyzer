@@ -179,8 +179,8 @@ tradeCosts({
   id: string,                 // 介面產生，唯一
   market: 'TW' | 'US',
   code: string,               // 會被 trim + 轉大寫
-  side: 'buy' | 'sell',
-  shares: number,             // > 0；美股可有小數
+  side: 'buy' | 'sell' | 'dividend' | 'split',
+  shares: number,             // > 0；美股可有小數（dividend／split 沒有）
   price: number,              // >= 0
   date: 'YYYY-MM-DD',
   feeIncluded: boolean,       // 「價位已含手續費」
@@ -194,6 +194,8 @@ tradeCosts({
 - `feeIncluded: false`（預設）：買進成本 = `price × shares + fee + tax + regFee`；賣出淨收入 = `price × shares − fee − tax − regFee`。
 - `feeIncluded: true`：使用者填的價位已含費用。買進成本 = `price × shares`，`fee/tax/regFee` 一律忽略；賣出淨收入 = `price × shares`。
 - `fee`、`tax`、`regFee` 缺值當 0。**`buildHoldings` 不會自己估手續費**：新增交易時用 `tradeCosts` 算好再存。
+- 現金股利：`{ id, market, code, side: 'dividend', date, amount }`，`amount` > 0 是實收金額（原幣，已扣預扣稅等）。
+- 分割：`{ id, market, code, side: 'split', date, ratio }`，`ratio` > 0 且 ≠ 1，1 股變幾股（反分割 < 1）。
 
 ### `buildHoldings(transactions) → Result`
 
@@ -205,6 +207,8 @@ tradeCosts({
   closed: Holding[],        // 曾經有、現在已全部賣掉的（shares 0、costTotal 0），保留已實現損益
   realizedTotal: { TW: number, US: number }, // 各自原幣（TWD / USD）
   realizedList: [{ id, market, code, date, shares, proceeds, costBasis, realized, sellCosts, currency }], // 每筆賣出；sellCosts = 該筆手續費＋稅＋規費（依實際賣出股數比例）
+  dividendTotal: { TW: number, US: number }, // 各自原幣
+  dividendList: [{ id, market, code, date, amount, currency }], // 每筆計入的股利
   errors: [{ id, index, market, code, date, message }], // message 是繁中句子，可直接顯示
 }
 
@@ -216,6 +220,7 @@ tradeCosts({
   costTotal: number,   // 持有成本（含買進手續費），原幣
   avgCost: number,     // costTotal / shares；shares 0 時為 0
   realized: number,    // 此代號累計已實現損益，原幣
+  dividends: number,   // 此代號累計現金股利，原幣
   feesPaid: number,    // 累計手續費 + 稅 + 規費（feeIncluded 的交易不計）
   firstDate: string,   // 此代號第一筆交易日
   lastDate: string,    // 最後一筆交易日
@@ -227,19 +232,21 @@ tradeCosts({
 
 - 賣出：`costBasis = avgCost × 賣出股數`，`costTotal -= costBasis`，`realized += 淨收入 − costBasis`。賣光後 `costTotal` 歸 0。
 - 賣超過持股：加一筆 error（「…但當時只持有 N 股，已以 N 股計算」），以持有股數計算，費用按比例打折。
-- 沒有持股就賣出、欄位不合法（股數 ≤ 0、日期格式錯、市場或買賣別錯、缺代號）：加一筆 error 並略過該筆。
+- 沒有持股就賣出、欄位不合法（股數 ≤ 0、日期格式錯、市場或買賣別錯、缺代號、股利金額 ≤ 0、分割比例 ≤ 0 或 = 1）：加一筆 error 並略過該筆。
+- 股利：不動股數與成本，`dividends += amount`。此代號之前沒有任何計入的交易就報錯略過；賣光後才入帳的照算。
+- 分割：`shares ×= ratio`，`costTotal` 不變（`avgCost` 跟著變）。當時沒有持股就報錯略過。
 
-### `realizedByYear(realizedList) → YearRealized[]`
+### `realizedByYear(realizedList, dividendList = []) → YearRealized[]`
 
-把 `buildHoldings` 的 `realizedList` 依年度（賣出日）→ 市場 → 代號加總，年度由新到舊。台股 TWD、美股 USD 各自原幣，不換算也不合計。
+把 `buildHoldings` 的 `realizedList`（賣出日）與 `dividendList`（入帳日）依年度 → 市場 → 代號加總，年度由新到舊。台股 TWD、美股 USD 各自原幣，不換算也不合計。`count` 是賣出筆數；只有股利的代號 `count` 為 0。
 
 ```js
 // YearRealized
 {
   year: 2026,
-  markets: {               // 那年有賣出的市場才有
-    TW: { currency: 'TWD', count, shares, proceeds, costBasis, sellCosts, realized,
-          stocks: [{ code, count, shares, proceeds, costBasis, sellCosts, realized }] }, // 依代號排序
+  markets: {               // 那年有賣出或股利的市場才有
+    TW: { currency: 'TWD', count, shares, proceeds, costBasis, sellCosts, realized, dividends,
+          stocks: [{ code, count, shares, proceeds, costBasis, sellCosts, realized, dividends }] }, // 依代號排序
     US: { currency: 'USD', … },
   },
 }
@@ -289,7 +296,7 @@ valueHolding(holding, record /* 每日資料 record，可為 null */, {
 | `dayChange`, `dayChangePct` | `record.change`、`record.changePct`（只有 `priceSource === 'data'` 時有值） |
 | `dayPL` | 有 `session`：`dayChange × 資料日前已持有的股數 + (price − 當天買進均價) × 當天買進且還持有的股數`；資料日之後才買的股數不算。沒有 `session`：`dayChange × shares` |
 | `fx` | 換算率：TW 為 1；US 為 `ctx.fx`（缺則 `null`） |
-| `costTWD`, `valueTWD`, `grossPLTWD`, `sellCostsTWD`, `netPLTWD`, `dayPLTWD`, `realizedTWD` | 換成台幣的值 |
+| `costTWD`, `valueTWD`, `grossPLTWD`, `sellCostsTWD`, `netPLTWD`, `dayPLTWD`, `realizedTWD`, `dividendsTWD` | 換成台幣的值 |
 | `dayBaseTWD` | 今日損益% 的分母（台幣）：上面那些股數的前一日收盤市值＋當天買進金額；沒有 `dayPL` 時為 `null` |
 | `sellBroker` | 估賣出費用用的券商 id |
 | `missing` | 缺的東西：`'price'`、`'fx'` |
@@ -303,6 +310,7 @@ summarize(rows /* valueHolding 的結果陣列 */, {
   cashTWD?: number, cashUSD?: number,
   fx?: number,                  // meta.fx.USDTWD
   realizedTotal?: { TW, US },   // buildHoldings 的 realizedTotal；有傳才會含已全部賣掉的股票
+  dividendTotal?: { TW, US },   // buildHoldings 的 dividendTotal；同上
 })
 ```
 
@@ -321,6 +329,7 @@ summarize(rows /* valueHolding 的結果陣列 */, {
   netPL, netPLPct,              // netPLPct = netPL / pricedCost × 100
   dayPL, dayPLPct,              // 有持股但沒有任何一列有 dayPL 時 null；dayPLPct = dayPL / Σ dayBaseTWD × 100
   realized,                     // 已實現損益（TW + US × fx）
+  dividends,                    // 已領股利（TW + US × fx）
   cashTWD, cashUSD, cashTotalTWD,
   totalAssets,                  // 已計價的 marketValue（缺值當 0）+ cashTotalTWD
   cashRatio,                    // 有持股且沒輸入任何現金 → 0（全倉）；有持股沒計價或美元現金缺匯率 → null；

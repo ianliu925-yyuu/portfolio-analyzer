@@ -311,3 +311,66 @@ test('summarize: nothing priced → totals are null, not 0; cash ratio needs eve
   assert.equal(part.pricedCount, 1);
   assert.equal(part.cashRatio, null);
 });
+
+test('cash dividends: 不動股數成本，累計到 dividends、dividendTotal、dividendList', () => {
+  const div = (o) => ({ market: 'TW', code: '2330', side: 'dividend', ...o });
+  const { holdings, closed, dividendTotal, dividendList, errors } = buildHoldings([
+    tx({ id: 'b', shares: 1000, price: 580, date: '2025-01-05', fee: 495 }),
+    div({ id: 'd1', amount: 4500, date: '2025-07-10' }),
+    div({ id: 'd2', amount: 5000, date: '2026-01-10' }),
+    tx({ code: '2317', shares: 1000, price: 100, date: '2025-01-05' }),
+    tx({ code: '2317', side: 'sell', shares: 1000, price: 110, date: '2025-06-01' }),
+    div({ id: 'd3', code: '2317', amount: 5300, date: '2025-08-01' }), // 賣光後才入帳
+    div({ id: 'd4', code: '2454', amount: 100, date: '2025-08-01' }),  // 從來沒有持股
+    div({ id: 'd5', amount: 0, date: '2025-08-01' }),
+  ]);
+  assert.deepEqual(errors.map((e) => e.id), ['d5', 'd4']);
+  const h = holdings.find((x) => x.code === '2330');
+  assert.deepEqual([h.shares, h.costTotal, h.dividends], [1000, 580495, 9500]);
+  assert.equal(closed.find((x) => x.code === '2317').dividends, 5300);
+  assert.deepEqual(dividendTotal, { TW: 14800, US: 0 });
+  assert.deepEqual(dividendList.map((d) => [d.id, d.amount, d.currency]), [['d1', 4500, 'TWD'], ['d3', 5300, 'TWD'], ['d2', 5000, 'TWD']]);
+
+  const years = realizedByYear(buildHoldings([
+    tx({ shares: 1000, price: 580, date: '2025-01-05' }),
+    div({ amount: 4500, date: '2025-07-10' }),
+    tx({ side: 'sell', shares: 500, price: 600, date: '2025-09-01' }),
+    div({ amount: 2500, date: '2026-01-10' }),
+  ]).realizedList, buildHoldings([
+    tx({ shares: 1000, price: 580, date: '2025-01-05' }),
+    div({ amount: 4500, date: '2025-07-10' }),
+    div({ amount: 2500, date: '2026-01-10' }),
+  ]).dividendList);
+  assert.deepEqual(years.map((y) => [y.year, y.markets.TW.count, y.markets.TW.realized, y.markets.TW.dividends]),
+    [[2026, 0, 0, 2500], [2025, 1, 10000, 4500]]);
+
+  const row = valueHolding(h, { close: 600 }, { date: '2026-10-08' });
+  assert.equal(row.dividendsTWD, 9500);
+  const s = summarize([row], { dividendTotal: { TW: 9500, US: 10 }, fx: 32 });
+  assert.equal(s.dividends, 9820);
+});
+
+test('splits: 股數乘比例、總成本不變；反分割；沒有持股報錯', () => {
+  const split = (o) => ({ market: 'US', code: 'NVDA', side: 'split', ...o });
+  const us = (o) => tx({ market: 'US', code: 'NVDA', ...o });
+  const { holdings, realizedList, errors } = buildHoldings([
+    us({ shares: 10, price: 1000, date: '2024-05-01', fee: 1 }),
+    split({ id: 's1', ratio: 10, date: '2024-06-10' }),
+    us({ side: 'sell', shares: 50, price: 120, date: '2024-07-01' }), // 分割後才有 100 股可賣
+    split({ id: 's2', code: 'AAPL', ratio: 4, date: '2024-06-10' }),
+    split({ id: 's3', ratio: 1, date: '2024-06-11' }),
+  ]);
+  assert.deepEqual(errors.map((e) => e.id), ['s3', 's2']);
+  const h = holdings[0];
+  assert.equal(h.shares, 50);
+  assert.equal(h.avgCost, 100.01);
+  assert.equal(realizedList[0].realized, 50 * 120 - 50 * 100.01);
+
+  const rev = buildHoldings([us({ shares: 100, price: 2, date: '2025-01-01' }), split({ ratio: 0.1, date: '2025-02-01' })]).holdings[0];
+  assert.deepEqual([rev.shares, rev.costTotal, rev.avgCost], [10, 200, 20]);
+
+  // 資料日當天的分割算在開盤前：前一日持股用分割後股數
+  const s = sessionPosition([us({ shares: 10, price: 1000, date: '2024-05-01' }), split({ ratio: 10, date: '2024-06-10' })],
+    'US', 'NVDA', '2024-06-10');
+  assert.equal(s.prevShares, 100);
+});

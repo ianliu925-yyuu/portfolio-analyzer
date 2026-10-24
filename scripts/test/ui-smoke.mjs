@@ -12,7 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const ROOT = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const argv = process.argv.slice(2);
 const opt = (name, fallback) => (argv.includes(name) ? argv[argv.indexOf(name) + 1] : fallback);
-const DATA = path.resolve(opt('--data', path.join(ROOT, 'scripts/test/fixtures/ui-latest')));
+const DATA = path.resolve(opt('--data', path.join(ROOT, 'scripts/test/fixtures/site-latest')));
 const SHOTS = path.resolve(opt('--shots', '/tmp/ui-shots'));
 const TZ = 'Asia/Taipei';
 
@@ -513,6 +513,36 @@ async function desktopExtras(page, dialogs) {
   assert.equal(await page.locator('.log-table tbody tr').count(), 5, '按取消就不刪除');
   await rowOf(page, '2330', 'sell').locator('[data-del]').click();
   await page.waitForFunction(() => document.querySelectorAll('.log-table tbody tr').length === 4);
+
+  // 股利：只顯示實收金額欄位；記下後總覽與年度區塊都有
+  await page.check('input[name="market"][value="TW"]');
+  await page.check('input[name="side"][value="dividend"]');
+  assert.ok(await page.isVisible('#fAmount') && !(await page.isVisible('#fShares')) && !(await page.isVisible('#fPrice')), '股利只填實收金額');
+  await page.fill('#fCode', '2330');
+  await page.fill('#fAmount', '4500');
+  await page.click('#submitBtn');
+  await page.waitForFunction(() => document.querySelectorAll('.log-table tbody tr').length === 5);
+  assert.equal(await page.locator('.log-table .side-dividend').count(), 1);
+  assert.ok((await page.textContent('[data-stat="dividends"]')).includes('NT$4,500'), '總覽顯示已領股利');
+  assert.ok((await page.textContent('#realizedBody')).includes('NT$4,500'), '年度區塊列出股利');
+
+  // 分割：1 拆 4，股數變 4 倍
+  const sharesOf = () => page.$eval('#holdingsWrap tr[data-key="US:AAPL"] td:nth-child(4)', (td) => Number(td.textContent.replace(/[^\d.]/g, '')));
+  const before = await sharesOf();
+  await page.check('input[name="market"][value="US"]');
+  await page.check('input[name="side"][value="split"]');
+  assert.ok(await page.isVisible('#fRatio') && !(await page.isVisible('#fAmount')), '分割只填比例');
+  await page.fill('#fCode', 'AAPL');
+  await page.fill('#fRatio', '4');
+  assert.ok((await page.textContent('#feePreview')).includes('分割後'), '分割預覽');
+  await page.click('#submitBtn');
+  await page.waitForFunction(() => document.querySelectorAll('.log-table tbody tr').length === 6);
+  assert.equal(await sharesOf(), before * 4, '分割後股數 ×4');
+  await page.locator('.log-table tbody tr').filter({ has: page.locator('.side-split') }).locator('[data-edit]').click();
+  assert.equal(await page.inputValue('#fRatio'), '4', '編輯分割帶回比例');
+  assert.ok(await page.isVisible('#fRatio'));
+  await page.click('#cancelEdit');
+  assert.ok(await page.isVisible('#fShares'), '取消修改回到買進欄位');
 
   // 清除金鑰
   await page.click('#aiKeyClear');

@@ -156,15 +156,27 @@ const OVERRIDE_RANGES = {
   US: { rate: [0, 0.05], perShare: [0, 1], minFee: [0, 100], maxPct: [0, 1], etfFlat: [0, 100] },
 };
 
+const SIDES = ['buy', 'sell', 'dividend', 'split'];
+const SIDE_LABEL = { buy: '買進', sell: '賣出', dividend: '股利', split: '分割' };
+
 // strict（匯入用）：再套用新增交易表單的規則：代號格式、台股整數股、股數上限、日期不晚於今天。
 function sanitizeTx(t, { strict = false } = {}) {
   if (!t || typeof t !== 'object') return null;
   const market = t.market === 'TW' || t.market === 'US' ? t.market : null;
   const code = normalizeCode(t.code);
-  const side = t.side === 'buy' || t.side === 'sell' ? t.side : null;
+  const side = SIDES.includes(t.side) ? t.side : null;
+  const date = String(t.date ?? '');
+  const id = typeof t.id === 'string' && t.id.trim() ? t.id.trim().slice(0, 64) : newId();
+  if (side === 'dividend' || side === 'split') {
+    // 股利、分割沒有股數價位與費用；amount＝實收股利（原幣），ratio＝1 股變幾股
+    const v = Number(side === 'dividend' ? t.amount : t.ratio);
+    if (!market || !CODE_RE.test(code) || !(v > 0) || !Number.isFinite(v) || (side === 'split' && v === 1) ||
+      !validDate(date)) return null;
+    if (strict && (!CODE_PATTERN[market].test(code) || v > 1e12 || date > todayLocal())) return null;
+    return { id, market, code, side, date, ...(side === 'dividend' ? { amount: v } : { ratio: v }) };
+  }
   const shares = Number(t.shares);
   const price = Number(t.price);
-  const date = String(t.date ?? '');
   if (!market || !CODE_RE.test(code) || !side || !(shares > 0) || !Number.isFinite(shares) ||
     !(price >= 0) || !Number.isFinite(price) || !validDate(date)) return null;
   if (strict && (!CODE_PATTERN[market].test(code) || (market === 'TW' && !Number.isInteger(shares)) || shares > 1e9 ||
@@ -173,7 +185,7 @@ function sanitizeTx(t, { strict = false } = {}) {
   const feeIncluded = t.feeIncluded === true;
   const broker = brokersFor(market).some((b) => b.id === t.broker) ? t.broker : DEFAULT_BROKER_ID[market];
   return {
-    id: typeof t.id === 'string' && t.id.trim() ? t.id.trim().slice(0, 64) : newId(),
+    id,
     market, code, side, shares, price, date, feeIncluded,
     fee: feeIncluded ? 0 : nonNeg(t.fee),
     tax: feeIncluded ? 0 : nonNeg(t.tax),
@@ -309,7 +321,8 @@ function compute() {
     return valueHolding(h, rec, { fx, date: today, brokerOverrides: overrides, manualPrice: state.manual[key],
       session: rec ? sessionPosition(state.tx, h.market, h.code, asOf) : null });
   });
-  const summary = summarize(rows, { cashTWD: state.cash.twd, cashUSD: state.cash.usd, fx, realizedTotal: built.realizedTotal });
+  const summary = summarize(rows, { cashTWD: state.cash.twd, cashUSD: state.cash.usd, fx, realizedTotal: built.realizedTotal,
+    dividendTotal: built.dividendTotal });
   const analyses = {};
   for (const r of summary.rows) {
     const key = holdingKey(r.market, r.code);
@@ -468,6 +481,7 @@ function renderOverview(model) {
     parts.push(html`<span data-stat="dayPL">今日損益 <b class="${dir(s.dayPL)}">${twd(s.dayPL, { sign: true })}</b>${isNum(s.dayPLPct) ? html` <span class="${dir(s.dayPLPct)}">${fmtPct(s.dayPLPct)}</span>` : ''}</span>`);
   }
   if (has || s.realized) parts.push(html`<span data-stat="realized">已實現損益 <b class="${dir(s.realized)}">${twd(s.realized, { sign: true })}</b></span>`);
+  if (s.dividends) parts.push(html`<span data-stat="dividends">已領股利 <b class="${dir(s.dividends)}">${twd(s.dividends, { sign: true })}</b></span>`);
   const fx = state.meta?.fx;
   if (usdTwd()) parts.push(html`<span>匯率 USD/TWD <b>${fmtNum(fx.USDTWD, 2, 4)}</b>（${fx.source ?? '匯率'}，${fx.date ?? '—'}）</span>`);
   if (s.missingPrice.length) parts.push(html`<span class="holiday">${s.missingPrice.length} 檔沒有收盤價，未計入市值，可在持股明細輸入手動價格</span>`);
@@ -1159,6 +1173,22 @@ function renderLog(model) {
       <thead><tr><th scope="col">日期</th><th class="c" scope="col">市場</th><th class="l" scope="col">代號</th><th class="l" scope="col">名稱</th><th class="c" scope="col">買賣</th><th scope="col">股數</th><th scope="col">價位</th><th scope="col">費用</th><th class="l" scope="col">券商</th><th scope="col"><span class="sr-only">操作</span></th></tr></thead>
       <tbody>${list.map(({ t }) => {
         const cur = t.market === 'US' ? 'USD' : 'TWD';
+        const act = html`<td class="act"><button type="button" class="btn" data-edit="${t.id}" aria-label="編輯 ${t.date} ${t.code}">編輯</button><button type="button" class="btn danger" data-del="${t.id}" aria-label="刪除 ${t.date} ${t.code}">刪除</button></td>`;
+        if (t.side === 'dividend' || t.side === 'split') {
+          return html`<tr>
+          <td>${t.date}</td>
+          <td class="c">${t.market === 'TW' ? '台股' : '美股'}</td>
+          <td class="l">${t.code}</td>
+          <td class="l nm-cell">${nameOf(t.market, t.code)}</td>
+          <td class="c"><span class="side-${t.side}">${SIDE_LABEL[t.side]}</span></td>
+          ${t.side === 'dividend'
+            ? html`<td class="muted">—</td><td title="實收股利">${fmtMoney(t.amount, cur)}</td>`
+            : html`<td title="1 股變成 ${fmtNum(t.ratio, 0, 6)} 股">1 → ${fmtNum(t.ratio, 0, 6)}</td><td class="muted">—</td>`}
+          <td class="muted">—</td>
+          <td class="l muted">—</td>
+          ${act}
+        </tr>`;
+        }
         const fees = t.fee + t.tax + t.regFee;
         const detail = t.market === 'US' ? `佣金 ${fmtMoney(t.fee, cur)}、規費 ${fmtMoney(t.regFee, cur)}` : `手續費 ${fmtMoney(t.fee, cur)}、交易稅 ${fmtMoney(t.tax, cur)}`;
         return html`<tr>
@@ -1171,7 +1201,7 @@ function renderLog(model) {
           <td>${fmtPrice(t.price, t.market)}</td>
           <td title="${t.feeIncluded ? '價位已含手續費' : detail}">${t.feeIncluded ? html`<span class="muted">已含</span>` : fmtMoney(fees, cur)}</td>
           <td class="l">${getBroker(t.broker, t.market).name}</td>
-          <td class="act"><button type="button" class="btn" data-edit="${t.id}" aria-label="編輯 ${t.date} ${t.code}">編輯</button><button type="button" class="btn danger" data-del="${t.id}" aria-label="刪除 ${t.date} ${t.code}">刪除</button></td>
+          ${act}
         </tr>`;
       })}</tbody>
     </table></div>`);
@@ -1182,30 +1212,32 @@ function renderLog(model) {
 const MARKET_LABEL = { TW: '台股', US: '美股' };
 
 function renderRealized(model) {
-  const years = realizedByYear(model.built.realizedList);
+  const years = realizedByYear(model.built.realizedList, model.built.dividendList);
   $('exportRealizedCsv').disabled = !years.length;
   if (!years.length) {
-    setHtml($('realizedBody'), html`<p class="empty">還沒有賣出紀錄。</p>`);
+    setHtml($('realizedBody'), html`<p class="empty">還沒有賣出紀錄或股利。</p>`);
     return;
   }
-  const total = (m) => (m ? html`<b class="${dir(m.realized)}">${fmtMoney(m.realized, m.currency, { sign: true })}</b>` : html`<span class="muted">—</span>`);
+  const total = (m) => (m ? html`<b class="${dir(m.realized)}">${fmtMoney(m.realized, m.currency, { sign: true })}</b>${m.dividends ? html`<span class="muted small">＋股利 ${fmtMoney(m.dividends, m.currency)}</span>` : ''}` : html`<span class="muted">—</span>`);
+  const dash = (n, f) => (n ? f : html`<span class="muted">—</span>`);
   setHtml($('realizedBody'), years.map((y, i) => {
     const rows = ['TW', 'US'].flatMap((mk) => (y.markets[mk]?.stocks ?? []).map((s) => ({ mk, cur: y.markets[mk].currency, s })));
     return html`<details class="realized-year" data-year="${y.year}"${i === 0 ? html` open` : ''}>
       <summary><b>${y.year} 年</b><span>台股 ${total(y.markets.TW)}</span><span>美股 ${total(y.markets.US)}</span></summary>
       <div class="table-scroll" role="region" aria-label="${y.year} 年已實現損益明細（可左右捲動）" tabindex="0">
         <table class="data-table">
-          <thead><tr><th class="c" scope="col">市場</th><th class="l" scope="col">代號</th><th class="l" scope="col">名稱</th><th scope="col">賣出筆數</th><th scope="col">股數</th><th scope="col">賣出淨收入</th><th scope="col">成本</th><th scope="col">賣出費用與稅</th><th scope="col">已實現損益</th></tr></thead>
+          <thead><tr><th class="c" scope="col">市場</th><th class="l" scope="col">代號</th><th class="l" scope="col">名稱</th><th scope="col">賣出筆數</th><th scope="col">股數</th><th scope="col">賣出淨收入</th><th scope="col">成本</th><th scope="col">賣出費用與稅</th><th scope="col">已實現損益</th><th scope="col">股利</th></tr></thead>
           <tbody>${rows.map(({ mk, cur, s }) => html`<tr>
             <td class="c">${MARKET_LABEL[mk]}</td>
             <td class="l">${s.code}</td>
             <td class="l nm-cell">${nameOf(mk, s.code)}</td>
             <td>${s.count}</td>
-            <td>${fmtShares(s.shares)}</td>
-            <td>${fmtMoney(s.proceeds, cur)}</td>
-            <td>${fmtMoney(s.costBasis, cur)}</td>
-            <td>${fmtMoney(s.sellCosts, cur)}</td>
-            <td class="${dir(s.realized)}">${fmtMoney(s.realized, cur, { sign: true })}</td>
+            <td>${dash(s.count, fmtShares(s.shares))}</td>
+            <td>${dash(s.count, fmtMoney(s.proceeds, cur))}</td>
+            <td>${dash(s.count, fmtMoney(s.costBasis, cur))}</td>
+            <td>${dash(s.count, fmtMoney(s.sellCosts, cur))}</td>
+            <td class="${dir(s.realized)}">${dash(s.count, fmtMoney(s.realized, cur, { sign: true }))}</td>
+            <td class="${dir(s.dividends)}">${dash(s.dividends, fmtMoney(s.dividends, cur, { sign: true }))}</td>
           </tr>`)}</tbody>
         </table>
       </div>
@@ -1279,7 +1311,19 @@ async function loadData({ retry = false } = {}) {
 
 const form = { results: [], active: -1, row: null };
 const marketNow = () => document.querySelector('input[name="market"]:checked')?.value === 'US' ? 'US' : 'TW';
-const sideNow = () => (document.querySelector('input[name="side"]:checked')?.value === 'sell' ? 'sell' : 'buy');
+const sideNow = () => {
+  const v = document.querySelector('input[name="side"]:checked')?.value;
+  return SIDES.includes(v) ? v : 'buy';
+};
+// 表單依買賣別切換要填的欄位（CSS 看 data-side）
+function setSide(side) {
+  document.querySelectorAll('input[name="side"]').forEach((i) => { i.checked = i.value === side; });
+  syncSide();
+}
+function syncSide() {
+  $('tradeForm').dataset.side = sideNow();
+  renderPreview();
+}
 
 // 代號清單：成功才快取；失敗記下時間，5 秒後（或按「重試」）再載。
 const indexFailedAt = {};
@@ -1364,7 +1408,7 @@ function readForm() {
   const num = (el) => (el.value === '' ? NaN : Number(el.value));
   return {
     market, side: sideNow(), code,
-    shares: num($('fShares')), price: num($('fPrice')),
+    shares: num($('fShares')), price: num($('fPrice')), amount: num($('fAmount')), ratio: num($('fRatio')),
     date: $('fDate').value, broker: $('fBroker').value, feeIncluded: $('fFeeIncluded').checked,
     type: code ? typeFor(market, code) : 'stock',
   };
@@ -1373,7 +1417,14 @@ function readForm() {
 function renderPreview() {
   const v = readForm();
   const box = $('feePreview');
-  if (!(v.shares > 0) || !(v.price > 0)) {
+  if (v.side === 'split' && v.ratio > 0 && v.ratio !== 1 && v.code) {
+    // 分割預覽：依分割日當時持股換算
+    const held = sharesOn(state.tx.filter((t) => t.id !== state.editingId), v.market, v.code, v.date || todayLocal());
+    setHtml(box, held > 0
+      ? html`<p class="note">${v.code} 當時持有 ${fmtShares(held)} 股 → 分割後 ${fmtShares(held * v.ratio)} 股；總成本不變。</p>` : '');
+    return;
+  }
+  if (v.side === 'dividend' || v.side === 'split' || !(v.shares > 0) || !(v.price > 0)) {
     box.textContent = '';
     return;
   }
@@ -1532,16 +1583,29 @@ async function submitTrade(e) {
   if (!CODE_PATTERN[v.market].test(v.code)) {
     return formError($('fCode'), v.market === 'TW' ? '台股代號是 4～6 碼數字，可加一個英文字母（例如 00679B）。' : '美股代號是英文字母（例如 AAPL、BRK.B）。');
   }
-  if ($('fShares').validity.badInput || !(v.shares > 0)) return formError($('fShares'), '股數要大於 0。');
-  if (v.market === 'TW' && !Number.isInteger(v.shares)) return formError($('fShares'), '台股股數要是整數（1 張 = 1000 股）。');
-  if (v.shares > 1e9) return formError($('fShares'), '股數太大，請確認。');
-  if ($('fPrice').validity.badInput || !Number.isFinite(v.price) || v.price < 0) return formError($('fPrice'), '請輸入價位（0 以上的數字）。');
+  const editing = state.editingId;
+  const others = state.tx.filter((t) => t.id !== editing);
+  const corporate = v.side === 'dividend' || v.side === 'split';
+  if (v.side === 'dividend' && ($('fAmount').validity.badInput || !(v.amount > 0))) return formError($('fAmount'), '實收股利要大於 0。');
+  if (v.side === 'split' && ($('fRatio').validity.badInput || !(v.ratio > 0) || v.ratio === 1)) {
+    return formError($('fRatio'), '分割比例要大於 0 且不是 1（1 拆 4 填 4，10 股併 1 股填 0.1）。');
+  }
+  if (!corporate) {
+    if ($('fShares').validity.badInput || !(v.shares > 0)) return formError($('fShares'), '股數要大於 0。');
+    if (v.market === 'TW' && !Number.isInteger(v.shares)) return formError($('fShares'), '台股股數要是整數（1 張 = 1000 股）。');
+    if (v.shares > 1e9) return formError($('fShares'), '股數太大，請確認。');
+    if ($('fPrice').validity.badInput || !Number.isFinite(v.price) || v.price < 0) return formError($('fPrice'), '請輸入價位（0 以上的數字）。');
+  }
   if (!validDate(v.date)) return formError($('fDate'), '請選擇日期。');
   if (v.date > today) return formError($('fDate'), '日期不能晚於今天。');
-  const editing = state.editingId;
+  if (v.side === 'dividend' && !others.some((t) => t.market === v.market && t.code === v.code && t.side === 'buy' && t.date <= v.date)) {
+    return formError($('fDate'), `${v.date} 以前沒有買進 ${v.code}，不能記股利。`);
+  }
+  if (v.side === 'split' && !(sharesOn(others, v.market, v.code, v.date) > 0)) {
+    return formError($('fDate'), `${v.date} 當時沒有持有 ${v.code}，不能記分割。`);
+  }
   if (v.side === 'sell') {
     // 依賣出日期當時的持股判斷（交易依日期重算，賣在買進之前會被略過）
-    const others = state.tx.filter((t) => t.id !== editing);
     const held = sharesOn(others, v.market, v.code, v.date);
     if (v.shares > held + 1e-9) {
       const when = v.date === today ? '目前' : `${v.date} 當時`;
@@ -1551,12 +1615,17 @@ async function submitTrade(e) {
         : `${when}沒有持有 ${v.code}，不能賣出。${later ? '賣出日期要在買進之後。' : ''}`);
     }
   }
-  const c = tradeCosts({ market: v.market, side: v.side, price: v.price, shares: v.shares, type: v.type, code: v.code, date: v.date,
-    broker: v.broker, brokerOverrides: state.settings.brokerOverrides });
-  const tx = sanitizeTx({
-    id: editing ?? newId(), market: v.market, code: v.code, side: v.side, shares: v.shares, price: v.price, date: v.date,
-    feeIncluded: v.feeIncluded, fee: c.fee, tax: c.tax, regFee: c.regFee, broker: c.broker,
-  });
+  let tx;
+  if (corporate) {
+    tx = sanitizeTx({ id: editing ?? newId(), market: v.market, code: v.code, side: v.side, date: v.date, amount: v.amount, ratio: v.ratio });
+  } else {
+    const c = tradeCosts({ market: v.market, side: v.side, price: v.price, shares: v.shares, type: v.type, code: v.code, date: v.date,
+      broker: v.broker, brokerOverrides: state.settings.brokerOverrides });
+    tx = sanitizeTx({
+      id: editing ?? newId(), market: v.market, code: v.code, side: v.side, shares: v.shares, price: v.price, date: v.date,
+      feeIncluded: v.feeIncluded, fee: c.fee, tax: c.tax, regFee: c.regFee, broker: c.broker,
+    });
+  }
   const i = editing ? state.tx.findIndex((t) => t.id === editing) : -1;
   const candidate = i >= 0 ? state.tx.map((t, j) => (j === i ? tx : t)) : [...state.tx, tx];
   const broken = newTradeErrors(candidate);
@@ -1567,12 +1636,17 @@ async function submitTrade(e) {
   saveTx();
   const name = nameOf(v.market, v.code);
   const known = Boolean(form.row) || Boolean(state.records[holdingKey(v.market, v.code)]);
-  const msg = `${editing ? '已修改' : '已加入'}：${v.side === 'buy' ? '買進' : '賣出'} ${v.code}${name ? ` ${name}` : ''} ${fmtShares(v.shares)} 股 @ ${fmtPrice(v.price, v.market)}${v.price === 0 ? '（價位 0，例如配股）' : ''}${known ? '' : '。這檔沒有每日資料，請在持股明細輸入手動價格'}`;
+  const what = v.side === 'dividend' ? `${fmtMoney(v.amount, v.market === 'US' ? 'USD' : 'TWD')}`
+    : v.side === 'split' ? `1 股變 ${fmtNum(v.ratio, 0, 6)} 股`
+      : `${fmtShares(v.shares)} 股 @ ${fmtPrice(v.price, v.market)}${v.price === 0 ? '（價位 0，例如配股）' : ''}`;
+  const msg = `${editing ? '已修改' : '已加入'}：${SIDE_LABEL[v.side]} ${v.code}${name ? ` ${name}` : ''} ${what}${known || corporate ? '' : '。這檔沒有每日資料，請在持股明細輸入手動價格'}`;
   if (editing) resetForm();
   else {
     $('fCode').value = '';
     $('fShares').value = '';
     $('fPrice').value = '';
+    $('fAmount').value = '';
+    $('fRatio').value = '';
     $('codeInfo').textContent = '';
     $('priceHint').textContent = '';
     form.row = null;
@@ -1590,12 +1664,14 @@ function startEdit(id) {
   state.editingId = id;
   setFormMarket(t.market);
   $('fCode').value = t.code;
-  document.querySelectorAll('input[name="side"]').forEach((i) => { i.checked = i.value === t.side; });
-  $('fShares').value = String(t.shares);
-  $('fPrice').value = String(t.price);
+  $('fShares').value = t.shares != null ? String(t.shares) : '';
+  $('fPrice').value = t.price != null ? String(t.price) : '';
+  $('fAmount').value = t.amount != null ? String(t.amount) : '';
+  $('fRatio').value = t.ratio != null ? String(t.ratio) : '';
   $('fDate').value = t.date;
   if (brokersFor(t.market).some((b) => b.id === t.broker)) $('fBroker').value = t.broker;
-  $('fFeeIncluded').checked = t.feeIncluded;
+  $('fFeeIncluded').checked = t.feeIncluded === true;
+  setSide(t.side);
   $('submitBtn').textContent = '儲存修改';
   $('cancelEdit').hidden = false;
   $('editBadge').hidden = false;
@@ -1618,13 +1694,14 @@ function stopEditing() {
 function resetForm() {
   stopEditing();
   document.querySelectorAll('#tradeForm [aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
-  document.querySelectorAll('input[name="side"]').forEach((i) => { i.checked = i.value === 'buy'; });
   $('fShares').value = '';
   $('fPrice').value = '';
+  $('fAmount').value = '';
+  $('fRatio').value = '';
   $('fDate').value = todayLocal();
   $('fFeeIncluded').checked = false;
   setFormMarket(marketNow());
-  renderPreview();
+  setSide('buy');
 }
 
 function deleteTx(id) {
@@ -1634,7 +1711,9 @@ function deleteTx(id) {
   const broken = newTradeErrors(rest);
   const warn = broken.length
     ? `\n\n注意：刪除後其他交易會對不上：${errText(broken[0])}${broken.length > 1 ? `（共 ${broken.length} 筆）` : ''}。` : '';
-  if (!window.confirm(`確定刪除 ${t.date} ${t.side === 'buy' ? '買進' : '賣出'} ${t.code} ${fmtShares(t.shares)} 股？${warn}`)) return;
+  const what = t.side === 'dividend' ? fmtMoney(t.amount, t.market === 'US' ? 'USD' : 'TWD')
+    : t.side === 'split' ? `1 股變 ${fmtNum(t.ratio, 0, 6)} 股` : `${fmtShares(t.shares)} 股`;
+  if (!window.confirm(`確定刪除 ${t.date} ${SIDE_LABEL[t.side]} ${t.code} ${what}？${warn}`)) return;
   state.tx = rest;
   if (state.editingId === id) resetForm();
   saveTx();
@@ -1671,21 +1750,27 @@ function csvField(v) {
 }
 
 function exportCsv() {
-  const head = ['日期', '市場', '代號', '名稱', '買賣', '股數', '價位', '手續費', '交易稅', '規費', '價位已含手續費', '券商', '幣別'];
-  const lines = [...state.tx].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)).map((t) => [
-    t.date, t.market === 'TW' ? '台股' : '美股', t.code, nameOf(t.market, t.code), t.side === 'buy' ? '買進' : '賣出',
-    t.shares, t.price, t.fee, t.tax, t.regFee, t.feeIncluded ? '是' : '否', getBroker(t.broker, t.market).name, t.market === 'US' ? 'USD' : 'TWD',
-  ]);
+  const head = ['日期', '市場', '代號', '名稱', '買賣', '股數', '價位', '手續費', '交易稅', '規費', '價位已含手續費', '券商', '股利實收', '分割比例', '幣別'];
+  const lines = [...state.tx].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)).map((t) => {
+    const trade = t.side === 'buy' || t.side === 'sell';
+    return [
+      t.date, t.market === 'TW' ? '台股' : '美股', t.code, nameOf(t.market, t.code), SIDE_LABEL[t.side],
+      ...(trade ? [t.shares, t.price, t.fee, t.tax, t.regFee, t.feeIncluded ? '是' : '否', getBroker(t.broker, t.market).name]
+        : ['', '', '', '', '', '', '']),
+      t.amount ?? '', t.ratio ?? '', t.market === 'US' ? 'USD' : 'TWD',
+    ];
+  });
   const csv = [head, ...lines].map((row) => row.map(csvField).join(',')).join('\r\n');
   download(`持倉分析交易紀錄-${todayLocal()}.csv`, `﻿${csv}\r\n`, 'text/csv;charset=utf-8');
 }
 
 function exportRealizedCsv() {
-  const head = ['年度', '市場', '代號', '名稱', '賣出筆數', '股數', '賣出淨收入', '成本', '賣出費用與稅', '已實現損益', '幣別'];
-  const lines = realizedByYear(buildHoldings(state.tx).realizedList).flatMap((y) => ['TW', 'US'].flatMap((mk) => {
+  const head = ['年度', '市場', '代號', '名稱', '賣出筆數', '股數', '賣出淨收入', '成本', '賣出費用與稅', '已實現損益', '股利', '幣別'];
+  const built = buildHoldings(state.tx);
+  const lines = realizedByYear(built.realizedList, built.dividendList).flatMap((y) => ['TW', 'US'].flatMap((mk) => {
     const m = y.markets[mk];
     return (m?.stocks ?? []).map((s) => [y.year, MARKET_LABEL[mk], s.code, nameOf(mk, s.code), s.count, s.shares,
-      s.proceeds, s.costBasis, s.sellCosts, s.realized, m.currency]);
+      s.proceeds, s.costBasis, s.sellCosts, s.realized, s.dividends, m.currency]);
   }));
   const csv = [head, ...lines].map((row) => row.map(csvField).join(',')).join('\r\n');
   download(`持倉分析年度已實現損益-${todayLocal()}.csv`, `﻿${csv}\r\n`, 'text/csv;charset=utf-8');
@@ -1883,8 +1968,8 @@ function bind() {
     setFormMarket(marketNow());
     renderPreview();
   }));
-  document.querySelectorAll('input[name="side"]').forEach((i) => i.addEventListener('change', renderPreview));
-  ['fShares', 'fPrice', 'fDate'].forEach((id) => $(id).addEventListener('input', () => {
+  document.querySelectorAll('input[name="side"]').forEach((i) => i.addEventListener('change', syncSide));
+  ['fShares', 'fPrice', 'fAmount', 'fRatio', 'fDate'].forEach((id) => $(id).addEventListener('input', () => {
     $(id).removeAttribute('aria-invalid');
     renderPreview();
   }));

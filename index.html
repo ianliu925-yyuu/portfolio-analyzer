@@ -50,7 +50,7 @@
       <h2 id="tradeTitle">新增交易</h2>
       <span id="editBadge" class="badge" hidden>修改中</span>
     </div>
-    <form id="tradeForm" novalidate autocomplete="off">
+    <form id="tradeForm" novalidate autocomplete="off" data-side="buy">
       <div class="form-grid">
         <fieldset class="field f-market">
           <legend>市場</legend>
@@ -72,8 +72,20 @@
           <div class="seg">
             <label><input type="radio" name="side" value="buy" checked><span>買進</span></label>
             <label><input type="radio" name="side" value="sell"><span>賣出</span></label>
+            <label><input type="radio" name="side" value="dividend"><span>股利</span></label>
+            <label><input type="radio" name="side" value="split"><span>分割</span></label>
           </div>
         </fieldset>
+        <div class="field f-amount">
+          <label for="fAmount">實收股利</label>
+          <input id="fAmount" type="number" inputmode="decimal" min="0" step="any" aria-describedby="amountHint">
+          <p id="amountHint" class="hint">實際入帳的現金（扣掉預扣稅、二代健保、匯費後），台股 NT$、美股 US$。配股請用「買進」、價位 0。</p>
+        </div>
+        <div class="field f-ratio">
+          <label for="fRatio">分割比例</label>
+          <input id="fRatio" type="number" inputmode="decimal" min="0" step="any" aria-describedby="ratioHint">
+          <p id="ratioHint" class="hint">1 股變成幾股：1 拆 4 填 4；反分割 10 股併 1 股填 0.1。總成本不變，股數與平均成本跟著調整。</p>
+        </div>
         <div class="field f-shares">
           <label for="fShares">股數</label>
           <input id="fShares" type="number" inputmode="numeric" min="0" step="1" aria-describedby="sharesHint">
@@ -188,12 +200,12 @@
 
   <section id="realized" class="card" aria-labelledby="realizedTitle">
     <div class="card-head">
-      <h2 id="realizedTitle">年度已實現損益</h2>
+      <h2 id="realizedTitle">年度已實現損益與股利</h2>
       <div class="log-tools">
         <button type="button" class="btn btn-sm" id="exportRealizedCsv">下載 CSV</button>
       </div>
     </div>
-    <p class="hint">不含股利。台股證券交易所得目前停徵所得稅；美股為美元原幣，申報海外所得請依規定匯率自行換算。</p>
+    <p class="hint">股利是在「新增交易」選「股利」記下的實收金額，依入帳日的年度列出，已實現損益不含股利。台股證券交易所得目前停徵所得稅；美股為美元原幣，申報海外所得請依規定匯率自行換算。</p>
     <div id="realizedBody"></div>
   </section>
 
